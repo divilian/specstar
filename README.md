@@ -16,9 +16,9 @@ SPECnet develops its approach with reference to SPECscape and SPECscape develops
 ## Contributors
 Our contributors include:
 SPECnet
-[Stephen Davies](https://github.com/WheezePuppet)
+[Stephen Davies](https://github.com/WheezePuppet) and
 [Rajesh Venkatachalapathy](https://github.com/venkatachalapathy)
 
 SPECscape
-[Milton Friesen](https://www.cardus.ca/who-we-are/our-team/mfriesen/)
+[Milton Friesen](https://www.cardus.ca/who-we-are/our-team/mfriesen/) and
 [Srikanth Modigonda](https://www.slu.edu/online/contact-us/faculty/srikanth-mudigonda.php)
