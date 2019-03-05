@@ -9,7 +9,7 @@ The SPEC**scape** subproject, in particular, uses a landscape grid as a modeling
 [Sugarscape](https://en.wikipedia.org/wiki/Sugarscape)
 [NetLogo](https://ccl.northwestern.edu/netlogo/).
 
-An additional project, which is complimentary to SPECscape is SPECnet which is based on a non-spatial social network where interactions are solely based on agent relationships. These two approaches are understood as distinct but mutually beneficial, detailed as follows.
+An additional project, which is complimentary to SPECscape is [SPECnet](https://github.com/WheezePuppet/specnet) which is based on a non-spatial social network where interactions are solely based on agent relationships. These two approaches are understood as distinct but mutually beneficial, detailed as follows.
 
 SPECnet develops its approach with reference to SPECscape and SPECscape develops its approach with reference to SPECnet. They are independent but they actively work to provide contrast where there are differences, build off commonalities where they exist, and seek useful complimentarities where the differences turn out to be useful enhancements.
 
