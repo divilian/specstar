@@ -3,6 +3,9 @@ include("Agent.jl")
 using Statistics
 using Random
 using Distributions
+using CSV
+using DataFrames
+using RCall
 
 function set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
                             pop_density, metab_range_tpl, vision_range_tpl, suglvl_range_tpl)
@@ -63,30 +66,37 @@ end ## end animate()
 
 function run_sim()
     ## Random.seed!(13990);
-    scape_side = 6 #10
-    scape_carry_cap = 5
-    scape_growth_rate = 0.05
-    metab_range_tpl = (1, 3)
-    vision_range_tpl = (1, 5)
-    suglvl_range_tpl = (1, 4)
-    pop_density = 0.3
-    time_periods = 10
-    
-    dict_objs = set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
-                                   pop_density, metab_range_tpl, vision_range_tpl, suglvl_range_tpl)
-    sugscape_obj = dict_objs["sugscape_obj"]
-    arr_agents = dict_objs["arr_agents"]
-    
-    println(get_sugarscape_stats(sugscape_obj))
-    println("\n\n")
-    # plot_sugar_concentrations!(sugscape_obj)
-    # println(arr_agents)
-    # println("\n\n")
-    ## [cellobj for cellobj in sugscape_obj if cellobj.occupied == true]
+    params_df = CSV.read("parameter-ranges-testing.csv")
 
-    ## next, animate the simulation - move the agents, have them consume sugar,
-    ## reduce the sugar in sugscape cells, regrow the sugar....
-    animate(sugscape_obj, arr_agents, time_periods)
+    time_periods = 30
+    
+    for rownum in 1:nrow(params_df)
+        scape_side = params_df[2, :Side]
+        scape_carry_cap = params_df[2, :Capacity]
+        scape_growth_rate = params_df[2, :RegRate]
+        metab_range_tpl = (1, params_df[2, :MtblRate])
+        vision_range_tpl = (1, params_df[2, :VsnRng])
+        suglvl_range_tpl = (1, params_df[2, :InitSgLvl])
+        pop_density = params_df[2, :Adensity]
+
+        dict_objs = set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
+                                       pop_density, metab_range_tpl, vision_range_tpl, suglvl_range_tpl)
+        sugscape_obj = dict_objs["sugscape_obj"]
+        arr_agents = dict_objs["arr_agents"]
+        
+        println(get_sugarscape_stats(sugscape_obj))
+        println("\n\n")
+        # plot_sugar_concentrations!(sugscape_obj)
+        # println(arr_agents)
+        # println("\n\n")
+        ## [cellobj for cellobj in sugscape_obj if cellobj.occupied == true]
+
+        ## next, animate the simulation - move the agents, have them consume sugar,
+        ## reduce the sugar in sugscape cells, regrow the sugar....
+        animate(sugscape_obj, arr_agents, time_periods)
+        println("Finished combination $rownum")
+        readline()
+    end #end iterate over param rows 
 end ## run_sim
 
 run_sim()
