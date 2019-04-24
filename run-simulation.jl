@@ -52,23 +52,49 @@ function set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
                 "arr_agents" => arr_agents)) 
 end ## end of set_up_environment()
 
-function animate(sugscape_obj, arr_agents, time_periods)
+function animate_sim(sugscape_obj, arr_agents, time_periods)
+    """
+    Performs the various operations on the sugarscape and agent population
+    to 'animate' them.
+    Returns a single row, consisting of all of the params + gini values
+    of sugar across all the time periods
+    
+    """
+    arr_ginis = zeros(time_periods)
     for period in 1:time_periods 
         for ind in shuffle(1:length(arr_agents))
             locate_move_feed!(arr_agents[ind], sugscape_obj)            
         end
         life_check!(arr_agents)
         regenerate_sugar!(sugscape_obj)
-        println(get_sugarscape_stats(sugscape_obj))
-        println("Finished time-step: ", string(period), "\n\n") 
-    end
-end ## end animate()
+        ## println(get_sugarscape_stats(sugscape_obj))
+        gini_coeff = compute_Gini(arr_agents)
+        ## println("Here's the gini:",
+                # string(gini_coeff))
+        arr_ginis[period] = gini_coeff
+        ## println("Finished time-step: ", string(period), "\n\n")
+        
+    end## end of time_periods for loop
+    return(arr_ginis)
+end ## end animate_sim()
 
 function run_sim()
     ## Random.seed!(13990);
     params_df = CSV.read("parameter-ranges-testing.csv")
+    outfile_name = "outputs.csv"
+    time_periods = 100
 
-    time_periods = 30
+    temp_out = DataFrame(zeros(nrow(params_df), time_periods))
+    names!(temp_out, Symbol.(["prd_"*string(i) for i in 1:time_periods]))
+
+    out_df = DataFrame()
+    for colname in names(params_df)
+        out_df[Symbol(colname)] = params_df[Symbol(colname)]
+    end
+
+    for colname in names(temp_out)
+        out_df[Symbol(colname)] = temp_out[Symbol(colname)]
+    end
     
     for rownum in 1:nrow(params_df)
         scape_side = params_df[2, :Side]
@@ -79,24 +105,41 @@ function run_sim()
         suglvl_range_tpl = (1, params_df[2, :InitSgLvl])
         pop_density = params_df[2, :Adensity]
 
-        dict_objs = set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
-                                       pop_density, metab_range_tpl, vision_range_tpl, suglvl_range_tpl)
+        dict_objs = set_up_environment(scape_side, scape_carry_cap,
+                                       scape_growth_rate, pop_density,
+                                       metab_range_tpl, vision_range_tpl,
+                                       suglvl_range_tpl)
         sugscape_obj = dict_objs["sugscape_obj"]
         arr_agents = dict_objs["arr_agents"]
         
-        println(get_sugarscape_stats(sugscape_obj))
-        println("\n\n")
+        ## println(get_sugarscape_stats(sugscape_obj))
+        ## println("\n\n")
         # plot_sugar_concentrations!(sugscape_obj)
-        # println(arr_agents)
-        # println("\n\n")
-        ## [cellobj for cellobj in sugscape_obj if cellobj.occupied == true]
 
         ## next, animate the simulation - move the agents, have them consume sugar,
-        ## reduce the sugar in sugscape cells, regrow the sugar....
-        animate(sugscape_obj, arr_agents, time_periods)
+        ## reduce the sugar in sugscape cells, regrow the sugar....and collect the
+        ## array of gini coeffs
+        arr_ginis = animate_sim(sugscape_obj, arr_agents, time_periods)
+
+        # for colname in names(params_df)
+        #     out_df[rownum, Symbol(colname)] = params_df[rownum, Symbol(colname)]
+        # end
+
+        for colnum in ncol(params_df)+1 : ncol(out_df)
+            out_df[rownum, colnum] = arr_ginis[colnum - ncol(params_df)]
+        end
+        
+        
+        ## create a row
         println("Finished combination $rownum")
-        readline()
+        # println("Here's the out_df")
+        # println(out_df)
+        # readline()
     end #end iterate over param rows 
+    
+    ## return the output df 
+    return(out_df)
+    
 end ## run_sim
 
-run_sim()
+run_sim() |> CSV.write("output.csv")

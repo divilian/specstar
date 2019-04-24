@@ -105,7 +105,7 @@ function regenerate_sugar!(sugscape_obj)
     amount specified by growth_date, with an upper bound of carrying_capacity.
     Does not return a new object, since the cell objects are modified in place.
     """
-    print("Inside regenerate_sugar!()\n\n")
+    ## println("Inside regenerate_sugar!()")
     for cellobj in sugscape_obj
         old_val = cellobj.sugar_level
         new_val = 

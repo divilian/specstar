@@ -1,4 +1,6 @@
 using Random
+using RCall
+
 mutable struct Agent
     agent_id::Int64
     location_x::Int64
@@ -34,10 +36,10 @@ function fetch_best_location(agent_obj, sugscape_obj)
                   y in low_col:hi_col
                   if (!sugscape_obj[x, y].occupied &
                       (sugscape_obj[x, y].sugar_level > 0))]
-    println("Here are the potential cells")
+    # println("Here are the potential cells")
     # x = readline()
-    print([(cellobj.location_x, cellobj.location_y, cellobj.sugar_level)
-             for cellobj in poss_cells])
+    # println([(cellobj.location_x, cellobj.location_y, cellobj.sugar_level)
+    #          for cellobj in poss_cells])
     if length(poss_cells) > 0
         a_suglevels = [cellobj.sugar_level for cellobj in poss_cells]
         a_cells =[cellobj for cellobj in poss_cells
@@ -58,13 +60,13 @@ function locate_move_feed!(agent_obj, sugscape_obj)
     periods that have elapsed in starvation mode, and performs death when
     a threshold has passed.
     """
-    println("Performing locate-move-feed on agent:", string(agent_obj.agent_id), "")
+    # println("Performing locate-move-feed on agent:", string(agent_obj.agent_id), "")
     
     if(agent_obj.alive)
         if agent_obj.sugar_level >= agent_obj.metabolic_rate
             agent_obj.sugar_level = agent_obj.sugar_level - agent_obj.metabolic_rate
-            println("Agent ", string(agent_obj.agent_id), " just drew from its self ",
-                  "sugar reserve!")
+            # println("Agent ", string(agent_obj.agent_id), " just drew from its self ",
+            #       "sugar reserve!")
             ## x = readline() 
         elseif sugscape_obj[agent_obj.location_x,
                             agent_obj.location_y].sugar_level +
@@ -73,7 +75,7 @@ function locate_move_feed!(agent_obj, sugscape_obj)
             agent_obj.sugar_level = sugscape_obj[agent_obj.location_x,
                                                  agent_obj.location_y].sugar_level +
                                                      agent_obj.sugar_level - agent_obj.metabolic_rate
-            println("Agent ", string(agent_obj.agent_id), " loaded up at its current location!")
+            # println("Agent ", string(agent_obj.agent_id), " loaded up at its current location!")
             sugscape_obj[agent_obj.location_x, agent_obj.location_y].sugar_level -=
                 sugscape_obj[agent_obj.location_x, agent_obj.location_y].sugar_level +
                 agent_obj.sugar_level - agent_obj.metabolic_rate
@@ -86,15 +88,15 @@ function locate_move_feed!(agent_obj, sugscape_obj)
                 ## of food available, so set alive status to false
                 agent_obj.alive = false
                 agent_obj.location_x, agent_obj.location_y = -1, -1
-                println("Agent ", string(agent_obj.agent_id), " starved to death!")
+                # println("Agent ", string(agent_obj.agent_id), " starved to death!")
                 ## x = readline()
             else
                 ## move to and load from the new cell location
                 sugscape_obj[agent_obj.location_x,
                              agent_obj.location_y].occupied = false
-                println("Agent ", string(agent_obj.agent_id, " moving from ",
-                                       string(agent_obj.location_x), ",",
-                                       string(agent_obj.location_y), ",", " to "))
+                # println("Agent ", string(agent_obj.agent_id, " moving from ",
+                #                        string(agent_obj.location_x), ",",
+                #                        string(agent_obj.location_y), ",", " to "))
                 
                 agent_obj.location_x, agent_obj.location_y = new_location[1], new_location[2]
                 
@@ -104,15 +106,15 @@ function locate_move_feed!(agent_obj, sugscape_obj)
                 
                 sugscape_obj[agent_obj.location_x,
                              agent_obj.location_y].occupied = true
-                println(string(agent_obj.location_x), ",",
-                        string(agent_obj.location_y), "")
+                # println(string(agent_obj.location_x), ",",
+                #         string(agent_obj.location_y), "")
                 ## x = readline()
             end
             ## consume 
         end 
         ## move
     else ## agent is dead
-        println("Tried to animate a dead agent: ", string(agent_obj.agent_id))
+        # println("Tried to animate a dead agent: ", string(agent_obj.agent_id))
         ## x = readline()
     end 
 end ## locate_move_feed!()
@@ -121,8 +123,17 @@ function life_check!(arr_agents)
     for ag_obj in arr_agents
         if ag_obj.sugar_level < 0
             ag_obj.alive = false
-            println("Agent ", string(ag_obj), " has died!")
+            # println("Agent ", string(ag_obj), " has died!")
             ## x = readline()
         end
     end
+end
+
+function compute_Gini(arr_agents)
+    arr_suglevels = [agobj.sugar_level for agobj in
+                     arr_agents]
+    R"library(ineq)"
+    gini = R"ineq($arr_suglevels, type='Gini')"
+    # println(gini)
+    return(gini)    
 end
