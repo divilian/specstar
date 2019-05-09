@@ -12,6 +12,7 @@ mutable struct Sugarcell
     carrying_capacity::Float64    
     sugar_level::Float64
     occupied::Bool
+    agent_id::Int64
 end
 
 function generate_sugarscape(side, growth_rate, carrying_cap, scenario=1)
@@ -80,7 +81,8 @@ function generate_sugarscape(side, growth_rate, carrying_cap, scenario=1)
             end
         end ## end of outer for
     end ## end of scenarios
-    return([Sugarcell(x, y, growth_rate, carrying_cap, array_suglevels[x,y], false)
+    ## default occupied = false and agent_id = -1
+    return([Sugarcell(x, y, growth_rate, carrying_cap, array_suglevels[x,y], false, -1) 
             for x in 1:side, y in 1:side])
 end ## end of function generate_sugarscape
 
@@ -129,3 +131,18 @@ function plot_sugar_concentrations!(sugscape_obj)
     z = [sugscape_obj[row, col].sugar_level for row in 1:nrows, col in 1:ncols] 
     heatmap(xs, ys, z, aspect_ratio=1)
 end ## plot_sugar_concentrations()
+
+function update_occupied_status!(arr_agents, sugscape_obj)
+    """
+    Updates the occupied status of all sugarcells, based on the
+    location values of agents that are alive.
+    """
+    for cellobj in sugscape_obj
+        cellobj.occupied = false
+    end
+    for agobj in arr_agents
+        if agobj.location_x >= 1 && agobj.location_y >= 1
+            sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
+        end
+    end
+end
