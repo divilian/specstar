@@ -1,0 +1,9 @@
+*.pdf
+*.txt
+*.toc
+*.out
+*.log
+*.snm
+*.aux
+*.nav
+**/.ipynb_checkpoints
