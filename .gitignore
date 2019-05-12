@@ -6,4 +6,6 @@
 *.snm
 *.aux
 *.nav
+*.swp
+outputfile*.csv
 **/.ipynb_checkpoints
