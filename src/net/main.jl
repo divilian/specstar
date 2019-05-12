@@ -16,15 +16,15 @@ params = Dict{Symbol,Any}(
     :animation_delay => 20,          # milliseconds between animation frames
     :random_seed => 1234,            # random number generator starting seed
 	
-	:whichGraph=>"small_world",            # the name of graph to generate e.g. 'erdos_renyi' 'scale_free' 'small_world'
+    :whichGraph=>"small_world",      # the name of graph to generate e.g. 'erdos_renyi' 'scale_free' 'small_world'
 	
-	:ER_prob=>0.2,				 # probability of edge between two vertices
+    :ER_prob=>0.2,	             # probability of edge between two vertices
 	
-	:SF_edges=>40,                   # number of edges in SF model
-	:SF_degree=>2,                   # exponent of expected power law degree distribution
+    :SF_edges=>40,                   # number of edges in SF model
+    :SF_degree=>2,                   # exponent of expected power law degree distribution
 	
-	:SW_degree=>4,                   # degree (even integer) number of neighbors 
-	:SW_prob=>0.2,                   # probibility of rewiring between 0/1 inclusive
+    :SW_degree=>4,                   # degree (even integer) number of neighbors 
+    :SW_prob=>0.2,                   # probibility of rewiring between 0/1 inclusive
 )
 
 specnet(params)
