@@ -189,7 +189,7 @@ function specnet(params)
         global graph = chose_graph()
 
         pri("Not connected; regenerating...")
-        graph = chose_graph
+        graph = chose_graph()
     end
     global AN = Dict{Char,Any}(LETTERS[k]=>k for k in 1:N)
 
