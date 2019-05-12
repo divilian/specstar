@@ -178,10 +178,7 @@ function specnet(params)
     # agent numbers. (Could be a set instead of a list, but we're using it as
     # an index to the colors array, to uniquely color members of each proto.)
     global protos = Set{Char}[]
- if(chose_graph=="small_world")
-	 println("hello")
- end
- println("hellol")
+
     # The numbers of agents who have perished (initially none).
     global dead = Set{Char}()
 
@@ -192,7 +189,7 @@ function specnet(params)
         global graph = chose_graph()
 
         pri("Not connected; regenerating...")
-        graph = LightGraphs.SimpleGraphs.erdos_renyi(N,.2)
+        graph = chose_graph
     end
     global AN = Dict{Char,Any}(LETTERS[k]=>k for k in 1:N)
 
