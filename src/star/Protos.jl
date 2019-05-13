@@ -23,7 +23,7 @@ end
 
 function fetch_specific_proto_obj(arr_protos, proto_id)
     """
-    Return an proto object from the given array of proto objects
+    Return a proto object from the given array of proto objects
     that has the given proto id.
     """
     return [probj for probj in arr_protos 
@@ -68,12 +68,12 @@ function form_possible_protos!(arr_agents, threshold, sugscape_obj,
     """
     Called during each time period to enact association among agents to form
     protos. The following conditions exist:
-    (a) none of the focal agent's neighbors are part of an proto
-    (b) one of the focal agent's neighbors is part of an proto
-    (c) two or more of the focal agent's neighbors are part of an proto.
+    (a) none of the focal agent's neighbors are part of a proto
+    (b) one of the focal agent's neighbors is part of a proto
+    (c) two or more of the focal agent's neighbors are part of a proto.
     
     In the case of (a), a randomly chosen neighbor and the focal agent join to
-    form an proto.
+    form a proto.
     In the case of (b), the focal agent joins the proto of the neighbor.
     In the case of (c), the focal agent joins the proto of a 
     randomly-chosen neighbor.
