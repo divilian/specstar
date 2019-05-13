@@ -1,5 +1,5 @@
 include("Sugarscape.jl")
-include("Agent.jl")
+include("ScapeAgents.jl")
 include("Institution.jl")
 include("max-num-generator.jl")
 
@@ -38,12 +38,14 @@ function set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
     arr_poss_locations = sample([(x,y) for x in 1:scape_side, y in 1:scape_side],
                                 no_agents, replace=false)    
 
-    arr_agents = [Agent(agg_id,
-                        arr_poss_locations[agg_id][1],
-                        arr_poss_locations[agg_id][2],
-                        rand(vision_distrib),
+    arr_agents = [ScapeAgent(agg_id,
                         rand(metabol_distrib),
-                        rand(suglvl_distrib), true, -1)
+                        rand(suglvl_distrib),
+                        true,
+                        -1,
+                        rand(vision_distrib),
+                        arr_poss_locations[agg_id][1],
+                        arr_poss_locations[agg_id][2])
                   for agg_id in 1:no_agents]
 
     ## mark as occupied the cells in sugarscape corresponding to the agents' locs
@@ -91,7 +93,7 @@ function animate_sim(sugscape_obj, arr_agents, time_periods,
                                     arr_institutions, period)
 
         arr_agents = life_check!(arr_agents)
-        @assert all([aggobj.alive for aggobj in arr_agents])
+        @assert all([aggobj.a.alive for aggobj in arr_agents])
         # println("HERHEREHERE")
         # readline()
         update_occupied_status!(arr_agents, sugscape_obj)

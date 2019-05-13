@@ -1,20 +1,31 @@
 include("Institution.jl")
 include("max-num-generator.jl")
 
+using StarAgents
 using Random
 using RCall
 
 maxnumchannel = Channel(producer);
 
-mutable struct Agent
-    agent_id::Int64
+mutable struct ScapeAgent
+    a::StarAgent
     location_x::Int64
     location_y::Int64
     vision::Int64
-    metabolic_rate::Int64
-    sugar_level::Float64
-    alive::Bool
-    institution_id::Int64
+
+    function ScapeAgent(
+        agent_id::Int64,
+        metabolic_rate::Int64,
+        sugar_level,
+        alive::Bool,
+        institution_id::Int64,
+        location_x::Int64,
+        location_y::Int64,
+        vision::Int64)
+        starAgent = StarAgent(agent_id, metabolic_rate, sugar_level, alive,
+            institution_id)
+        return new(starAgent, location_x, location_y, vision)
+    end
 end
 
 function fetch_best_location(ag_obj, sugscape_obj)
@@ -43,7 +54,7 @@ function fetch_best_location(ag_obj, sugscape_obj)
                       (sugscape_obj[x, y].sugar_level > 0))]
     # println("Here are the potential cells")
     # x = readline()
-    # println([(cellobj.location_x, cellobj.location_y, cellobj.sugar_level)
+    # println([(cellobj.location_x, cellobj.location_y, cellobj.a.sugar_level)
     #          for cellobj in poss_cells])
     if length(poss_cells) > 0
         a_suglevels = [cellobj.sugar_level for cellobj in poss_cells]
@@ -65,25 +76,25 @@ function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_institutions, ti
     periods that have elapsed in starvation mode, and performs death when
     a threshold has passed.
     """
-    # println("Performing locate-move-feed on agent:", string(agobj.agent_id), "")
+    # println("Performing locate-move-feed on agent:", string(agobj.a.agent_id), "")
     
-    if(agobj.alive)
-        if agobj.sugar_level >= agobj.metabolic_rate
-            agobj.sugar_level = agobj.sugar_level - agobj.metabolic_rate
-            # println("Agent ", string(agobj.agent_id), " just drew from its self ",
+    if(agobj.a.alive)
+        if agobj.a.sugar_level >= agobj.a.metabolic_rate
+            agobj.a.sugar_level = agobj.a.sugar_level - agobj.a.metabolic_rate
+            # println("Agent ", string(agobj.a.agent_id), " just drew from its self ",
             #       "sugar reserve!")
             ## x = readline() 
         elseif sugscape_obj[agobj.location_x,
                             agobj.location_y].sugar_level +
-                                agobj.sugar_level >= agobj.metabolic_rate
+                                agobj.a.sugar_level >= agobj.a.metabolic_rate
 
-            agobj.sugar_level = sugscape_obj[agobj.location_x,
+            agobj.a.sugar_level = sugscape_obj[agobj.location_x,
                                                  agobj.location_y].sugar_level +
-                                                     agobj.sugar_level - agobj.metabolic_rate
-            # println("Agent ", string(agobj.agent_id), " loaded up at its current location!")
+                                                     agobj.a.sugar_level - agobj.a.metabolic_rate
+            # println("Agent ", string(agobj.a.agent_id), " loaded up at its current location!")
             sugscape_obj[agobj.location_x, agobj.location_y].sugar_level = 0
             sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
-            sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.agent_id
+            sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.a.agent_id
             ## x = readline()
         else ## need to move or borrow from institution
             ## identify best location
@@ -92,24 +103,24 @@ function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_institutions, ti
                 ## no food available at current location and no new source
                 ## of food available, so see if withdrawal from institution is possible
                 instobj = fetch_specific_inst_obj(arr_institutions,
-                                            agobj.institution_id)
-                needed_amount = agobj.metabolic_rate - agobj.sugar_level
-                if agobj.institution_id > 0 && (instobj.sugar_level >
+                                            agobj.a.institution_id)
+                needed_amount = agobj.a.metabolic_rate - agobj.a.sugar_level
+                if agobj.a.institution_id > 0 && (instobj.sugar_level >
                                                 needed_amount)
-                    agobj.sugar_level = 0
+                    agobj.a.sugar_level = 0
                     instobj.sugar_level -= needed_amount
                     push!(instobj.ledger_transactions,
                           Transaction(needed_amount, timeperiod, "withdrawal",
-                                      agobj.agent_id))
+                                      agobj.a.agent_id))
                 else
                     ## otherwise, set alive status to false
                     sugscape_obj[agobj.location_x,
                                  agobj.location_y].occupied = false
                     sugscape_obj[agobj.location_x,
                                  agobj.location_y].agent_id = -1
-                    agobj.alive = false
+                    agobj.a.alive = false
                     agobj.location_x, agobj.location_y = -1, -1 
-                    # println("Agent ", string(agobj.agent_id), " starved to death!")
+                    # println("Agent ", string(agobj.a.agent_id), " starved to death!")
                     ## x = readline()
                 end
 
@@ -122,15 +133,15 @@ function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_institutions, ti
                 agobj.location_x, agobj.location_y = new_location[1], new_location[2]
                 sugscape_obj[agobj.location_x, agobj.location_y].sugar_level -=
                     sugscape_obj[agobj.location_x, agobj.location_y].sugar_level +
-                    agobj.sugar_level - agobj.metabolic_rate 
+                    agobj.a.sugar_level - agobj.a.metabolic_rate 
                 sugscape_obj[agobj.location_x,
                              agobj.location_y].occupied = true
                 sugscape_obj[agobj.location_x,
-                             agobj.location_y].agent_id = agobj.agent_id 
+                             agobj.location_y].agent_id = agobj.a.agent_id 
             end ## move and consume 
-        end ## agobj.sugar_level >= agobj.metabolic_rate
+        end ## agobj.a.sugar_level >= agobj.a.metabolic_rate
     else ## agent is dead
-        # println("Tried to animate a dead agent: ", string(agobj.agent_id))
+        # println("Tried to animate a dead agent: ", string(agobj.a.agent_id))
         ## x = readline()
     end 
 end ## locate_move_feed!()
@@ -141,16 +152,16 @@ function life_check!(arr_agents)
     Remove agents from the arr_agents whose sugarlevel <= 0.
     """
     for agobj in arr_agents
-        if agobj.sugar_level < 0
+        if agobj.a.sugar_level < 0
             agobj.location_x = -1
             agobj.location_y = -1
-            agobj.alive = false
-            agobj.institution_id = -1
+            agobj.a.alive = false
+            agobj.a.institution_id = -1
         end
     end
     # println("Number of agents: ", string(length(arr_agents)))
-    # println("Number of dead agents: ", string(count([!agobj.alive for agobj in arr_agents])))
-    arr_agents = [agobj for agobj in arr_agents if agobj.alive]
+    # println("Number of dead agents: ", string(count([!agobj.a.alive for agobj in arr_agents])))
+    arr_agents = [agobj for agobj in arr_agents if agobj.a.alive]
     # if length(arr_agents) < 1
     #     println("It appears that all agents have died!")
     # end
@@ -158,7 +169,7 @@ function life_check!(arr_agents)
 end
 
 function compute_Gini(arr_agents)
-    arr_suglevels = [agobj.sugar_level for agobj in
+    arr_suglevels = [agobj.a.sugar_level for agobj in
                      arr_agents]
     R"library(ineq)"
     gini = R"ineq($arr_suglevels, type='Gini')"[1]
@@ -229,7 +240,7 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
     try
         @assert length(arr_agents) > 0
         ## highest agent id
-        highest_id = maximum([agobj.agent_id for agobj in arr_agents])        
+        highest_id = maximum([agobj.a.agent_id for agobj in arr_agents])        
         ## add agents to the chosen locations
         
     catch
@@ -239,13 +250,14 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
         # println("Fetched a new maxnum: ", string(highest_id))
     end
     arr_agent_ids = [agid for agid in (highest_id+1):(highest_id + no_to_add)]
-    arr_new_agents = [Agent(arr_agent_ids[index],
-                            arr_locations[index][1],
-                            arr_locations[index][2],
-                            rand(vision_distrib),
+    arr_new_agents = [ScapeAgent(arr_agent_ids[index],
                             rand(metabol_distrib),
                             rand(suglvl_distrib),
-                            true, -1)
+                            true,
+                            -1,
+                            rand(vision_distrib),
+                            arr_locations[index][1],
+                            arr_locations[index][2])
                       for index in 1:no_to_add]
 
     ## set the new cell locations' occupied status to true
@@ -255,7 +267,7 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
     
     for agobj in arr_new_agents
         sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
-        sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.agent_id
+        sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.a.agent_id
     end
     
     arr_empty_locations = [(cellobj.location_x, cellobj.location_y) 

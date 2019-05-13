@@ -40,7 +40,7 @@ function fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
                      loc[2] >= 1 & loc[2] <= size(sugscape_obj)[2]]
 
     neighbor_agents = [nagobj for nagobj in arr_agents 
-                       if nagobj.sugar_level > threshold &&
+                       if nagobj.a.sugar_level > threshold &&
                        (nagobj.location_x, nagobj.location_y) 
                        in neighbor_locs]
     ## println("Entered fetch_neighbors")
@@ -95,61 +95,61 @@ function form_possible_institutions!(arr_agents, threshold, sugscape_obj,
     ## println("The start_inst_id is: ", string(start_inst_id))
     for agobj in arr_agents
         ## update their institution_ids. 
-        ## println("Current object:", string(agobj.agent_id), 
-                # " its excess sugarlevel: ", agobj.sugar_level - threshold)
+        ## println("Current object:", string(agobj.a.agent_id), 
+                # " its excess sugarlevel: ", agobj.a.sugar_level - threshold)
         ## println("Enter enter")
         ## readline()
-        if agobj.institution_id == -1 && agobj.sugar_level > threshold 
+        if agobj.a.institution_id == -1 && agobj.a.sugar_level > threshold 
             ## fetch neighbors
-            ## println("Checking to see if ", string(agobj.agent_id), " can join an", " institution")
+            ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " institution")
             arr_neighbors = fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
             ## println("Here here here!")
             if !isempty(arr_neighbors)
 
                 partner_agent = arr_neighbors[1]
 
-                if partner_agent.institution_id == -1 ## (a)
+                if partner_agent.a.institution_id == -1 ## (a)
                     ## println("No neighbor found with an existing membership, ",
                             # "so creating a new institution with agent: ", 
-                            # string(partner_agent.agent_id))
-                    agobj.institution_id = start_inst_id
-                    agobj.sugar_level = agobj.sugar_level - threshold
-                    transaction1 = Transaction(agobj.sugar_level - threshold,
+                            # string(partner_agent.a.agent_id))
+                    agobj.a.institution_id = start_inst_id
+                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
                                                timeperiod, "deposit", 
-                                               agobj.agent_id)
+                                               agobj.a.agent_id)
 
-                    partner_agent.institution_id = start_inst_id
-                    partner_agent.sugar_level = partner_agent.sugar_level - threshold
-                    transaction2 = Transaction(partner_agent.sugar_level - threshold,
+                    partner_agent.a.institution_id = start_inst_id
+                    partner_agent.a.sugar_level = partner_agent.a.sugar_level - threshold
+                    transaction2 = Transaction(partner_agent.a.sugar_level - threshold,
                                                timeperiod, "deposit", 
-                                               partner_agent.agent_id)
+                                               partner_agent.a.agent_id)
 
                     insttn_obj = Institution(start_inst_id, 
                                              transaction1.transaction_amount +
                                              transaction2.transaction_amount,
                                              true,
-                                             [agobj.agent_id, partner_agent.agent_id],
+                                             [agobj.a.agent_id, partner_agent.a.agent_id],
                                              [transaction1, transaction2])
 
                     push!(arr_institutions, insttn_obj)
-                    ## println("Added ", string(agobj.agent_id), " to a new ",
+                    ## println("Added ", string(agobj.a.agent_id), " to a new ",
                             # "institution with id:", start_inst_id)
 
                 else ## (b) and (c)
                     ## println("Inside the (b) and (c) conditional branch")
                     instt_obj = fetch_specific_inst_obj(arr_institutions, 
-                                                        partner_agent.institution_id)
+                                                        partner_agent.a.institution_id)
                     @assert instt_obj.institution_id > 0
-                    agobj.institution_id = partner_agent.institution_id
-                    agobj.sugar_level = agobj.sugar_level - threshold
-                    transaction1 = Transaction(agobj.sugar_level - threshold,
+                    agobj.a.institution_id = partner_agent.a.institution_id
+                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
                                                timeperiod, "deposit", 
-                                               agobj.agent_id)
+                                               agobj.a.agent_id)
                     push!(instt_obj.ledger_transactions, transaction1)
                     
                 end ## (a), (b), (c)
             end ## !isempty(arr_neighbors)
-        end ## agobj.sugar_level > threshold & agobj.institution_id > 0
+        end ## agobj.a.sugar_level > threshold & agobj.a.institution_id > 0
     end ## for agobj    
 end ## end of form_possible_institutions
 
