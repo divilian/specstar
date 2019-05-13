@@ -149,7 +149,23 @@ function specnet(params)
                         colorant"pink" : colorant"lightgrey")
         for node in 1:nv(graph) ]
     end
-   ginis=[]
+
+	function choose_graph()
+	    if whichGraph=="erdos_renyi"
+	        graph = LightGraphs.SimpleGraphs.erdos_renyi(N,ER_prob)
+		end 
+	 
+	    if whichGraph=="scale_free"
+	        graph = LightGraphs.SimpleGraphs.static_scale_free(N, SF_edges, SF_degree)
+		end
+	
+	    if whichGraph=="small_world"
+	        graph = LightGraphs.SimpleGraphs.watts_strogatz(N,SW_degree, SW_prob)
+		end
+	    return graph
+	end
+
+    ginis=[]
     rev_dict(d) = Dict(y=>x for (x,y) in d)
     ###########################################################################
 
@@ -161,16 +177,18 @@ function specnet(params)
     # agent numbers. (Could be a set instead of a list, but we're using it as
     # an index to the colors array, to uniquely color members of each proto.)
     global protos = Set{Char}[]
- 
+
     # The numbers of agents who have perished (initially none).
     global dead = Set{Char}()
 
     # The initial social network.
-    global graph = LightGraphs.SimpleGraphs.erdos_renyi(N,.2)
+    global graph = choose_graph()
+	
     while !is_connected(graph)
-        global graph
+        global graph = choose_graph()
+
         pri("Not connected; regenerating...")
-        graph = LightGraphs.SimpleGraphs.erdos_renyi(N,.2)
+        graph = choose_graph()
     end
     global AN = Dict{Char,Any}(LETTERS[k]=>k for k in 1:N)
 

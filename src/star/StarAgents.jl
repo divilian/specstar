@@ -8,7 +8,7 @@ mutable struct StarAgent
     metabolic_rate::Int64
     sugar_level::Float64
     alive::Bool
-    institution_id::Int64
+    proto_id::Int64
 end
 
 end
