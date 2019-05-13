@@ -1,7 +1,7 @@
-include("Proto.jl")
 include("max-num-generator.jl")
 
 using StarAgents
+using Protos
 using Random
 using RCall
 

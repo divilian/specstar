@@ -1,4 +1,10 @@
+
+module Protos
+
 using Random
+
+export Proto, Transaction, form_possible_protos!, update_proto_statuses!,
+    fetch_specific_proto_obj
 
 mutable struct Transaction
     transaction_amount::Float64
@@ -169,4 +175,6 @@ function update_proto_statuses!(arr_protos, timeperiod)
                   Transaction(0, timeperiod, "closure", -999))
         end
     end
+end
+
 end

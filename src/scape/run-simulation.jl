@@ -1,6 +1,5 @@
 include("Sugarscape.jl")
 include("ScapeAgents.jl")
-include("Proto.jl")
 include("max-num-generator.jl")
 
 using Statistics
@@ -9,6 +8,7 @@ using Distributions
 using CSV
 using DataFrames
 using RCall
+using Protos
 
 function set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
                             pop_density, metab_range_tpl, vision_range_tpl, suglvl_range_tpl)
