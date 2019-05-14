@@ -255,9 +255,9 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
                             rand(suglvl_distrib),
                             true,
                             -1,
-                            rand(vision_distrib),
                             arr_locations[index][1],
-                            arr_locations[index][2])
+                            arr_locations[index][2],
+                            rand(vision_distrib))
                       for index in 1:no_to_add]
 
     ## set the new cell locations' occupied status to true

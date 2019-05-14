@@ -48,9 +48,9 @@ function set_up_environment(scape_side, scape_carry_cap, scape_growth_rate,
                         rand(suglvl_distrib),
                         true,
                         -1,
-                        rand(vision_distrib),
                         arr_poss_locations[agg_id][1],
-                        arr_poss_locations[agg_id][2])
+                        arr_poss_locations[agg_id][2],
+                        rand(vision_distrib))
                   for agg_id in 1:no_agents]
 
     ## mark as occupied the cells in sugarscape corresponding to the agents' locs
