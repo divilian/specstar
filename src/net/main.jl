@@ -2,7 +2,8 @@
 using Revise
 using RCall 
 @rlibrary ineq
-using sim
+
+include("sim.jl")
 
 ## Input parameters
 params = Dict{Symbol,Any}(

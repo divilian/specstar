@@ -1,8 +1,6 @@
 
 # Misc helper functions.
 
-module Misc
-
 using Gadfly
 using ColorSchemes, Colors
 
@@ -26,5 +24,3 @@ function prd(x)
 end
 
 theme = Theme(default_color=colorant"navy")
-
-end

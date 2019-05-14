@@ -1,16 +1,14 @@
-module sim
 using RCall
 @rlibrary ineq
 using Gadfly
 using LightGraphs
 using GraphPlot, Compose
 using ColorSchemes, Colors
-using Misc
 using Random
 using Cairo, Fontconfig
 using DataFrames
 
-export specnet
+include("misc.jl")
 
 function specnet(params)
     println("SPECnet simulation parameters:")
@@ -350,6 +348,3 @@ function specnet(params)
 
     println("...ending SPECnet.")
 end
-
-end
-
