@@ -13,9 +13,9 @@ include("../star/misc.jl")
 # Run the SPECnet simulation once, for the set of parameters in the global
 # variable "params".
 function specnet()
-    println("SPECnet simulation parameters:")
+    pri("SPECnet simulation parameters:")
     for (param, val) in params
-        println("   $(param) = $(val)")
+        pri("   $(param) = $(val)")
     end
 
     global locs_x, locs_y
