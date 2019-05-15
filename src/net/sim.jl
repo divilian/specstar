@@ -8,7 +8,7 @@ using Random
 using Cairo, Fontconfig
 using DataFrames
 
-include("misc.jl")
+include("../star/misc.jl")
 
 # Run the SPECnet simulation once, for the set of parameters in the global
 # variable "params".

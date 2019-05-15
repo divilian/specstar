@@ -2,6 +2,7 @@ include("../star/Protos.jl")
 include("ScapeAgents.jl")
 include("Sugarscape.jl")
 include("max-num-generator.jl")
+include("../star/misc.jl")
 
 using Statistics
 using Random
@@ -17,9 +18,9 @@ function specscape()
     Returns a single row, consisting of all of the params + gini values
     of sugar across all the time periods.
     """
-    println("SPECscape simulation parameters:")
+    prd("SPECscape simulation parameters:")
     for (param, val) in params
-        println("   $(param) = $(val)")
+        prd("   $(param) = $(val)")
     end
 
     metabol_distrib =  DiscreteUniform(params[:metab_range_tpl][1], params[:metab_range_tpl][2])
