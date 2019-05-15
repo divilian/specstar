@@ -10,11 +10,10 @@ using DataFrames
 
 include("misc.jl")
 
-function specnet(params)
+function specnet()
     println("SPECnet simulation parameters:")
     for (param, val) in params
         println("   $(param) = $(val)")
-        @eval $param=$val
     end
 
     global locs_x, locs_y
@@ -22,7 +21,7 @@ function specnet(params)
     LETTERS = collect('A':'Z')
     [ push!(LETTERS, x) for x in 'a':'z' ]
 
-    Random.seed!(random_seed)
+    Random.seed!(params[:random_seed])
 
     # Note on representation:
     #
@@ -53,121 +52,7 @@ function specnet(params)
     # problem, will implement two dictionaries, one in each direction, and keep
     # them ruthlessly in sync.)
     #
-    ################################ functions ################################
-
-    # Mark the agent "dead" whose agent number is passed. This involves
-    # surgically removing it from the graph, adding it to the "dead" list,
-    # adjusting the agent-to-node mappings, and deleting it from the list of
-    # last-frame's plot coordinates.
-    function kill_agent(dying_agent)
-        global graph, dead, AN, locs_x, locs_y, wealths
-        dying_node = AN[dying_agent]
-        deleteat!(locs_x, dying_node)
-        deleteat!(locs_y, dying_node)
-
-        neighbor_nodes = neighbors(graph, dying_node)
-        while length(neighbor_nodes) > 0
-            rem_edge!(graph, dying_node, neighbor_nodes[1])
-            neighbor_nodes = neighbors(graph, dying_node)
-        end
-        push!(dead, dying_agent)
-        AN = Dict{Char,Any}(a=>
-            (a==dying_agent ? Nothing :
-                (AN[a] == nv(graph) ? AN[dying_agent] : AN[a]))
-            for (a,n) in AN)
-        # TODO: the rem_vertices!() function that Simon Schoelly wrote returns
-        # a map of old-to-new node numbers, and might be safer.
-        rem_vertex!(graph, dying_node)
-        pop!(AN,dying_agent)
-        pop!(wealths,dying_agent)
-    end
-
-    # Return true if the agent is a member of any proto institution.
-    in_proto(agent) = any(agent in proto for proto in protos)
-
-    # Return true if the agent is a rich enough to joing a proto, and available
-    # to do so.
-    function eligible_for_proto(agent)
-        return wealths[agent] > proto_threshold && !in_proto(agent)
-    end
-
-    #return true if agent is wealthy enough to join proto
-    function wealth_eligible(agent)
-           return wealths[agent] > proto_threshold
-    end
-
-    # Form a new proto between two agents.
-    function form_proto(agent1, agent2)
-        global protos
-        push!(protos, Set{Char}([agent1,agent2]))
-    end
-
-    # agent joins preexisting proto
-    function join_proto(agent1,proto)
-        push!(proto,agent1)
-        for agent in proto
-            if !has_edge(graph, AN[agent], AN[agent1])
-                add_edge!(graph, AN[agent], AN[agent1])
-            end
-        end
-    end
-		
-    #return the proto a given agent is in
-    function get_proto(agent1)
-        if(!in_proto(agent1))
-            return -1
-        else
-            for proto in protos
-                if agent1 in proto
-                    return proto
-                end
-            end
-        end
-    end
-
-    function assert_no_dead_neighbors(graph, agent, dead)
-        node = AN[agent]
-        if intersect(
-            Set(map(node->[ a for a in keys(AN) if AN[a] == node ][1],
-                neighbors(graph, node))), dead) != Set()
-            nodes_to_agents = rev_dict(AN)
-            error("Dead neighbor of $(agent)!\n" *
-                "neighbors: $(nodes_to_agents[neighbors(graph, node)]) "*
-                "dead: $(dead)")
-        end
-    end
-
-    function compute_colors()
-        global protos, possible_colors, N
-        [ in_proto([ a for a in keys(AN) if AN[a] == node ][1]) ?
-            possible_colors[
-                findfirst(x->[ a for a in keys(AN) if AN[a] == node ][1] in x,
-                                                                    protos)] :
-                ([ a for a in keys(AN) if AN[a] == node ][1] in dead ?
-                        colorant"pink" : colorant"lightgrey")
-        for node in 1:nv(graph) ]
-    end
-
-	function choose_graph()
-	    if whichGraph=="erdos_renyi"
-	        graph = LightGraphs.SimpleGraphs.erdos_renyi(N,ER_prob)
-		end 
-	 
-	    if whichGraph=="scale_free"
-	        graph = LightGraphs.SimpleGraphs.static_scale_free(N, SF_edges, SF_degree)
-		end
-	
-	    if whichGraph=="small_world"
-	        graph = LightGraphs.SimpleGraphs.watts_strogatz(N,SW_degree, SW_prob)
-		end
-	    return graph
-	end
-
-    ginis=[]
-    rev_dict(d) = Dict(y=>x for (x,y) in d)
-    ###########################################################################
-
-
+    #
     println("Run SPECnet...")
 
 
@@ -181,21 +66,20 @@ function specnet(params)
 
     # The initial social network.
     global graph = choose_graph()
-	
+
     while !is_connected(graph)
         global graph = choose_graph()
 
         pri("Not connected; regenerating...")
         graph = choose_graph()
     end
-    global AN = Dict{Char,Any}(LETTERS[k]=>k for k in 1:N)
+    global AN = Dict{Char,Any}(LETTERS[k]=>k for k in 1:params[:N])
 
     # Agent attributes.
     global wealths =
         Dict{Char,Any}(LETTERS[k]=>
-            rand(Float16) * max_starting_wealth for k in 1:N)
+            rand(Float16) * params[:max_starting_wealth] for k in 1:params[:N])
 
-    global possible_colors = Random.shuffle(ColorSchemes.rainbow.colors)
 
 
     # (Erase old images.)
@@ -208,7 +92,7 @@ function specnet(params)
 
     println("Iterations:")
 
-    for iter in 1:num_iter
+    for iter in 1:params[:num_iter]
 
         nodes_to_agents = rev_dict(AN)
 
@@ -224,7 +108,7 @@ function specnet(params)
 
         agent1 = rand(keys(AN))
         assert_no_dead_neighbors(graph, agent1, dead)
-        if rand(Float16) < openness  ||
+        if rand(Float16) < params[:openness]  ||
                 length(neighbors(graph, AN[agent1])) == 0
             # Choose from the graph at large.
             agent2 = rand(filter(x->x!=agent1,keys(AN)))
@@ -247,17 +131,17 @@ function specnet(params)
             end
         end
                                                                                                 #allow agent to join proto
-	    if wealth_eligible(agent1) && wealth_eligible(agent2)
-	        if in_proto(agent1)&&!in_proto(agent2)
-	            current_proto=get_proto(agent1)
-	            join_proto(agent2,current_proto)
-	        end
+        if wealth_eligible(agent1) && wealth_eligible(agent2)
+            if in_proto(agent1)&&!in_proto(agent2)
+                current_proto=get_proto(agent1)
+                join_proto(agent2,current_proto)
+            end
 
             if in_proto(agent2)&&!in_proto(agent1)
-	            current_proto=get_proto(agent2)
-	            join_proto(agent1,current_proto)
-	        end
-	    end
+                current_proto=get_proto(agent2)
+                join_proto(agent1,current_proto)
+            end
+        end
 
         # Plot graph for this iteration.
         colors = compute_colors()
@@ -289,20 +173,20 @@ function specnet(params)
             Guide.title("Wealth distribution at iteration $(iter)"),
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
-                maxvalue=max_starting_wealth*num_iter/10),
+                maxvalue=params[:max_starting_wealth]*params[:num_iter]/10),
             theme)
 
         draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),wealthp)
 
 
         #iteration label for svg files
-        if make_anim
-            run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(num_iter)"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+        if params[:make_anims]
+            run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iter])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
             run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
         end
 
         # Payday!
-        [ wealths[k] += (rand(Float16) - .5) * salary_range
+        [ wealths[k] += (rand(Float16) - .5) * params[:salary_range]
             for k in keys(wealths) ]
         [ wealths[k] += in_proto(k) ? rand(Float16)*10 : 0
             for k in keys(wealths) ]
@@ -313,7 +197,7 @@ function specnet(params)
             prd("Agent $(dying_agent) died!")
             kill_agent(dying_agent)
         end
-    
+
         #adding current gini index to ginis array
         wealthArray=[]
         empty!(wealthArray)
@@ -324,7 +208,7 @@ function specnet(params)
         end
         cGini=ineq(wealthArray, type="Gini")
 
-        gIndex=convert(Float16,cGini)	   
+        gIndex=convert(Float16,cGini)
         push!(ginis,gIndex)
 
     end   # End main simulation for loop
@@ -336,15 +220,137 @@ function specnet(params)
     )
 
     #drawing the gini index plot
-    giniPlot=plot(x=1:num_iter,y=ginis, Geom.point, Geom.line, Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
+    giniPlot=plot(x=1:params[:num_iter],y=ginis, Geom.point, Geom.line, Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
     draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
-    
-    if make_anim
+
+    if params[:make_anims]
         println("Building wealth animation (be unbelievably patient)...")
-        run(`convert -delay $(animation_delay) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
+        run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
         println("Building graph animation (be mind-bogglingly patient)...")
-        run(`convert -delay $(animation_delay) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
+        run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
 
     println("...ending SPECnet.")
 end
+
+
+################################ functions ################################
+
+# Mark the agent "dead" whose agent number is passed. This involves
+# surgically removing it from the graph, adding it to the "dead" list,
+# adjusting the agent-to-node mappings, and deleting it from the list of
+# last-frame's plot coordinates.
+function kill_agent(dying_agent)
+    global graph, dead, AN, locs_x, locs_y, wealths
+    dying_node = AN[dying_agent]
+    deleteat!(locs_x, dying_node)
+    deleteat!(locs_y, dying_node)
+
+    neighbor_nodes = neighbors(graph, dying_node)
+    while length(neighbor_nodes) > 0
+        rem_edge!(graph, dying_node, neighbor_nodes[1])
+        neighbor_nodes = neighbors(graph, dying_node)
+    end
+    push!(dead, dying_agent)
+    AN = Dict{Char,Any}(a=>
+        (a==dying_agent ? Nothing :
+            (AN[a] == nv(graph) ? AN[dying_agent] : AN[a]))
+        for (a,n) in AN)
+    # TODO: the rem_vertices!() function that Simon Schoelly wrote returns
+    # a map of old-to-new node numbers, and might be safer.
+    rem_vertex!(graph, dying_node)
+    pop!(AN,dying_agent)
+    pop!(wealths,dying_agent)
+end
+
+# Return true if the agent is a member of any proto institution.
+in_proto(agent) = any(agent in proto for proto in protos)
+
+# Return true if the agent is a rich enough to joing a proto, and available
+# to do so.
+function eligible_for_proto(agent)
+    return wealths[agent] > params[:proto_threshold] && !in_proto(agent)
+end
+
+#return true if agent is wealthy enough to join proto
+function wealth_eligible(agent)
+       return wealths[agent] > params[:proto_threshold]
+end
+
+# Form a new proto between two agents.
+function form_proto(agent1, agent2)
+    global protos
+    push!(protos, Set{Char}([agent1,agent2]))
+end
+
+# agent joins preexisting proto
+function join_proto(agent1,proto)
+    push!(proto,agent1)
+    for agent in proto
+        if !has_edge(graph, AN[agent], AN[agent1])
+            add_edge!(graph, AN[agent], AN[agent1])
+        end
+    end
+end
+
+#return the proto a given agent is in
+function get_proto(agent1)
+    if(!in_proto(agent1))
+        return -1
+    else
+        for proto in protos
+            if agent1 in proto
+                return proto
+            end
+        end
+    end
+end
+
+function assert_no_dead_neighbors(graph, agent, dead)
+    node = AN[agent]
+    if intersect(
+        Set(map(node->[ a for a in keys(AN) if AN[a] == node ][1],
+            neighbors(graph, node))), dead) != Set()
+        nodes_to_agents = rev_dict(AN)
+        error("Dead neighbor of $(agent)!\n" *
+            "neighbors: $(nodes_to_agents[neighbors(graph, node)]) "*
+            "dead: $(dead)")
+    end
+end
+
+let possible_colors = Random.shuffle(ColorSchemes.rainbow.colors)
+    global compute_colors
+    function compute_colors()
+        [ in_proto([ a for a in keys(AN) if AN[a] == node ][1]) ?
+            possible_colors[
+                findfirst(x->[ a for a in keys(AN)
+                        if AN[a] == node ][1] in x, protos)] :
+                ([ a for a in keys(AN) if AN[a] == node ][1] in dead ?
+                        colorant"pink" : colorant"lightgrey")
+        for node in 1:nv(graph) ]
+    end
+end
+
+function choose_graph()
+    if params[:whichGraph]=="erdos_renyi"
+        graph = LightGraphs.SimpleGraphs.erdos_renyi(
+            params[:N], params[:ER_prob])
+    end
+
+    if params[:whichGraph]=="scale_free"
+        graph = LightGraphs.SimpleGraphs.static_scale_free(
+            params[:N], params[:SF_edges], params[:SF_degree])
+    end
+
+    if params[:whichGraph]=="small_world"
+        graph = LightGraphs.SimpleGraphs.watts_strogatz(
+            params[:N], params[:SW_degree], params[:SW_prob])
+    end
+    return graph
+end
+
+ginis=[]
+rev_dict(d) = Dict(y=>x for (x,y) in d)
+###########################################################################
+
+

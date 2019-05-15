@@ -18,7 +18,7 @@ params = Dict{Symbol,Any}(
                                     #   U~(-salary_range, salary_range) wealth
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
-    :make_anim => false,            # create an animation of results?
+    :make_anims => false,           # create animations of results?
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 
@@ -37,5 +37,5 @@ params = Dict{Symbol,Any}(
     :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
 )
 
-specnet(params)
+specnet()
 
