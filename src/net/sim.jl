@@ -10,6 +10,8 @@ using DataFrames
 
 include("misc.jl")
 
+# Run the SPECnet simulation once, for the set of parameters in the global
+# variable "params".
 function specnet()
     println("SPECnet simulation parameters:")
     for (param, val) in params
@@ -231,6 +233,8 @@ function specnet()
     end
 
     println("...ending SPECnet.")
+
+    return results
 end
 
 
