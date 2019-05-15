@@ -146,43 +146,44 @@ function specnet()
         end
 
         # Plot graph for this iteration.
-        colors = compute_colors()
-
-        remember_layout = x -> spring_layout(x, locs_x, locs_y)
-
-        labels_to_plot = map(node->[ a for a in keys(AN) if AN[a] == node ][1],
-            1:length(AN))
-        wealths_to_plot = map(
-            node->wealths[[ a for a in keys(AN) if AN[a] == node ][1]],
-            1:length(AN))
-        graphp = gplot(graph,
-            layout=remember_layout,
-            nodelabel=labels_to_plot,
-            NODESIZE=.08,
-            nodesize=ifelse.(wealths_to_plot .> 0,
-                             wealths_to_plot*4,
-                             maximum(wealths_to_plot)*2),
-            nodestrokec=colorant"grey",
-            nodestrokelw=.5,
-            nodefillc=colors)
-        draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),graphp)
-
-        # Plot wealth histogram for this iteration.
-        wealthp = plot(x=collect(values(wealths)),
-            Geom.histogram(density=true, bincount=20),
-            Guide.xlabel("Wealth"),
-            Guide.ylabel("Density of agents"),
-            Guide.title("Wealth distribution at iteration $(iter)"),
-            # Hard to know what to set the max value to.
-            Scale.x_continuous(minvalue=0,
-                maxvalue=params[:max_starting_wealth]*params[:num_iter]/10),
-            theme)
-
-        draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),wealthp)
-
-
-        #iteration label for svg files
         if params[:make_anims]
+            colors = compute_colors()
+
+            remember_layout = x -> spring_layout(x, locs_x, locs_y)
+
+            labels_to_plot = map(
+                node->[ a for a in keys(AN) if AN[a] == node ][1],
+                1:length(AN))
+            wealths_to_plot = map(
+                node->wealths[[ a for a in keys(AN) if AN[a] == node ][1]],
+                1:length(AN))
+            graphp = gplot(graph,
+                layout=remember_layout,
+                nodelabel=labels_to_plot,
+                NODESIZE=.08,
+                nodesize=ifelse.(wealths_to_plot .> 0,
+                                 wealths_to_plot*4,
+                                 maximum(wealths_to_plot)*2),
+                nodestrokec=colorant"grey",
+                nodestrokelw=.5,
+                nodefillc=colors)
+            draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
+                                                                    graphp)
+
+            # Plot wealth histogram for this iteration.
+            wealthp = plot(x=collect(values(wealths)),
+                Geom.histogram(density=true, bincount=20),
+                Guide.xlabel("Wealth"),
+                Guide.ylabel("Density of agents"),
+                Guide.title("Wealth distribution at iteration $(iter)"),
+                # Hard to know what to set the max value to.
+                Scale.x_continuous(minvalue=0, maxvalue=
+                    params[:max_starting_wealth]*params[:num_iter]/10), theme)
+
+            draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
+                                                                    wealthp)
+
+            #iteration label for svg files
             run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iter])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
             run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
         end
@@ -221,11 +222,12 @@ function specnet()
         wealth = collect(values(wealths))
     )
 
-    #drawing the gini index plot
-    giniPlot=plot(x=1:params[:num_iter],y=ginis, Geom.point, Geom.line, Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
-    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
-
     if params[:make_anims]
+        #drawing the gini index plot
+        giniPlot=plot(x=1:params[:num_iter],y=ginis, Geom.point, Geom.line,
+            Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
+        draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
+
         println("Building wealth animation (be unbelievably patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
         println("Building graph animation (be mind-bogglingly patient)...")
