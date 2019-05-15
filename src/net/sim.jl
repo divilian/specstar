@@ -168,15 +168,26 @@ function specnet()
         draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),graphp)
 
         # Plot wealth histogram for this iteration.
-        wealthp = plot(x=collect(values(wealths)),
-            Geom.histogram(density=true, bincount=20),
-            Guide.xlabel("Wealth"),
-            Guide.ylabel("Density of agents"),
-            Guide.title("Wealth distribution at iteration $(iter)"),
-            # Hard to know what to set the max value to.
-            Scale.x_continuous(minvalue=0,
-                maxvalue=params[:max_starting_wealth]*params[:num_iter]/10),
-            theme)
+       in_proto_wealths=[]
+		 not_in_proto_wealths=[]
+		 [  in_proto(k) ? push!(in_proto_wealths,wealths[k]) : push!(not_in_proto_wealths,wealths[k])
+            for k in keys(wealths) ]
+		
+		wealthp = plot(
+			layer(x=in_proto_wealths,
+				Geom.histogram(density=true, bincount=20),
+				Theme(default_color=Colors.RGBA(255,165,0, 0.6))),
+			
+			layer(x=not_in_proto_wealths,
+				Geom.histogram(density=true, bincount=20),
+				Theme(default_color=Colors.RGBA(255,0,255,0.6))),
+				Guide.xlabel("Wealth"),
+				Guide.ylabel("Density of agents"),
+				Guide.title("Wealth distribution at iteration $(iter)"),
+				# Hard to know what to set the max value to.
+				Scale.x_continuous(minvalue=0,
+					maxvalue=params[:max_starting_wealth]*params[:num_iter]/10)
+		)
 
         draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),wealthp)
 
