@@ -131,8 +131,60 @@ function specnet()
             end
         end
 
-        # Plot graph for this iteration.
         if params[:make_anims]
+            # Plot graph for this iteration.
+            colors = compute_colors()
+
+            remember_layout = x -> spring_layout(x, locs_x, locs_y)
+
+            labels_to_plot = map(node->
+                    [ ag.a.agent_id for ag in keys(AN) if AN[ag] == node ][1],
+                1:length(AN))
+            wealths_to_plot = map(node->
+                    [ ag.a.sugar_level for ag in keys(AN)
+                                            if AN[ag] == node ][1],
+                1:length(AN))
+            graphp = gplot(graph,
+                layout=remember_layout,
+                nodelabel=labels_to_plot,
+                NODESIZE=.08,
+                nodesize=ifelse.(wealths_to_plot .> 0,
+                                 wealths_to_plot*4,
+                                 maximum(wealths_to_plot)*2),
+                nodestrokec=colorant"grey",
+                nodestrokelw=.5,
+                nodefillc=colors)
+            draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
+                graphp)
+
+            # Plot wealth histogram for this iteration.
+            in_proto_wealths=[]
+            not_in_proto_wealths=[]
+            [  in_proto(ag) ?
+                    push!(in_proto_wealths,ag.a.sugar_level) :
+                    push!(not_in_proto_wealths,ag.a.sugar_level)
+                for ag in keys(AN) ]
+            
+            wealthp = plot(
+                layer(x=in_proto_wealths,
+                    Geom.histogram(density=true, bincount=20),
+                    Theme(default_color=Colors.RGBA(255,165,0, 0.6))),
+                
+                layer(x=not_in_proto_wealths,
+                    Geom.histogram(density=true, bincount=20),
+                    Theme(default_color=Colors.RGBA(255,0,255,0.6))),
+                    Guide.xlabel("Wealth"),
+                    Guide.ylabel("Density of agents"),
+                    Guide.title("Wealth distribution at iteration $(iter)"),
+                    # Hard to know what to set the max value to.
+                    Scale.x_continuous(minvalue=0,
+                        maxvalue=params[:max_starting_wealth]*
+                            params[:num_iter]/10)
+            )
+
+            draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
+                wealthp)
+
             colors = compute_colors()
 
             remember_layout = x -> spring_layout(x, locs_x, locs_y)
@@ -155,19 +207,6 @@ function specnet()
                 nodefillc=colors)
             draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
                                                                     graphp)
-
-            # Plot wealth histogram for this iteration.
-            wealthp = plot(x=[ ag.a.sugar_level for ag in keys(AN) ],
-                Geom.histogram(density=true, bincount=20),
-                Guide.xlabel("Wealth"),
-                Guide.ylabel("Density of agents"),
-                Guide.title("Wealth distribution at iteration $(iter)"),
-                # Hard to know what to set the max value to.
-                Scale.x_continuous(minvalue=0, maxvalue=
-                    params[:max_starting_wealth]*params[:num_iter]/10), theme)
-
-            draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
-                                                                    wealthp)
 
             #iteration label for svg files
             run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iter])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
@@ -208,7 +247,7 @@ function specnet()
     # Collect results in DataFrame.
     results = DataFrame(
         agent = [ ag.a.agent_id for ag in keys(AN) ],
-        wealth = [ ag.a.sugar_level for ag in keys(AN) ],
+        sugar = [ ag.a.sugar_level for ag in keys(AN) ],
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
 
