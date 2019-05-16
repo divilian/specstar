@@ -14,7 +14,7 @@ mutable struct ScapeAgent
     vision::Int64
 
     function ScapeAgent(
-        agent_id::Int64,
+        agent_id::String,
         metabolic_rate::Int64,
         sugar_level,
         alive::Bool,
@@ -117,7 +117,7 @@ function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_protos, timeperi
                     sugscape_obj[agobj.location_x,
                                  agobj.location_y].occupied = false
                     sugscape_obj[agobj.location_x,
-                                 agobj.location_y].agent_id = -1
+                                 agobj.location_y].agent_id = "-"
                     agobj.a.alive = false
                     agobj.location_x, agobj.location_y = -1, -1 
                     # println("Agent ", string(agobj.a.agent_id), " starved to death!")
@@ -129,7 +129,7 @@ function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_protos, timeperi
                 sugscape_obj[agobj.location_x,
                              agobj.location_y].occupied = false
                 sugscape_obj[agobj.location_x,
-                             agobj.location_y].agent_id = -1
+                             agobj.location_y].agent_id = "-"
                 agobj.location_x, agobj.location_y = new_location[1], new_location[2]
                 sugscape_obj[agobj.location_x, agobj.location_y].sugar_level -=
                     sugscape_obj[agobj.location_x, agobj.location_y].sugar_level +
@@ -206,7 +206,7 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
     
     ## remove the required number of randomly-chosen agents
     ## and set their corresponding sugarscape cells' occupied status to false
-    ## and the agent_id to -1.
+    ## and the agent_id to "-".
     shuffle!(arr_agents)
     
     for count in 1:no_to_remove
@@ -218,7 +218,7 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
             ## readline()
         else
             sugscape_obj[agobj.location_x, agobj.location_y].occupied = false
-            sugscape_obj[agobj.location_x, agobj.location_y].agent_id = -1
+            sugscape_obj[agobj.location_x, agobj.location_y].agent_id = "-"
             
         end
     end
@@ -242,37 +242,38 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate,
         ## highest agent id
         highest_id = maximum([agobj.a.agent_id for agobj in arr_agents])        
         ## add agents to the chosen locations
+        highest_id_idx = findall(x->x==highest_id, AGENT_IDS)[1]
+        arr_agent_ids = AGENT_IDS[[agid for agid in
+            (highest_id_idx+1):(highest_id_idx + no_to_add)]]
+        arr_new_agents = [ScapeAgent(arr_agent_ids[index],
+                                rand(metabol_distrib),
+                                rand(suglvl_distrib),
+                                true,
+                                -1,
+                                arr_locations[index][1],
+                                arr_locations[index][2],
+                                rand(vision_distrib))
+                          for index in 1:no_to_add]
+
+        ## set the new cell locations' occupied status to true
+        # for loc_tpl in arr_locations
+        #     sugscape_obj[loc_tpl[1], loc_tpl[2]].occupied = true
+        # end
         
+        for agobj in arr_new_agents
+            sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
+            sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.a.agent_id
+        end
+        append!(arr_agents, arr_new_agents)
     catch
         # println("Caught the assertion!")
         # println(length(arr_agents))
         highest_id = take!(maxnumchannel)
         # println("Fetched a new maxnum: ", string(highest_id))
     end
-    arr_agent_ids = [agid for agid in (highest_id+1):(highest_id + no_to_add)]
-    arr_new_agents = [ScapeAgent(arr_agent_ids[index],
-                            rand(metabol_distrib),
-                            rand(suglvl_distrib),
-                            true,
-                            -1,
-                            arr_locations[index][1],
-                            arr_locations[index][2],
-                            rand(vision_distrib))
-                      for index in 1:no_to_add]
 
-    ## set the new cell locations' occupied status to true
-    # for loc_tpl in arr_locations
-    #     sugscape_obj[loc_tpl[1], loc_tpl[2]].occupied = true
-    # end
-    
-    for agobj in arr_new_agents
-        sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
-        sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.a.agent_id
-    end
-    
     arr_empty_locations = [(cellobj.location_x, cellobj.location_y) 
                            for cellobj in sugscape_obj
                            if cellobj.occupied == false]
-    append!(arr_agents, arr_new_agents)
 
 end ## perform_birth_inbound_outbound!()

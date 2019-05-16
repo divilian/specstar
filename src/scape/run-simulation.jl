@@ -32,7 +32,7 @@ function specscape()
     ## So to add type-checking on arr_protos, we're going to initialize it with
     ## a dummy Proto object
     # arr_protos = Array{Proto, 1}
-    arr_protos = [Proto(-1, -1, false, [-1], [Transaction(-1, -1, "", -1)])]
+    arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
     dict_objs = set_up_environment()
     sugscape_obj = dict_objs["sugscape_obj"]
@@ -108,7 +108,7 @@ function set_up_environment()
         (x,y) for x in 1:params[:scape_side], y in 1:params[:scape_side]],
                                 no_agents, replace=false)
 
-    arr_agents = [ScapeAgent(agg_id,
+    arr_agents = [ScapeAgent(AGENT_IDS[agg_id],
                         rand(metabol_distrib),
                         rand(suglvl_distrib),
                         true,

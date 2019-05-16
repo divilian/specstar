@@ -12,7 +12,7 @@ mutable struct Sugarcell
     carrying_capacity::Float64    
     sugar_level::Float64
     occupied::Bool
-    agent_id::Int64
+    agent_id::String
 end
 
 function generate_sugarscape(side, growth_rate, carrying_cap, scenario=1)
@@ -82,7 +82,7 @@ function generate_sugarscape(side, growth_rate, carrying_cap, scenario=1)
         end ## end of outer for
     end ## end of scenarios
     ## default occupied = false and agent_id = -1
-    return([Sugarcell(x, y, growth_rate, carrying_cap, array_suglevels[x,y], false, -1) 
+    return([Sugarcell(x, y, growth_rate, carrying_cap, array_suglevels[x,y], false, "-") 
             for x in 1:side, y in 1:side])
 end ## end of function generate_sugarscape
 

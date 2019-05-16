@@ -37,5 +37,5 @@ params = Dict{Symbol,Any}(
     :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
 )
 
-specnet()
+results = specnet()
 

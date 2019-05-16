@@ -8,14 +8,14 @@ mutable struct Transaction
     transaction_amount::Float64
     period::Int32
     type::String ## deposit or withdrawal or closure
-    agent_id::Int64    
+    agent_id::String    
 end
 
 mutable struct Proto
     proto_id::Int64
     sugar_level::Float64
     alive::Bool
-    arr_member_ids::Array{Int64, 1}
+    arr_member_ids::Array{String, 1}
     ledger_transactions::Array{Transaction, 1}
 end
 
@@ -170,7 +170,7 @@ function update_proto_statuses!(arr_protos, timeperiod)
             proto_obj.alive = false
             proto_obj.arr_member_ids = []
             push!(proto_obj.ledger_transactions, 
-                  Transaction(0, timeperiod, "closure", -999))
+                  Transaction(0, timeperiod, "closure", "-"))
         end
     end
 end
