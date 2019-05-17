@@ -47,7 +47,7 @@ function specscape()
                                         params[:inbound_rate], params[:outbound_rate],
                                         vision_distrib, metabol_distrib,
                                         suglvl_distrib)
-        form_possible_protos!(arr_agents, params[:threshold], sugscape_obj,
+        form_possible_protos!(arr_agents, sugscape_obj,
                                     arr_protos, period)
 
         arr_agents = life_check!(arr_agents)
@@ -166,7 +166,7 @@ function run_all_param_ranges_for(givenseed)
             :birth_rate => params_df[rownum, :Birthrate],
             :inbound_rate => params_df[rownum, :InbndRt],
             :outbound_rate => params_df[rownum, :OtbndRt],
-            :threshold => params_df[rownum, :Threshold],
+            :proto_threshold => params_df[rownum, :Threshold],
             :num_iter => time_periods,
         )
 

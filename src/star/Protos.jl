@@ -28,10 +28,10 @@ function fetch_specific_proto_obj(arr_protos, proto_id)
             if probj.proto_id == proto_id][1] 
 end
 
-function fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
+function fetch_neighbors(agobj, arr_agents, sugscape_obj)
     """
     For a given agent, identify agents that are in the n-s-e-w cells
-    whose sugar_level > threshold and return them.
+    whose sugar_level > proto_threshold and return them.
     """
 
     neighbor_locs = [(agobj.location_x - 1, agobj.location_y), 
@@ -44,9 +44,8 @@ function fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
                      loc[2] >= 1 & loc[2] <= size(sugscape_obj)[2]]
 
     neighbor_agents = [nagobj for nagobj in arr_agents 
-                       if nagobj.a.sugar_level > threshold &&
-                       (nagobj.location_x, nagobj.location_y) 
-                       in neighbor_locs]
+           if nagobj.a.sugar_level > params[:proto_threshold] &&
+           (nagobj.location_x, nagobj.location_y) in neighbor_locs]
     ## println("Entered fetch_neighbors")
     ## readline()
     try
@@ -61,8 +60,7 @@ function fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
     return(neighbor_agents)
 end ## end fetch_neighbors
 
-function form_possible_protos!(arr_agents, threshold, sugscape_obj, 
-                                     arr_protos, timeperiod)
+function form_possible_protos!(arr_agents, sugscape_obj, arr_protos, timeperiod)
     """
     Called during each time period to enact association among agents to form
     protos. The following conditions exist:
@@ -79,7 +77,7 @@ function form_possible_protos!(arr_agents, threshold, sugscape_obj,
     Modifies focal and neighbor agents' proto_id field, if proto-
     formation or joining occurs.
     Reduces the focal agent and neighbor agents' sugarlevels by an amount 
-    = sugarlevel - threshold.
+    = sugarlevel - params[:threshold].
 
     Modifies the array of protos by adding, as needed, new proto struct.
     
@@ -89,6 +87,7 @@ function form_possible_protos!(arr_agents, threshold, sugscape_obj,
     # ## println(arr_protos)
     # println("Length of arr_protos is: ", string(length(arr_protos)))
     
+    threshold = params[:proto_threshold]
     start_proto_id = begin
         if length(arr_protos) == 1 && arr_protos[1].proto_id == -1
             1
@@ -100,13 +99,13 @@ function form_possible_protos!(arr_agents, threshold, sugscape_obj,
     for agobj in arr_agents
         ## update their proto_ids. 
         ## println("Current object:", string(agobj.a.agent_id), 
-                # " its excess sugarlevel: ", agobj.a.sugar_level - threshold)
+                # " its excess sugarlevel: ", agobj.a.sugar_level - threshold
         ## println("Enter enter")
         ## readline()
-        if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold 
+        if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold
             ## fetch neighbors
             ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " proto")
-            arr_neighbors = fetch_neighbors(agobj, arr_agents, sugscape_obj, threshold)
+            arr_neighbors = fetch_neighbors(agobj, arr_agents, sugscape_obj)
             ## println("Here here here!")
             if !isempty(arr_neighbors)
 
