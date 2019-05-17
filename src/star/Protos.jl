@@ -28,38 +28,6 @@ function fetch_specific_proto_obj(arr_protos, proto_id)
             if probj.proto_id == proto_id][1] 
 end
 
-function fetch_neighbors(agobj, arr_agents, sugscape_obj)
-    """
-    For a given agent, identify agents that are in the n-s-e-w cells
-    whose sugar_level > proto_threshold and return them.
-    """
-
-    neighbor_locs = [(agobj.location_x - 1, agobj.location_y), 
-                     (agobj.location_x + 1, agobj.location_y),
-                     (agobj.location_x, agobj.location_y - 1), 
-                     (agobj.location_x, agobj.location_y + 1)]
-
-    neighbor_locs = [loc for loc in neighbor_locs if 
-                     loc[1] >= 1 & loc[1] <= size(sugscape_obj)[1] &
-                     loc[2] >= 1 & loc[2] <= size(sugscape_obj)[2]]
-
-    neighbor_agents = [nagobj for nagobj in arr_agents 
-           if nagobj.a.sugar_level > params[:proto_threshold] &&
-           (nagobj.location_x, nagobj.location_y) in neighbor_locs]
-    ## println("Entered fetch_neighbors")
-    ## readline()
-    try
-        @assert size(neighbor_agents)[1] in 0:4
-    catch except
-        println("********************************************************************" )
-        println("")
-        println("No. of neighbor agents: ", length(neighbor_agents))
-        println("********************************************************************" )
-    end 
-    shuffle!(neighbor_agents)
-    return(neighbor_agents)
-end ## end fetch_neighbors
-
 function form_possible_protos!(arr_agents, sugscape_obj, arr_protos, timeperiod)
     """
     Called during each time period to enact association among agents to form
@@ -105,7 +73,7 @@ function form_possible_protos!(arr_agents, sugscape_obj, arr_protos, timeperiod)
         if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold
             ## fetch neighbors
             ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " proto")
-            arr_neighbors = fetch_neighbors(agobj, arr_agents, sugscape_obj)
+            arr_neighbors = fetch_eligible_neighbors(agobj, arr_agents, sugscape_obj)
             ## println("Here here here!")
             if !isempty(arr_neighbors)
 
