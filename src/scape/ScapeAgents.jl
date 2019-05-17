@@ -1,6 +1,7 @@
 include("max-num-generator.jl")
 include("../star/StarAgents.jl")
 include("../star/Protos.jl")
+include("Sugarscape.jl")
 
 using Random
 using RCall
@@ -28,7 +29,7 @@ mutable struct ScapeAgent
     end
 end
 
-function fetch_best_location(ag_obj, sugscape_obj)
+function fetch_best_location(ag_obj, sugscape_obj::Array{Sugarcell,2})
     """
     Returns a tuple representing the location of the sugarscape cell that is
     not occupied and has the highest sugarlevel in the Von-Neumann neighborhood.
@@ -66,7 +67,7 @@ function fetch_best_location(ag_obj, sugscape_obj)
     end    
 end ## end fetch_best_location
 
-function locate_move_feed!(agobj, sugscape_obj, arr_agents, arr_protos, timeperiod)
+function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, arr_protos, timeperiod)
     """
     For a given agent, performs the feeding operation first. If sugar is not 
     available within the agent or in conjunction with current location, moves
@@ -184,7 +185,7 @@ function compute_Gini(arr_agents)
     return(gini)    
 end
 
-function perform_birth_inbound_outbound!(arr_agents, sugscape_obj, birth_rate, 
+function perform_birth_inbound_outbound!(arr_agents, sugscape_obj::Array{Sugarcell,2}, birth_rate, 
                                          inbound_rate, outbound_rate, 
                                          vision_distrib, metabol_distrib, 
                                          suglvl_distrib)

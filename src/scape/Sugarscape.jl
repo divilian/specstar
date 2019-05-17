@@ -90,7 +90,7 @@ end ## end of function generate_sugarscape
 #     return([sugarobj.sugar_level for sugarobj in sugscape_obj])
 # end ## get_sugscape_suglevels()
 
-function get_sugarscape_stats(sugscape_obj)
+function get_sugarscape_stats(sugscape_obj::Array{Sugarcell,2})
     """
     Returns min., max., mean, median, and sd. of sugar levels.
     """
@@ -101,7 +101,7 @@ function get_sugarscape_stats(sugscape_obj)
 end ## get_sugarscape_stats()
 
 
-function regenerate_sugar!(sugscape_obj)
+function regenerate_sugar!(sugscape_obj::Array{Sugarcell,2})
     """
     Modifies the cell objects in place by regenerating sugar in each cell by an
     amount specified by growth_date, with an upper bound of carrying_capacity.
@@ -119,7 +119,7 @@ function regenerate_sugar!(sugscape_obj)
     return
 end ## regenerate_sugar!()
 
-function plot_sugar_concentrations!(sugscape_obj)
+function plot_sugar_concentrations!(sugscape_obj::Array{Sugarcell,2})
     """
     Generates a heatmap of the sugarlevels of all the cells
     """
@@ -132,7 +132,7 @@ function plot_sugar_concentrations!(sugscape_obj)
     heatmap(xs, ys, z, aspect_ratio=1)
 end ## plot_sugar_concentrations()
 
-function update_occupied_status!(arr_agents, sugscape_obj)
+function update_occupied_status!(arr_agents, sugscape_obj::Array{Sugarcell,2})
     """
     Updates the occupied status of all sugarcells, based on the
     location values of agents that are alive.
