@@ -311,14 +311,6 @@ function wealth_eligible(agent)
     return agent.a.sugar_level > params[:proto_threshold]
 end
 
-# Form a new proto between two agents.
-function form_proto(agent1, agent2)
-    next_proto_id = maximum([ ag.a.proto_id for ag in keys(AN) ]) + 1
-    agent1.a.proto_id = next_proto_id
-    agent2.a.proto_id = next_proto_id
-end
-
-
 function assert_no_dead_neighbors(graph, agent)
     node = AN[agent]
     nodes_to_agents = rev_dict(AN)
