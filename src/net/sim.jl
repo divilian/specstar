@@ -66,11 +66,12 @@ function specnet()
         pri("Not connected; regenerating...")
         graph = choose_graph()
     end
+
     global AN = Dict{NetAgent,Any}(
         NetAgent(
                 AGENT_IDS[k],
                 0,
-                rand(Float16) * params[:max_starting_wealth],true,0) 
+                rand(Float16) * params[:max_starting_wealth],true,-1)
             =>k for k in 1:params[:N])
 
 
