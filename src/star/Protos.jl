@@ -28,7 +28,9 @@ function fetch_specific_proto_obj(arr_protos, proto_id)
             if probj.proto_id == proto_id][1] 
 end
 
-function form_possible_protos!(arr_agents, sugscape_obj, arr_protos, timeperiod)
+function form_possible_protos!(arr_agents, agent_environment, arr_protos,
+        timeperiod)
+
     """
     Called during each time period to enact association among agents to form
     protos. The following conditions exist:
@@ -73,7 +75,8 @@ function form_possible_protos!(arr_agents, sugscape_obj, arr_protos, timeperiod)
         if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold
             ## fetch neighbors
             ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " proto")
-            arr_neighbors = fetch_eligible_neighbors(agobj, arr_agents, sugscape_obj)
+            arr_neighbors = fetch_eligible_neighbors(agobj, arr_agents,
+                agent_environment)
             ## println("Here here here!")
             if !isempty(arr_neighbors)
 
