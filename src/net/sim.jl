@@ -1,5 +1,5 @@
 using RCall
-@rlibrary ineq
+reval("suppressPackageStartupMessages(library(ineq))")
 using Gadfly
 using LightGraphs
 using GraphPlot, Compose

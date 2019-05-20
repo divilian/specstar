@@ -1,7 +1,5 @@
 #!/usr/bin/env julia
 using Revise
-using RCall
-@rlibrary ineq
 using DataFrames
 using CSV
 include("sim.jl")
@@ -61,6 +59,7 @@ function param_sweeper(graph_name)
     end
 
     #drawing plot
+    println("Creating $(param_to_sweep) plot...")
     plotLG=plot(x=plot_df.counter_value,y=plot_df.gini, Geom.point, Geom.line,
                 Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
