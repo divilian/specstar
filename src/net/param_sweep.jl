@@ -9,11 +9,11 @@ include("setup_params.jl")
 
 
 param_to_sweep=:salary_range    #parameter to iterate over
-start_value=10                  #value to begin sweep
-end_value=210                   #value to end sweep
+start_value=0                  #value to begin sweep
+end_value=1                  #value to end sweep
 graph_sweep=false               #run sweep for each graph type
 num_steps=100
-iter_per_step=50
+iter_per_step=100
 
 
 function param_sweeper(graph_name)
