@@ -1,5 +1,7 @@
 #!/usr/bin/env julia
 using Revise
+using RCall
+@rlibrary ineq
 using DataFrames
 using CSV
 include("sim.jl")
