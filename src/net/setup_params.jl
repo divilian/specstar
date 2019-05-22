@@ -2,7 +2,7 @@
 ## Input parameters
 params = Dict{Symbol,Any}(
     :N => 30,                       # number of agents
-    :num_iter => 50,                # number of iterations the simulation runs
+    :num_iters => 50,               # number of iterations the simulation runs
     :openness => 0.0,               # 0 <=> openness <=> 1
                                     #   (0: always choose from neighbor,
                                     #    1: always choose from entire city)

@@ -91,7 +91,7 @@ function specnet()
 
     println("Iterations:")
 
-    for iter in 1:params[:num_iter]
+    for iter in 1:params[:num_iters]
 
         global graph, locs_x, locs_y
 
@@ -157,7 +157,7 @@ function specnet()
 
     if params[:make_anims]
         #drawing the gini index plot
-        giniPlot=plot(x=1:params[:num_iter],y=ginis, Geom.point, Geom.line,
+        giniPlot=plot(x=1:params[:num_iters],y=ginis, Geom.point, Geom.line,
             Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
         draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 
@@ -306,7 +306,7 @@ function plot_iteration_graphs(iter)
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
                 maxvalue=params[:init_sg_lvl]*
-                    params[:num_iter]/10)
+                    params[:num_iters]/10)
     )
 
     draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
@@ -336,7 +336,7 @@ function plot_iteration_graphs(iter)
                                                             graphp)
 
     #iteration label for svg files
-    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iter])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
     run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
 
 end
