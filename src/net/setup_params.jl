@@ -6,15 +6,15 @@ params = Dict{Symbol,Any}(
     :openness => 0.0,               # 0 <=> openness <=> 1
                                     #   (0: always choose from neighbor,
                                     #    1: always choose from entire city)
-    :max_starting_wealth => 100,    # each agent starts with wealth
-                                    #   U~(0,max_starting_wealth)
+    :init_sg_lvl => 100,            # each agent starts with wealth
+                                    #   U~(1, init_sg_lvl)
     :salary_range => 10,            # each iteration, each agent receives/loses
                                     #   U~(-salary_range, salary_range) wealth
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
     :animation_delay => 20,         # milliseconds between animation frames
-    :random_seed => 1235,           # random number generator starting seed
+    :random_seed => 1234,           # random number generator starting seed
 
     :whichGraph=>"erdos_renyi",     # the name of graph to generate e.g.
                                     #   - "erdos_renyi"

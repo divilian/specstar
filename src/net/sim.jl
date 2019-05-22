@@ -67,11 +67,14 @@ function specnet()
         graph = choose_graph()
     end
 
+    suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
+
     global AN = Dict{NetAgent,Any}(
         NetAgent(
                 AGENT_IDS[k],
                 0,
-                rand(Float16) * params[:max_starting_wealth],true,-1)
+                rand(suglvl_distrib),
+                true,-1)
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
@@ -302,7 +305,7 @@ function plot_iteration_graphs(iter)
             Guide.title("Wealth distribution at iteration $(iter)"),
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
-                maxvalue=params[:max_starting_wealth]*
+                maxvalue=params[:init_sg_lvl]*
                     params[:num_iter]/10)
     )
 
