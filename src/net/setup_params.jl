@@ -14,7 +14,7 @@ params = Dict{Symbol,Any}(
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
     :animation_delay => 20,         # milliseconds between animation frames
-    :random_seed => 1234,           # random number generator starting seed
+    :random_seed => 1235,           # random number generator starting seed
 
     :whichGraph=>"erdos_renyi",     # the name of graph to generate e.g.
                                     #   - "erdos_renyi"
@@ -27,6 +27,6 @@ params = Dict{Symbol,Any}(
     :SF_degree=>2,                  # exponent of expected power law degree
                                     #   distribution
 
-    :SW_degree=>4,                  # degree (even integer) number of neighbors 
+    :SW_degree=>4,                  # degree (even integer) number of neighbors
     :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
 )
