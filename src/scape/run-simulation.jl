@@ -52,16 +52,9 @@ function specscape()
 
         arr_agents = life_check!(arr_agents)
         @assert all([aggobj.a.alive for aggobj in arr_agents])
-        # println("HERHEREHERE")
-        # readline()
         update_occupied_status!(arr_agents, sugscape_obj)
         update_proto_statuses!(arr_protos, period)
         arr_agent_ginis[period] = compute_Gini(arr_agents)
-        # println("No. of protos: ", length(arr_protos))
-        # println("No. of agents: ", string(length(arr_agents)))
-        # println("Finished time-step: ", string(period), "\n\n")
-        ## println("Enter enter")
-        ## readline()
     end## end of params[:num_iter] for loop
     return(arr_agent_ginis)
 end ## end specscape()
@@ -122,9 +115,6 @@ function set_up_environment()
     for loc in arr_poss_locations
         sugscape_obj[loc[1], loc[2]].occupied = true
     end
-    # println("Created a sugarscape of size: ",
-    #         string(size(sugscape_obj)[1] * size(sugscape_obj)[2]))
-    # println("Created ", string(length(arr_agents)), " agents.")
     return(Dict("sugscape_obj" => sugscape_obj,
                 "arr_agents" => arr_agents))
 end ## end of set_up_environment()
@@ -150,8 +140,6 @@ function run_all_param_ranges_for(givenseed)
 
     for rownum in 1:nrow(params_df)
 
-        ## println(get_sugarscape_stats(sugscape_obj))
-        ## println("\n\n")
         # plot_sugar_concentrations!(sugscape_obj)
 
         # Create the global dict of parameters for this run of the sim.
@@ -187,9 +175,6 @@ function run_all_param_ranges_for(givenseed)
 
         ## create a row
         println("Finished combination $rownum")
-        # println("Here's the out_df")
-        # println(out_df)
-        # readline()
     end #end iterate over param rows
 
     return(out_df)

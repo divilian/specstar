@@ -53,9 +53,6 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
     
     Returns an array of Proto structures to the caller.
     """
-    # println("At the beginning form_possible_protos! the array of protos is:")
-    # ## println(arr_protos)
-    # println("Length of arr_protos is: ", string(length(arr_protos)))
     
     threshold = params[:proto_threshold]
     start_proto_id = begin
@@ -65,27 +62,19 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
             maximum([protoobj.proto_id for protoobj in arr_protos]) + 1
         end
     end
-    ## println("The start_proto_id is: ", string(start_proto_id))
+
     for agobj in arr_agents
-        ## update their proto_ids. 
-        ## println("Current object:", string(agobj.a.agent_id), 
-                # " its excess sugarlevel: ", agobj.a.sugar_level - threshold
-        ## println("Enter enter")
-        ## readline()
+
         if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold
-            ## fetch neighbors
-            ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " proto")
+
             arr_neighbors = fetch_eligible_neighbors(agobj, arr_agents,
                 agent_environment)
-            ## println("Here here here!")
+
             if !isempty(arr_neighbors)
 
                 partner_agent = arr_neighbors[1]
 
                 if partner_agent.a.proto_id == -1 ## (a)
-                    ## println("No neighbor found with an existing membership, ",
-                            # "so creating a new proto with agent: ", 
-                            # string(partner_agent.a.agent_id))
                     agobj.a.proto_id = start_proto_id
                     agobj.a.sugar_level = agobj.a.sugar_level - threshold
                     transaction1 = Transaction(agobj.a.sugar_level - threshold,
@@ -106,11 +95,8 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                                        [transaction1, transaction2])
 
                     push!(arr_protos, prototn_obj)
-                    ## println("Added ", string(agobj.a.agent_id), " to a new ",
-                            # "proto with id:", start_proto_id)
 
                 else ## (b) and (c)
-                    ## println("Inside the (b) and (c) conditional branch")
                     protot_obj = fetch_specific_proto_obj(arr_protos, 
                                                         partner_agent.a.proto_id)
                     @assert protot_obj.proto_id > 0

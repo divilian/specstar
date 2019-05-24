@@ -44,19 +44,11 @@ function fetch_best_location(ag_obj, sugscape_obj::Array{Sugarcell,2})
     # try
     #     @assert all(map(x -> x > 1, [low_row, low_col, hi_row, hi_col]))
     # catch
-    #     println("--------------------------")
-    #     println("low_row:", string(low_row), " hi_row:", string(hi_row),
-    #           " low_col:", string(low_col), " hi_col:", string(hi_col))
-    #     println("---------------------------")
     # end
     poss_cells = [sugscape_obj[x, y] for x in low_row:hi_row,
                   y in low_col:hi_col
                   if (!sugscape_obj[x, y].occupied &
                       (sugscape_obj[x, y].sugar_level > 0))]
-    # println("Here are the potential cells")
-    # x = readline()
-    # println([(cellobj.location_x, cellobj.location_y, cellobj.a.sugar_level)
-    #          for cellobj in poss_cells])
     if length(poss_cells) > 0
         a_suglevels = [cellobj.sugar_level for cellobj in poss_cells]
         a_cells =[cellobj for cellobj in poss_cells
@@ -77,14 +69,10 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
     periods that have elapsed in starvation mode, and performs death when
     a threshold has passed.
     """
-    # println("Performing locate-move-feed on agent:", string(agobj.a.agent_id), "")
     
     if(agobj.a.alive)
         if agobj.a.sugar_level >= agobj.a.metabolic_rate
             agobj.a.sugar_level = agobj.a.sugar_level - agobj.a.metabolic_rate
-            # println("Agent ", string(agobj.a.agent_id), " just drew from its self ",
-            #       "sugar reserve!")
-            ## x = readline() 
         elseif sugscape_obj[agobj.location_x,
                             agobj.location_y].sugar_level +
                                 agobj.a.sugar_level >= agobj.a.metabolic_rate
@@ -92,11 +80,9 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
             agobj.a.sugar_level = sugscape_obj[agobj.location_x,
                                                  agobj.location_y].sugar_level +
                                                      agobj.a.sugar_level - agobj.a.metabolic_rate
-            # println("Agent ", string(agobj.a.agent_id), " loaded up at its current location!")
             sugscape_obj[agobj.location_x, agobj.location_y].sugar_level = 0
             sugscape_obj[agobj.location_x, agobj.location_y].occupied = true
             sugscape_obj[agobj.location_x, agobj.location_y].agent_id = agobj.a.agent_id
-            ## x = readline()
         else ## need to move or borrow from proto
             ## identify best location
             new_location = fetch_best_location(agobj, sugscape_obj)
@@ -121,8 +107,6 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
                                  agobj.location_y].agent_id = "-"
                     agobj.a.alive = false
                     agobj.location_x, agobj.location_y = -1, -1 
-                    # println("Agent ", string(agobj.a.agent_id), " starved to death!")
-                    ## x = readline()
                 end
 
             else
@@ -141,10 +125,6 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
                              agobj.location_y].agent_id = agobj.a.agent_id 
             end ## move and consume 
         end ## agobj.a.sugar_level >= agobj.a.metabolic_rate
-    else ## agent is dead
-        # println("Tried to animate a dead agent: ", string(agobj.a.agent_id))
-        ## x = readline()
-    end 
 end ## locate_move_feed!()
 
 
@@ -160,12 +140,7 @@ function life_check!(arr_agents)
             agobj.a.proto_id = -1
         end
     end
-    # println("Number of agents: ", string(length(arr_agents)))
-    # println("Number of dead agents: ", string(count([!agobj.a.alive for agobj in arr_agents])))
     arr_agents = [agobj for agobj in arr_agents if agobj.a.alive]
-    # if length(arr_agents) < 1
-    #     println("It appears that all agents have died!")
-    # end
     return(arr_agents)
 end
 
@@ -174,14 +149,8 @@ function compute_Gini(arr_agents)
                      arr_agents]
     R"library(ineq)"
     gini = R"ineq($arr_suglevels, type='Gini')"[1]
-    try
-        @assert gini >= 0.0 && gini <= 1.0
-    catch
-        ## println("Came across a nonsensical Gini value: ", string(gini))
-        # readline()
-    end
+    @assert gini >= 0.0 && gini <= 1.0
 
-    # println(gini)
     return(gini)    
 end
 
@@ -216,7 +185,6 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj::Array{Sugarce
         if agobj.location_x == -1 && agobj.location_y == -1 
             println("Caught an inconsistent agent!")
             println(agobj)
-            ## readline()
         else
             sugscape_obj[agobj.location_x, agobj.location_y].occupied = false
             sugscape_obj[agobj.location_x, agobj.location_y].agent_id = "-"
@@ -231,8 +199,6 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj::Array{Sugarce
 
     if(size(arr_empty_locations)[1] < no_to_add)
         ## select a random sample of locations
-        # println("Not enough cells available for adding all of the required",
-        #         " number of agents")
         no_to_add = size(arr_empty_locations)[1]
     end ## end if not enough cells available
 
@@ -267,10 +233,7 @@ function perform_birth_inbound_outbound!(arr_agents, sugscape_obj::Array{Sugarce
         end
         append!(arr_agents, arr_new_agents)
     catch
-        # println("Caught the assertion!")
-        # println(length(arr_agents))
         highest_id = take!(maxnumchannel)
-        # println("Fetched a new maxnum: ", string(highest_id))
     end
 
     arr_empty_locations = [(cellobj.location_x, cellobj.location_y) 
@@ -300,8 +263,6 @@ function fetch_eligible_neighbors(agobj, arr_agents,
     neighbor_agents = [nagobj for nagobj in arr_agents 
            if nagobj.a.sugar_level > params[:proto_threshold] &&
            (nagobj.location_x, nagobj.location_y) in neighbor_locs]
-    ## println("Entered fetch_neighbors")
-    ## readline()
     try
         @assert size(neighbor_agents)[1] in 0:4
     catch except
