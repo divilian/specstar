@@ -65,6 +65,7 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
             maximum([protoobj.proto_id for protoobj in arr_protos]) + 1
         end
     end
+    next_proto_id = start_proto_id
 
     for agobj in arr_agents
 
@@ -78,24 +79,27 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                 partner_agent = arr_neighbors[1]
 
                 if partner_agent.a.proto_id == -1 ## (a)
-                    agobj.a.proto_id = start_proto_id
-                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
-                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
+                    agobj.a.proto_id = next_proto_id
+                    deposit_amt = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                agobj.a.agent_id)
+                    agobj.a.sugar_level -= deposit_amt
 
-                    partner_agent.a.proto_id = start_proto_id
-                    partner_agent.a.sugar_level = partner_agent.a.sugar_level - threshold
-                    transaction2 = Transaction(partner_agent.a.sugar_level - threshold,
+                    partner_agent.a.proto_id = next_proto_id
+                    deposit_amt = partner_agent.a.sugar_level - threshold
+                    transaction2 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                partner_agent.a.agent_id)
+                    partner_agent.a.sugar_level -= deposit_amt
 
-                    prototn_obj = Proto(start_proto_id, 
+                    prototn_obj = Proto(next_proto_id, 
                                        transaction1.transaction_amount +
                                        transaction2.transaction_amount,
                                        true,
                                        [agobj.a.agent_id, partner_agent.a.agent_id],
                                        [transaction1, transaction2])
+                    next_proto_id += 1
 
                     push!(arr_protos, prototn_obj)
 
@@ -104,10 +108,11 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                                                         partner_agent.a.proto_id)
                     @assert protot_obj.proto_id > 0
                     agobj.a.proto_id = partner_agent.a.proto_id
-                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
-                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
+                    deposit_amt = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                agobj.a.agent_id)
+                    agobj.a.sugar_level -= deposit_amt
                     push!(protot_obj.ledger_transactions, transaction1)
                     
                 end ## (a), (b), (c)
