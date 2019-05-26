@@ -13,7 +13,7 @@ end
 
 mutable struct Proto
     proto_id::Int64
-    sugar_level::Float64
+    balance::Float64
     alive::Bool
     arr_member_ids::Array{String, 1}
     ledger_transactions::Array{Transaction, 1}
@@ -130,7 +130,7 @@ function update_proto_statuses!(arr_protos, timeperiod)
     agent_id = -999.
     """
     for proto_obj in arr_protos
-        if proto_obj.sugar_level <= 0
+        if proto_obj.balance <= 0
             proto_obj.alive = false
             proto_obj.arr_member_ids = []
             push!(proto_obj.ledger_transactions, 
@@ -149,10 +149,9 @@ function withdraw_from_proto!(agobj, arr_protos)
     @assert agobj.a.proto_id > 0
 
     needed_amount = agobj.a.metabolic_rate - agobj.a.sugar_level
-    if agobj.a.proto_id > 0 && (probj.sugar_level >
-                                    needed_amount)
+    if agobj.a.proto_id > 0 && (probj.balance > needed_amount)
         agobj.a.sugar_level = 0
-        probj.sugar_level -= needed_amount
+        probj.balance -= needed_amount
         push!(probj.ledger_transactions,
               Transaction(needed_amount, timeperiod, "withdrawal",
                           agobj.a.agent_id))
