@@ -19,6 +19,9 @@ mutable struct Proto
     ledger_transactions::Array{Transaction, 1}
 end
 
+struct NotEnoughSugarException <: Exception
+end
+
 function fetch_specific_proto_obj(arr_protos, proto_id)
     """
     Return a proto object from the given array of proto objects
@@ -128,5 +131,27 @@ function update_proto_statuses!(arr_protos, timeperiod)
             push!(proto_obj.ledger_transactions, 
                   Transaction(0, timeperiod, "closure", "-"))
         end
+    end
+end
+
+# Attempt to withdraw sugar from a desperately poor agent's proto. If enough
+# funds are available for it to continue to survive this iteration, make that
+# withdrawal and return silently. Otherwise, leave its proto alone and throw a
+# NotEnoughSugarException.
+function withdraw_from_proto!(agobj, arr_protos)
+    probj = fetch_specific_proto_obj(arr_protos,
+                                agobj.a.proto_id)
+    @assert agobj.a.proto_id > 0
+
+    needed_amount = agobj.a.metabolic_rate - agobj.a.sugar_level
+    if agobj.a.proto_id > 0 && (probj.sugar_level >
+                                    needed_amount)
+        agobj.a.sugar_level = 0
+        probj.sugar_level -= needed_amount
+        push!(probj.ledger_transactions,
+              Transaction(needed_amount, timeperiod, "withdrawal",
+                          agobj.a.agent_id))
+    else
+        throw(NotEnoughSugarException())
     end
 end

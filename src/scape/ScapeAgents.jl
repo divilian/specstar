@@ -266,24 +266,3 @@ function fetch_eligible_neighbors(agobj, arr_agents,
     shuffle!(neighbor_agents)
     return(neighbor_agents)
 end ## end fetch_eligible_neighbors
-
-struct NotEnoughSugarException <: Exception
-end
-
-function withdraw_from_proto!(agobj, arr_protos)
-    probj = fetch_specific_proto_obj(arr_protos,
-                                agobj.a.proto_id)
-    @assert agobj.a.proto_id > 0
-
-    needed_amount = agobj.a.metabolic_rate - agobj.a.sugar_level
-    if agobj.a.proto_id > 0 && (probj.sugar_level >
-                                    needed_amount)
-        agobj.a.sugar_level = 0
-        probj.sugar_level -= needed_amount
-        push!(probj.ledger_transactions,
-              Transaction(needed_amount, timeperiod, "withdrawal",
-                          agobj.a.agent_id))
-    else
-        throw(NotEnoughSugarException())
-    end
-end
