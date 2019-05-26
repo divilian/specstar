@@ -100,7 +100,6 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                                        [agobj.a.agent_id, partner_agent.a.agent_id],
                                        [transaction1, transaction2])
                     next_proto_id += 1
-
                     push!(arr_protos, prototn_obj)
 
                 else ## (b) and (c)
@@ -143,7 +142,7 @@ end
 # funds are available for it to continue to survive this iteration, make that
 # withdrawal and return silently. Otherwise, leave its proto alone and throw a
 # NotEnoughSugarException.
-function withdraw_from_proto!(agobj, arr_protos)
+function withdraw_from_proto!(agobj, arr_protos, timeperiod)
     probj = fetch_specific_proto_obj(arr_protos,
                                 agobj.a.proto_id)
     @assert agobj.a.proto_id > 0

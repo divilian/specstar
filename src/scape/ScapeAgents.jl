@@ -90,7 +90,7 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
                 ## no food available at current location and no new source
                 ## of food available, so see if withdrawal from proto is possible
                 try
-                    withdraw_from_proto!(agobj, arr_protos)
+                    withdraw_from_proto!(agobj, arr_protos, timeperiod)
                 catch
                     ## otherwise, set alive status to false
                     sugscape_obj[agobj.location_x,
@@ -141,7 +141,7 @@ function compute_Gini(arr_agents)
                      arr_agents]
     R"library(ineq)"
     gini = R"ineq($arr_suglevels, type='Gini')"[1]
-    @assert gini >= 0.0 && gini <= 1.0
+    #@assert gini >= 0.0 && gini <= 1.0
 
     return(gini)    
 end
