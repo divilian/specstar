@@ -125,6 +125,7 @@ function locate_move_feed!(agobj, sugscape_obj::Array{Sugarcell,2}, arr_agents, 
                              agobj.location_y].agent_id = agobj.a.agent_id 
             end ## move and consume 
         end ## agobj.a.sugar_level >= agobj.a.metabolic_rate
+    end ## agent is dead
 end ## locate_move_feed!()
 
 
