@@ -96,7 +96,11 @@ function specnet()
 
         global graph, locs_x, locs_y
 
-        if iter % 10 == 0 println(iter) else print(".") end
+        if verbosity == 1
+            if iter % 10 == 0 println(iter) else print(".") end
+        else
+            println(" --- Iteration $(iter) of $(params[:num_iters]) ---")
+        end
 
         if locs_x == nothing
             locs_x, locs_y = spring_layout(graph)
