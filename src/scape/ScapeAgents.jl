@@ -141,9 +141,12 @@ function compute_Gini(arr_agents)
                      arr_agents]
     R"library(ineq)"
     gini = R"ineq($arr_suglevels, type='Gini')"[1]
-    #@assert gini >= 0.0 && gini <= 1.0
-
-    return(gini)    
+    try
+        @assert gini >= 0.0 && gini <= 1.0
+        return(gini)    
+    catch
+        return(NaN)
+    end
 end
 
 function perform_birth_inbound_outbound!(arr_agents, sugscape_obj::Array{Sugarcell,2}, birth_rate, 
