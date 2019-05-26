@@ -125,9 +125,6 @@ function specnet()
         # Payday!
         for ag in keys(AN)
             ag.a.sugar_level += (rand(Float16) - .5) * params[:salary_range]
-            if ag.a.proto_id > 0
-                ag.a.sugar_level += (rand(Float16)*10)
-            end
         end
 
         dying_agents =
