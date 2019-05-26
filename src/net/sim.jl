@@ -5,6 +5,7 @@ using LightGraphs
 using GraphPlot, Compose
 using ColorSchemes, Colors
 using Random
+using Distributions
 using Cairo, Fontconfig
 using DataFrames
 
