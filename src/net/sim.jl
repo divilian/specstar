@@ -131,8 +131,24 @@ function specnet()
             [ ag for ag in keys(AN)
                 if ag.a.sugar_level < 0 && ag.a.alive ]
         for dying_agent in dying_agents
-            prd("Agent $(dying_agent) died!")
-            kill_agent(dying_agent)
+            try
+                in_the_hole = ag.a.sugar_level
+                withdraw_from_proto!(dying_agent, arr_protos, iter)
+                prd("Agent $(dying_agent) got some money! " *
+                    "(had $(in_the_hole), " *
+                    "now has $(dying_agent.a.sugar_level), " *
+                    "proto still has " *
+                    "$(arr_protos[dying_agent.a.proto_id].balance))")
+            catch exc
+                if isa(exc, NotEnoughSugarException)
+                    prd("Agent $(dying_agent) died!! " *
+                        "(needed -$(dying_agent.a.sugar_level), only had " *
+                        "$(arr_protos[dying_agent.a.proto_id].balance) in proto)")
+                else
+                    prd("Agent $(dying_agent) died!! (no proto)")
+                end
+                kill_agent(dying_agent)
+            end
         end
 
         #adding current gini index to ginis array
