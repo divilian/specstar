@@ -21,12 +21,12 @@ params = Dict{Symbol,Any}(
                                     #   - "scale_free"
                                     #   - "small_world"
 
-    :ER_prob=>0.2,                  # probability of edge between two vertices
+    :λ=>2,                              # expected number if edges per node 
 
     :SF_edges=>40,                  # number of edges in SF model
     :SF_degree=>2,                  # exponent of expected power law degree
                                     #   distribution
 
-    :SW_degree=>4,                  # degree (even integer) number of neighbors 
+									# degree (even integer) number of neighbors 
     :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
 )

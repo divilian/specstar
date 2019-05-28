@@ -234,8 +234,9 @@ end
 
 function choose_graph()
     if params[:whichGraph]=="erdos_renyi"
-        graph = LightGraphs.SimpleGraphs.erdos_renyi(
-            params[:N], params[:ER_prob])
+ER_prob=params[:λ]/params[:N]      
+	   graph = LightGraphs.SimpleGraphs.erdos_renyi(
+            params[:N], ER_prob)
     end
 
     if params[:whichGraph]=="scale_free"
@@ -245,7 +246,7 @@ function choose_graph()
 
     if params[:whichGraph]=="small_world"
         graph = LightGraphs.SimpleGraphs.watts_strogatz(
-            params[:N], params[:SW_degree], params[:SW_prob])
+            params[:N], params[:λ], params[:SW_prob])
     end
     return graph
 end

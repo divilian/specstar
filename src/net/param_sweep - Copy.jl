@@ -1,27 +1,23 @@
 #!/usr/bin/env julia
-using Revise
 using RCall
-@rlibrary ineq
+@rlibrary ineq"
+using Revise
 using DataFrames
 using CSV
 include("sim.jl")
 include("setup_params.jl")
 
 
-param_to_sweep=:λ             #parameter to iterate over *any parameter*
-                              #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=1                 #value to begin sweep
-end_value=4                   #value to end sweep
-graph_sweep=false             #run the sweep three times, once for each graph type
-num_steps=3
-iter_per_step=4
+param_to_sweep=:salary_range    #parameter to iterate over
+start_value=10                  #value to begin sweep
+end_value=210                   #value to end sweep
+graph_sweep=false               #run sweep for each graph type
+num_steps=100
+iter_per_step=50
 
 
 function param_sweeper(graph_name)
-    println("Starting sweep..")
-	print("Sweeping for:")
-	print("$(param_to_sweep))"
-	counter=start_value
+    counter=start_value
     large_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
 
     params[:make_anims] = false  # We would never want this true for a sweep
@@ -85,7 +81,7 @@ end
 
 if graph_sweep
     graphs=["erdos_renyi","scale_free", "small_world"]
-println("sweeping for graph type")
+
     for k in 1:3
         params[:whichGraph]=graphs[k]
         param_sweeper(string(graphs[k]))
@@ -94,3 +90,4 @@ println("sweeping for graph type")
 else
     param_sweeper(params[:whichGraph])
 end
+
