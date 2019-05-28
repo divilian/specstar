@@ -19,9 +19,8 @@ iter_per_step=4
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
-	print("Sweeping for:")
-	print("$(param_to_sweep))"
-	counter=start_value
+    print("Sweeping for: $(param_to_sweep)")
+    counter=start_value
     large_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
 
     params[:make_anims] = false  # We would never want this true for a sweep
