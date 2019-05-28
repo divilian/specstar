@@ -13,10 +13,13 @@ end
 
 mutable struct Proto
     proto_id::Int64
-    sugar_level::Float64
+    balance::Float64
     alive::Bool
     arr_member_ids::Array{String, 1}
     ledger_transactions::Array{Transaction, 1}
+end
+
+struct NotEnoughSugarException <: Exception
 end
 
 function fetch_specific_proto_obj(arr_protos, proto_id)
@@ -53,9 +56,6 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
     
     Returns an array of Proto structures to the caller.
     """
-    # println("At the beginning form_possible_protos! the array of protos is:")
-    # ## println(arr_protos)
-    # println("Length of arr_protos is: ", string(length(arr_protos)))
     
     threshold = params[:proto_threshold]
     start_proto_id = begin
@@ -65,60 +65,53 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
             maximum([protoobj.proto_id for protoobj in arr_protos]) + 1
         end
     end
-    ## println("The start_proto_id is: ", string(start_proto_id))
+    next_proto_id = start_proto_id
+
     for agobj in arr_agents
-        ## update their proto_ids. 
-        ## println("Current object:", string(agobj.a.agent_id), 
-                # " its excess sugarlevel: ", agobj.a.sugar_level - threshold
-        ## println("Enter enter")
-        ## readline()
+
         if agobj.a.proto_id == -1 && agobj.a.sugar_level > threshold
-            ## fetch neighbors
-            ## println("Checking to see if ", string(agobj.a.agent_id), " can join an", " proto")
+
             arr_neighbors = fetch_eligible_neighbors(agobj, arr_agents,
                 agent_environment)
-            ## println("Here here here!")
+
             if !isempty(arr_neighbors)
 
                 partner_agent = arr_neighbors[1]
 
                 if partner_agent.a.proto_id == -1 ## (a)
-                    ## println("No neighbor found with an existing membership, ",
-                            # "so creating a new proto with agent: ", 
-                            # string(partner_agent.a.agent_id))
-                    agobj.a.proto_id = start_proto_id
-                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
-                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
+                    agobj.a.proto_id = next_proto_id
+                    deposit_amt = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                agobj.a.agent_id)
+                    agobj.a.sugar_level -= deposit_amt
 
-                    partner_agent.a.proto_id = start_proto_id
-                    partner_agent.a.sugar_level = partner_agent.a.sugar_level - threshold
-                    transaction2 = Transaction(partner_agent.a.sugar_level - threshold,
+                    partner_agent.a.proto_id = next_proto_id
+                    deposit_amt = partner_agent.a.sugar_level - threshold
+                    transaction2 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                partner_agent.a.agent_id)
+                    partner_agent.a.sugar_level -= deposit_amt
 
-                    prototn_obj = Proto(start_proto_id, 
+                    prototn_obj = Proto(next_proto_id, 
                                        transaction1.transaction_amount +
                                        transaction2.transaction_amount,
                                        true,
                                        [agobj.a.agent_id, partner_agent.a.agent_id],
                                        [transaction1, transaction2])
-
+                    next_proto_id += 1
                     push!(arr_protos, prototn_obj)
-                    ## println("Added ", string(agobj.a.agent_id), " to a new ",
-                            # "proto with id:", start_proto_id)
 
                 else ## (b) and (c)
-                    ## println("Inside the (b) and (c) conditional branch")
                     protot_obj = fetch_specific_proto_obj(arr_protos, 
                                                         partner_agent.a.proto_id)
                     @assert protot_obj.proto_id > 0
                     agobj.a.proto_id = partner_agent.a.proto_id
-                    agobj.a.sugar_level = agobj.a.sugar_level - threshold
-                    transaction1 = Transaction(agobj.a.sugar_level - threshold,
+                    deposit_amt = agobj.a.sugar_level - threshold
+                    transaction1 = Transaction(deposit_amt,
                                                timeperiod, "deposit", 
                                                agobj.a.agent_id)
+                    agobj.a.sugar_level -= deposit_amt
                     push!(protot_obj.ledger_transactions, transaction1)
                     
                 end ## (a), (b), (c)
@@ -136,11 +129,32 @@ function update_proto_statuses!(arr_protos, timeperiod)
     agent_id = -999.
     """
     for proto_obj in arr_protos
-        if proto_obj.sugar_level <= 0
+        if proto_obj.balance <= 0
             proto_obj.alive = false
             proto_obj.arr_member_ids = []
             push!(proto_obj.ledger_transactions, 
                   Transaction(0, timeperiod, "closure", "-"))
         end
+    end
+end
+
+# Attempt to withdraw sugar from a desperately poor agent's proto. If enough
+# funds are available for it to continue to survive this iteration, make that
+# withdrawal and return silently. Otherwise, leave its proto alone and throw a
+# NotEnoughSugarException.
+function withdraw_from_proto!(agobj, arr_protos, timeperiod)
+    probj = fetch_specific_proto_obj(arr_protos,
+                                agobj.a.proto_id)
+    @assert agobj.a.proto_id > 0
+
+    needed_amount = agobj.a.metabolic_rate - agobj.a.sugar_level
+    if agobj.a.proto_id > 0 && (probj.balance > needed_amount)
+        agobj.a.sugar_level = 0
+        probj.balance -= needed_amount
+        push!(probj.ledger_transactions,
+              Transaction(needed_amount, timeperiod, "withdrawal",
+                          agobj.a.agent_id))
+    else
+        throw(NotEnoughSugarException())
     end
 end

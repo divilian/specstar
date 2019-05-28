@@ -2,12 +2,12 @@
 ## Input parameters
 params = Dict{Symbol,Any}(
     :N => 30,                       # number of agents
-    :num_iter => 50,                # number of iterations the simulation runs
+    :num_iters => 50,               # number of iterations the simulation runs
     :openness => 0.0,               # 0 <=> openness <=> 1
                                     #   (0: always choose from neighbor,
                                     #    1: always choose from entire city)
-    :max_starting_wealth => 100,    # each agent starts with wealth
-                                    #   U~(0,max_starting_wealth)
+    :init_sg_lvl => 100,            # each agent starts with wealth
+                                    #   U~(1, init_sg_lvl)
     :salary_range => 10,            # each iteration, each agent receives/loses
                                     #   U~(-salary_range, salary_range) wealth
     :proto_threshold => 50,         # each agent in an encounter must have
@@ -27,6 +27,6 @@ params = Dict{Symbol,Any}(
     :SF_degree=>2,                  # exponent of expected power law degree
                                     #   distribution
 
-									# degree (even integer) number of neighbors 
+
     :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
 )

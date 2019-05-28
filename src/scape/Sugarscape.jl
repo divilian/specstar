@@ -107,14 +107,11 @@ function regenerate_sugar!(sugscape_obj::Array{Sugarcell,2})
     amount specified by growth_date, with an upper bound of carrying_capacity.
     Does not return a new object, since the cell objects are modified in place.
     """
-    ## println("Inside regenerate_sugar!()")
     for cellobj in sugscape_obj
         old_val = cellobj.sugar_level
         new_val = 
         cellobj.sugar_level = max(0, min(cellobj.sugar_level*(1 + cellobj.growth_rate),
                                          cellobj.carrying_capacity)) 
-        # println(string("Changing sugar level from ", old_val, " to ",
-        #                cellobj.sugar_level, "\n"))
     end
     return
 end ## regenerate_sugar!()

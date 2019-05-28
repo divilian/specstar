@@ -5,6 +5,7 @@ using LightGraphs
 using GraphPlot, Compose
 using ColorSchemes, Colors
 using Random
+using Distributions
 using Cairo, Fontconfig
 using DataFrames
 
@@ -67,11 +68,14 @@ function specnet()
         graph = choose_graph()
     end
 
+    suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
+
     global AN = Dict{NetAgent,Any}(
         NetAgent(
                 AGENT_IDS[k],
                 0,
-                rand(Float16) * params[:max_starting_wealth],true,-1)
+                rand(suglvl_distrib),
+                true,-1)
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
@@ -88,11 +92,15 @@ function specnet()
 
     println("Iterations:")
 
-    for iter in 1:params[:num_iter]
+    for iter in 1:params[:num_iters]
 
         global graph, locs_x, locs_y
 
-        if iter % 10 == 0 println(iter) else print(".") end
+        if verbosity == 1
+            if iter % 10 == 0 println(iter) else print(".") end
+        else
+            println(" --- Iteration $(iter) of $(params[:num_iters]) ---")
+        end
 
         if locs_x == nothing
             locs_x, locs_y = spring_layout(graph)
@@ -117,17 +125,30 @@ function specnet()
         # Payday!
         for ag in keys(AN)
             ag.a.sugar_level += (rand(Float16) - .5) * params[:salary_range]
-            if ag.a.proto_id > 0
-                ag.a.sugar_level += (rand(Float16)*10)
-            end
         end
 
         dying_agents =
             [ ag for ag in keys(AN)
                 if ag.a.sugar_level < 0 && ag.a.alive ]
         for dying_agent in dying_agents
-            prd("Agent $(dying_agent) died!")
-            kill_agent(dying_agent)
+            try
+                in_the_hole = ag.a.sugar_level
+                withdraw_from_proto!(dying_agent, arr_protos, iter)
+                prd("Agent $(dying_agent) got some money! " *
+                    "(had $(in_the_hole), " *
+                    "now has $(dying_agent.a.sugar_level), " *
+                    "proto still has " *
+                    "$(arr_protos[dying_agent.a.proto_id].balance))")
+            catch exc
+                if isa(exc, NotEnoughSugarException)
+                    prd("Agent $(dying_agent) died!! " *
+                        "(needed -$(dying_agent.a.sugar_level), only had " *
+                        "$(arr_protos[dying_agent.a.proto_id].balance) in proto)")
+                else
+                    prd("Agent $(dying_agent) died!! (no proto)")
+                end
+                kill_agent(dying_agent)
+            end
         end
 
         #adding current gini index to ginis array
@@ -154,7 +175,7 @@ function specnet()
 
     if params[:make_anims]
         #drawing the gini index plot
-        giniPlot=plot(x=1:params[:num_iter],y=ginis, Geom.point, Geom.line,
+        giniPlot=plot(x=1:params[:num_iters],y=ginis, Geom.point, Geom.line,
             Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
         draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 
@@ -303,8 +324,8 @@ function plot_iteration_graphs(iter)
             Guide.title("Wealth distribution at iteration $(iter)"),
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
-                maxvalue=params[:max_starting_wealth]*
-                    params[:num_iter]/10)
+                maxvalue=params[:init_sg_lvl]*
+                    params[:num_iters]/10)
     )
 
     draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
@@ -334,7 +355,7 @@ function plot_iteration_graphs(iter)
                                                             graphp)
 
     #iteration label for svg files
-    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iter])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
     run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
 
 end
