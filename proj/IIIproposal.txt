@@ -1,0 +1,42 @@
+
+    (Stephen and TJ)'s proposal for solution III to net OQ#2. It attempts to
+mimic, in net, the way scape does foraging:
+
+
+    1) At start time, create the usual random graph of agents. The edges
+represent "friendships," say.
+
+    2) Additionally, create some number of "distributor nodes." These play the
+same role that grid squares do in scape: they are daily sources of sugar that
+not every agent has equal access to. Each distributor node is given a random
+"total amount of sugar dispensed per iteration" property.
+
+    3) Agents can "plug in" to distributor nodes. (Maybe there is a cap on the
+number each agent can plug in to?) Each iteration, each distributor node will
+divvy up its total dispensation equally among its plugged-in agents. An agent's
+total income in that iteration, then, is the sum of what it gets from each of
+the distributors it's plugged in to. This divvying up of a distributor's
+resources is analogous to how, in scape, if too many agents migrate to a
+fertile region, they start to deplete that region.
+
+    4) Agents can only plug in to a distributor if they have a friend who is
+already plugged in to that distributor. This roughly corresponds to the
+foraging behavior in scape -- you can't do a hyperspace jump to any old
+distributor at all, nor are you even aware of distributors outside your "field
+of vision" (i.e., your current set of friends).
+
+    5) In order for this to work, agents must be able to form additional
+friendships as the simulation progresses (otherwise they cannot forage). We
+propose that each iteration, there is a possibility of agent A forming a
+friendship with a friend-of-a-friend-of-A. (In other words, if A is friends
+with B but not with C, and B is friends with C, there is some probability that
+A will become friends with C.) This mimics the progressive foraging aspect of
+scape: agents kinda sorta "branch out" in a "particular direction" along the
+graph, forming new friendships as they go.
+
+    6) Since this model adds edges (friendships) to the graph, it must be able
+to also remove edges, else this whole thing just converges to the complete
+graph (all agents friends with all others). We propose that whenever an agent
+forms a new friendship, it deletes one of its existing ones. This corresponds
+to how in scape, if you choose to migrate north, you are necessarily abandoning
+options to the south.

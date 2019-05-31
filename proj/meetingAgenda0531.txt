@@ -1,0 +1,41 @@
+1. (5 mins) Welcome, chit-chat, and solving technology/connection issues.
+
+2. (20 mins) Rajesh wants to categorize specific wealth generation processes
+and proto-institution rules in terms of plausibility as a social mechanism (As
+THE HANDBOOK says we should!). This means that we should categorize them
+according to whether they are plausible mechanisms in
+
+   - Prehistoric anthropology ( ..... SFI working group members)
+   - Historical sociology (Hamilton, Canada)
+   - Urban sociology (Poverty dynamics .....)
+   - Economic sociology (Granovetter, Mathew Jackson,....)
+   - Comparative economic sociology (Microcredit and other systems more
+   popular in Asia and Africa)
+
+
+3. (15 mins) How daily income should work for agents in net. Despite much
+discussion, we still haven't decided this.
+
+    * The Status quo is option II-A (see https://cssas.pubpub.org/pub/6nonmc56)
+    * Sri -- likes the Stephen & TJ proposal (III)
+    * Rajesh -- thinks Stephen & TJ proposal is too complex for phase 1
+        (...does this imply a vote for II-A?...)
+    * Olufemi -- votes for II-C "modified": modify agent salaries up/down less
+        frequently than each iteration; give different protos different
+        thresholds
+
+    -> One idea: for paper1 (net only), we go with II-A, and do our analysis
+with that simplest possible thing. For paper2 (scape vs. net), we implement
+either II-C or III in an attempt to make scape and net as apples-to-apples as
+possible.
+
+
+4. (10 mins) Protos:
+    - Deposits: Lump sum only when joining, or ongoing contributions? (c.f.
+        Olufemi's Nigeria collectives)
+    - Withdrawals: Currently only when an agent would die otherwise. Is this
+        what we want?
+
+
+5. (10 mins) Timeline moving forward in light of Jun 30 CSSSA19 deadline.
+
