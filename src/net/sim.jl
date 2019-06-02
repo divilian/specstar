@@ -21,8 +21,9 @@ function specnet()
     end
 
     global locs_x, locs_y
+        
+	Random.seed!(params[:random_seed])
 
-    Random.seed!(params[:random_seed])
 
     # Note on representation:
     #
@@ -69,13 +70,16 @@ function specnet()
     end
 
     suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
+    metabolic_distribution = DiscreteUniform(1, params[:metabolic_rate])
 
     global AN = Dict{NetAgent,Any}(
         NetAgent(
                 AGENT_IDS[k],
-                0,
+                rand(metabolic_distribution),
                 rand(suglvl_distrib),
+				
                 true,-1)
+				
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
@@ -89,6 +93,7 @@ function specnet()
     rm("$(tempdir())/wealth"*".svg", force=true)
     rm("$(tempdir())/GiniPlot.png", force=true)
     locs_x, locs_y = nothing, nothing
+
 
     println("Iterations:")
 
@@ -124,7 +129,10 @@ function specnet()
 
         # Payday!
         for ag in keys(AN)
-            ag.a.sugar_level += (rand(Float16) - .5) * params[:salary_range]
+								#used to be -0.5 temp solution          
+		    ag.a.sugar_level += (rand(Float16)) * params[:salary_range]
+		    ag.a.sugar_level -= ag.a.metabolic_rate;
+
         end
 
         dying_agents =
@@ -155,7 +163,7 @@ function specnet()
         wealthArray=[]
         empty!(wealthArray)
         for ag in keys(AN)
-            if ag.a.sugar_level>=-400
+			if ag.a.sugar_level>=-400
                 push!(wealthArray,ag.a.sugar_level)
             end
         end
@@ -184,7 +192,7 @@ function specnet()
         println("Building graph animation (be mind-bogglingly patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
-
+ 
     println("...ending SPECnet.")
 
     return sort(results, :agent)
