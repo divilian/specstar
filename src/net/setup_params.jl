@@ -8,14 +8,14 @@ params = Dict{Symbol,Any}(
                                     #    1: always choose from entire city)
     :init_sg_lvl => 100,            # each agent starts with wealth
                                     #   U~(1, init_sg_lvl)
-    :metabolic_rate=> 20,           # each agents starts with metobolic rate 
-	                                #(sugar loss per iter)
+    :metabolic_rate=> 20,           # each agents starts with metabolic rate 
+	                                #   (sugar loss per iter)
 	                                #   U~(1, metabolic_rate)
     :salary_range => 10,            # each iteration, each agent receives/loses
                                     #   U~(-salary_range, salary_range) wealth
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
-    :make_anims => true,           # create animations of results?
+    :make_anims => false,           # create animations of results?
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 

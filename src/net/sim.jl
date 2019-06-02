@@ -77,7 +77,6 @@ function specnet()
                 AGENT_IDS[k],
                 rand(metabolic_distribution),
                 rand(suglvl_distrib),
-				
                 true,-1)
 				
             =>k for k in 1:params[:N])
@@ -129,10 +128,8 @@ function specnet()
 
         # Payday!
         for ag in keys(AN)
-								#used to be -0.5 temp solution          
 		    ag.a.sugar_level += (rand(Float16)) * params[:salary_range]
 		    ag.a.sugar_level -= ag.a.metabolic_rate;
-
         end
 
         dying_agents =
