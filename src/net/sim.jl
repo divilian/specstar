@@ -21,8 +21,8 @@ function specnet()
     end
 
     global locs_x, locs_y
-        
-	Random.seed!(params[:random_seed])
+
+    Random.seed!(params[:random_seed])
 
 
     # Note on representation:
@@ -77,9 +77,9 @@ function specnet()
                 AGENT_IDS[k],
                 rand(metabolic_distribution),
                 rand(suglvl_distrib),
-				
+
                 true,-1)
-				
+
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
@@ -129,10 +129,25 @@ function specnet()
 
         # Payday!
         for ag in keys(AN)
-								#used to be -0.5 temp solution          
-		    ag.a.sugar_level += (rand(Float16)) * params[:salary_range]
-		    ag.a.sugar_level -= ag.a.metabolic_rate;
+                                #used to be -0.5 temp solution
+            ag.a.sugar_level += (rand(Float16)) * params[:salary_range]
+            ag.a.sugar_level -= ag.a.metabolic_rate;
 
+        end
+
+        #Makes the agents deposit extra sugar into their proto
+           for ag in keys(AN)
+            if ag.a.proto_id ≠ -1
+                current = fetch_specific_proto_obj(arr_protos, ag.a.proto_id)
+                if ag.a.sugar_level > params[:proto_threshold]
+                    deposit_amt = ag.a.sugar_level - params[:proto_threshold]
+                    transaction = Transaction(deposit_amt,
+                                               timeperiod, "deposit",
+                                               ag.a.agent_id)
+                    ag.a.sugar_level -= deposit_amt
+                    push!(current.ledger_transactions, transaction)
+                end
+            end
         end
 
         dying_agents =
@@ -163,7 +178,7 @@ function specnet()
         wealthArray=[]
         empty!(wealthArray)
         for ag in keys(AN)
-			if ag.a.sugar_level>=-400
+            if ag.a.sugar_level>=-400
                 push!(wealthArray,ag.a.sugar_level)
             end
         end
@@ -192,7 +207,7 @@ function specnet()
         println("Building graph animation (be mind-bogglingly patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
- 
+
     println("...ending SPECnet.")
 
     return sort(results, :agent)
