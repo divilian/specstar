@@ -112,6 +112,7 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                                                timeperiod, "deposit", 
                                                agobj.a.agent_id)
                     agobj.a.sugar_level -= deposit_amt
+                    protot_obj.balance += deposit_amt
                     push!(protot_obj.ledger_transactions, transaction1)
                     
                 end ## (a), (b), (c)
