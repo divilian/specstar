@@ -64,6 +64,7 @@ function specnet()
 
 
     suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
+    white_noise_distrib = Normal(0, params[:white_noise_intensity])
 
     global AN = Dict{NetAgent,Any}(
         NetAgent(
@@ -122,7 +123,8 @@ function specnet()
         # Payday!
         for ag in keys(AN)
             ag.a.sugar_level += params[:salary]
-            ag.a.sugar_level -= ag.a.metabolic_rate;
+            ag.a.sugar_level -= ag.a.metabolic_rate
+            ag.a.sugar_level += rand(white_noise_distrib)
         end
 
         #Makes the agents deposit any excess sugar into their proto
