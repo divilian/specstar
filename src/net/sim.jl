@@ -64,12 +64,11 @@ function specnet()
 
 
     suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
-    metabolic_distribution = DiscreteUniform(1, params[:metabolic_rate])
 
     global AN = Dict{NetAgent,Any}(
         NetAgent(
                 AGENT_IDS[k],
-                rand(metabolic_distribution),
+                params[:metabolic_rate],  # constant for now
                 rand(suglvl_distrib),
                 true,-1)
 
