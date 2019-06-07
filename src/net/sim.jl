@@ -273,16 +273,17 @@ function choose_graph()
         ER_prob=params[:λ]/params[:N]
         graph = LightGraphs.SimpleGraphs.erdos_renyi(
             params[:N], ER_prob)
-    end
 
-    if params[:whichGraph]=="scale_free"
+    elseif params[:whichGraph]=="scale_free"
         graph = LightGraphs.SimpleGraphs.static_scale_free(
             params[:N], params[:SF_edges], params[:SF_degree])
-    end
 
-    if params[:whichGraph]=="small_world"
+    elseif params[:whichGraph]=="small_world"
         graph = LightGraphs.SimpleGraphs.watts_strogatz(
             params[:N], params[:λ], params[:SW_prob])
+
+    else
+        throw(DomainError("Invalid graph type \"$(params[:whichGraph])\""))
     end
     return graph
 end
