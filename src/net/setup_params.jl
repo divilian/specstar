@@ -8,10 +8,10 @@ params = Dict{Symbol,Any}(
                                     #    1: always choose from entire city)
     :init_sg_lvl => 100,            # each agent starts with wealth
                                     #   U~(1, init_sg_lvl)
-    :salary_range => 10,            # each iteration, each agent receives/loses
-                                    #   U~(-salary_range, salary_range) wealth
     :metabolic_rate => 5,           # each iteration, each agent consumes exactly
                                     #   this much sugar.
+    :salary => 10,                  # each iteration, each agent receives exactly
+                                    #   this much sugar
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?

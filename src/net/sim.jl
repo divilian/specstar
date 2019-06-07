@@ -121,7 +121,7 @@ function specnet()
 
         # Payday!
         for ag in keys(AN)
-            ag.a.sugar_level += (rand(Float16)) * params[:salary_range]
+            ag.a.sugar_level += params[:salary]
             ag.a.sugar_level -= ag.a.metabolic_rate;
         end
 
