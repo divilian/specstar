@@ -62,12 +62,6 @@ function specnet()
     # The initial social network.
     global graph = choose_graph()
 
-    while !is_connected(graph)
-        global graph = choose_graph()
-
-        pri("Not connected; regenerating...")
-        graph = choose_graph()
-    end
 
     suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
     metabolic_distribution = DiscreteUniform(1, params[:metabolic_rate])
