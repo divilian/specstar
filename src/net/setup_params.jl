@@ -9,8 +9,8 @@ params = Dict{Symbol,Any}(
     :init_sg_lvl => 100,            # each agent starts with wealth
                                     #   U~(1, init_sg_lvl)
     :metabolic_rate=> 20,           # each agents starts with metabolic rate 
-	                                #   (sugar loss per iter)
-	                                #   U~(1, metabolic_rate)
+                                    #   (sugar loss per iter)
+                                    #   U~(1, metabolic_rate)
     :salary_range => 10,            # each iteration, each agent receives/loses
                                     #   U~(-salary_range, salary_range) wealth
     :proto_threshold => 50,         # each agent in an encounter must have
@@ -23,6 +23,8 @@ params = Dict{Symbol,Any}(
                                     #   - "erdos_renyi"
                                     #   - "scale_free"
                                     #   - "small_world"
+                                    #   - "complete"
+                                    #   - "empty"
 
     :λ=>2,                              # expected number if edges per node 
 

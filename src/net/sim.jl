@@ -282,6 +282,12 @@ function choose_graph()
         graph = LightGraphs.SimpleGraphs.watts_strogatz(
             params[:N], params[:λ], params[:SW_prob])
 
+    elseif params[:whichGraph]=="complete"
+        graph = LightGraphs.SimpleGraphs.CompleteGraph(params[:N])
+
+    elseif params[:whichGraph]=="empty"
+        graph = LightGraphs.SimpleGraphs.SimpleGraph(params[:N], 0)
+
     else
         throw(DomainError("Invalid graph type \"$(params[:whichGraph])\""))
     end
