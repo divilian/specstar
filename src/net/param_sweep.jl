@@ -15,19 +15,23 @@ end_value=4                   #value to end sweep
 graph_sweep=false             #run the sweep three times, once for each graph type
 num_steps=3
 iter_per_step=4
+original_seed=params[:random_seed]
 
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
     print("Sweeping for: $(param_to_sweep)")
     counter=start_value
-    large_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
-
+    agent_line_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
+	iter_line_df=DataFrame(gini=Float64[], temp_random_seed=Int64[])
     params[:make_anims] = false  # We would never want this true for a sweep
 
     for i= 1:num_steps
         for j = 1:iter_per_step
-            if typeof(params[param_to_sweep])==Int64
+        #setting the random seed and adding it to the DataFrame of the final gini of each simulation
+	    Random.seed!(params[:random_seed])
+		
+		  if typeof(params[param_to_sweep])==Int64
 
                 param_counter=convert(Int64,floor(counter))
 
@@ -40,16 +44,21 @@ function param_sweeper(graph_name)
             results=specnet()
             insert!(results,4,repeat(counter:counter,nrow(results)),:counter_value)
             insert!(results,5,repeat((i*iter_per_step + j):(i*iter_per_step + j),nrow(results)),:iter_num_sweep)
-            large_df=[large_df;results]
-
+            agent_line_df=[agent_line_df;results]
+		#increment the random seed to vary the results of simulations with the same params
+		params[:random_seed]+=1
         end
-        counter+=(( end_value-  start_value)/num_steps)
+        params[:random_seed]=original_seed
+		counter+=(( end_value-  start_value)/num_steps)
     end
-    rm("$(tempdir())/$(graph_name)ParameterSweepDataFrame.csv", force=true)
+    rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
+	rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)ParameterSweepPlot.png", force=true)
-    CSV.write("$(tempdir())/$(graph_name)ParameterSweep.csv",large_df)
+    #this file contains all info with one line per agent in a given run of siml.jl
+    CSV.write("$(tempdir())/$(graph_name)_agent_results.csv",agent_line_df)
+    
 
-    #once the main dataframe is made, plots may be drawn with data from large_df
+    #once the main dataframe is made, plots may be drawn with data from agent_line_df
     #plotting and construction of dataframe is in separate for loop for optimal organiztion
 
     #dataframe containing only values to be plotted
@@ -59,19 +68,28 @@ function param_sweeper(graph_name)
 
     #loop to populate dataframe
     counter=start_value
-    for j = 1:num_steps
+    #weak solution to acccessing seed value, should be reworked
+	mark_seed_value=original_seed
+	for j = 1:num_steps
         total_gini=0
         for i=1:iter_per_step
-            total_gini+=convert(Float64,
-                ineq((large_df[large_df.iter_num_sweep.==(j*iter_per_step+i),
+            current_sim_gini=convert(Float64,
+                ineq((agent_line_df[agent_line_df.iter_num_sweep.==(j*iter_per_step+i),
                     :sugar]), "Gini"))
+			#adding to total gini to be averaged for plot (plot_df)
+			total_gini+=current_sim_gini
+			#adding the gini sim results to the df
+			push!(iter_line_df,(current_sim_gini,mark_seed_value))
+			mark_seed_value+=1
         end
-
+		mark_seed_value=original_seed
         #change this code to populate above dataframe with alt data
         push!(plot_df, (total_gini/iter_per_step,counter))
         counter+=((end_value-start_value)/num_steps)
    end
-
+    #this file contains (currently) only the resulting Gini index from each simulation
+	#one line per run of sim.jl
+	CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",iter_line_df)
     #drawing plot
     println("Creating $(param_to_sweep) plot...")
     plotLG=plot(x=plot_df.counter_value,y=plot_df.gini, Geom.point, Geom.line,
