@@ -18,19 +18,19 @@ params = Dict{Symbol,Any}(
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 
-    :whichGraph=>"erdos_renyi",     # the name of graph to generate e.g.
+    :whichGraph => "erdos_renyi",   # the name of graph to generate e.g.
                                     #   - "erdos_renyi"
                                     #   - "scale_free"
                                     #   - "small_world"
                                     #   - "complete"
                                     #   - "empty"
 
-    :λ=>2,                              # expected number if edges per node 
+    :λ => 2,                        # expected number if edges per node
 
-    :SF_edges=>40,                  # number of edges in SF model
-    :SF_degree=>2,                  # exponent of expected power law degree
+    :SF_edges => 40,                # number of edges in SF model
+    :SF_degree => 2,                # exponent of expected power law degree
                                     #   distribution
 
 
-    :SW_prob=>0.2,                  # probability of rewiring (between 0/1)
+    :SW_prob => 0.2,                # probability of rewiring (between 0/1)
 )
