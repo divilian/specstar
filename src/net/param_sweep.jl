@@ -26,11 +26,10 @@ function param_sweeper(graph_name)
     agent_line_df = DataFrame(
         replace_this=Float64[],
         seed=Int64[],
-        iter_num_sweep=Int64[],
         agent=String[],
         sugar=Float64[],
         proto_id=Int[])
-    names!(agent_line_df,[param_to_sweep,:seed,:iter_num_sweep,:agent,:sugar,:proto_id])
+    names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id])
 
     trial_line_df=DataFrame(
         replace_this=Float64[],
@@ -58,7 +57,6 @@ function param_sweeper(graph_name)
 
             insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
             insertcols!(results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(results)))
-            insertcols!(results, 3, :iter_num_sweep => repeat((i*trials_per_value+j):(i*trials_per_value+j),nrow(results)))
             agent_line_df=[agent_line_df;results]
 
             #increment the random seed to vary the results of simulations with the same params
@@ -90,8 +88,7 @@ function param_sweeper(graph_name)
         total_gini=0
         for i=1:trials_per_value
             current_sim_gini=convert(Float64,
-                ineq((agent_line_df[agent_line_df.iter_num_sweep.==(j*trials_per_value+i),
-                    :sugar]), "Gini"))
+                ineq((agent_line_df[agent_line_df.seed.==mark_seed_value,:sugar]), "Gini"))
             #adding to total gini to be averaged for plot (plot_df)
             total_gini+=current_sim_gini
             #adding the gini sim results to the df
