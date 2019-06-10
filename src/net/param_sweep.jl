@@ -25,18 +25,6 @@ function param_sweeper(graph_name)
     println("Starting sweep..")
     print("Sweeping for: $(param_to_sweep)")
     counter=start_value
-<<<<<<< HEAD
-    agent_line_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
-	global iter_line_df=DataFrame(gini=Float64[], temp_random_seed=Int64[])
-    params[:make_anims] = false  # We would never want this true for a sweep
-    
-    for i= 1:num_steps
-        for j = 1:iter_per_step
-        #setting the random seed and adding it to the DataFrame of the final gini of each simulation
-	    Random.seed!(params[:random_seed])
-		
-		    if typeof(params[param_to_sweep])==Int64
-=======
 
     agent_line_df = DataFrame(
         replace_this=Float64[],
@@ -45,7 +33,6 @@ function param_sweeper(graph_name)
         sugar=Float64[],
         proto_id=Int[])
     names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id])
->>>>>>> 3d2e869c4cf130923ff0e44787f524b120130649
 
     trial_line_df=DataFrame(
         replace_this=Float64[],
@@ -136,8 +123,8 @@ function param_sweeper(graph_name)
 
 	#one line per run of sim.jl
     global matching_comp_df = comp_df[setdiff(1:end, 1), :]
-    iter_line_df=hcat(iter_line_df,matching_comp_df)
-    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",iter_line_df)
+    iter_line_df=hcat(trial_line_df,matching_comp_df)
+    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     #drawing plot
     println("Creating $(param_to_sweep) plot...")
