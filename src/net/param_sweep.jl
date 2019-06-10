@@ -17,21 +17,24 @@ num_steps=3
 iter_per_step=4
 original_seed=params[:random_seed]
 
+components=[[],[]]
+global comp_df=convert(DataFrame,components')
+rename!(comp_df,Dict(:x1 => :Agents_per_component, :x2 => :Number_of_components))
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
     print("Sweeping for: $(param_to_sweep)")
     counter=start_value
     agent_line_df=DataFrame(agent=String[],sugar=Float64[], proto_id=Int[], counter_value=Float64[],iter_num_sweep=Int64[])
-	iter_line_df=DataFrame(gini=Float64[], temp_random_seed=Int64[])
+	global iter_line_df=DataFrame(gini=Float64[], temp_random_seed=Int64[])
     params[:make_anims] = false  # We would never want this true for a sweep
-
+    
     for i= 1:num_steps
         for j = 1:iter_per_step
         #setting the random seed and adding it to the DataFrame of the final gini of each simulation
 	    Random.seed!(params[:random_seed])
 		
-		  if typeof(params[param_to_sweep])==Int64
+		    if typeof(params[param_to_sweep])==Int64
 
                 param_counter=convert(Int64,floor(counter))
 
@@ -42,6 +45,15 @@ function param_sweeper(graph_name)
 
             params[param_to_sweep]=param_counter
             results=specnet()
+			#finding the breakdown of graph components and pushing that to component data frame
+			component_vertices=connected_components(graph)
+	        single_sim_components=[]
+            for comp in component_vertices
+	            push!(single_sim_components,length(comp))
+	        end
+			push!(comp_df,(single_sim_components',[length(component_vertices)]'))
+            
+			
             insert!(results,4,repeat(counter:counter,nrow(results)),:counter_value)
             insert!(results,5,repeat((i*iter_per_step + j):(i*iter_per_step + j),nrow(results)),:iter_num_sweep)
             agent_line_df=[agent_line_df;results]
@@ -63,9 +75,11 @@ function param_sweeper(graph_name)
 
     #dataframe containing only values to be plotted
     plot_df=DataFrame(gini=Float64[],counter_value=Float64[])
-
+    
+	
+	
     #change values of this dataframe to create other plots
-
+	
     #loop to populate dataframe
     counter=start_value
     #weak solution to acccessing seed value, should be reworked
@@ -79,7 +93,7 @@ function param_sweeper(graph_name)
 			#adding to total gini to be averaged for plot (plot_df)
 			total_gini+=current_sim_gini
 			#adding the gini sim results to the df
-			push!(iter_line_df,(current_sim_gini,mark_seed_value))
+			push!(iter_line_df,(current_sim_gini,mark_seed_value,))
 			mark_seed_value+=1
         end
 		mark_seed_value=original_seed
@@ -89,7 +103,9 @@ function param_sweeper(graph_name)
    end
     #this file contains (currently) only the resulting Gini index from each simulation
 	#one line per run of sim.jl
-	CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",iter_line_df)
+    global matching_comp_df = comp_df[setdiff(1:end, 1), :]
+    iter_line_df=hcat(iter_line_df,matching_comp_df)
+    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",iter_line_df)
     #drawing plot
     println("Creating $(param_to_sweep) plot...")
     plotLG=plot(x=plot_df.counter_value,y=plot_df.gini, Geom.point, Geom.line,
