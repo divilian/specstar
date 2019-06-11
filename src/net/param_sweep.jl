@@ -123,7 +123,7 @@ function param_sweeper(graph_name)
 
 	#one line per run of sim.jl
     global matching_comp_df = comp_df[setdiff(1:end, 1), :]
-    iter_line_df=hcat(trial_line_df,matching_comp_df)
+    trial_line_df=hcat(trial_line_df,matching_comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     #drawing plot
