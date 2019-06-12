@@ -11,10 +11,19 @@ using DataFrames
 
 include("NetAgents.jl")
 include("../star/misc.jl")
+include("setup_params.jl")
 
 # Run the SPECnet simulation once, for the set of parameters in the global
 # variable "params".
-function specnet()
+# Any keyword arguments provided will override settings in "params". For
+# instance:
+#     specnet()
+#     specnet(num_iters=20)
+#     specnet(num_iters=20, N=100)
+function specnet(;additional_params...)
+
+    merge!(params, Dict(additional_params))
+
     pri("SPECnet simulation parameters:")
     for (param, val) in params
         pri("   $(param) = $(val)")
