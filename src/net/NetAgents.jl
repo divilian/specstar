@@ -43,11 +43,11 @@ function fetch_eligible_neighbors(agobj::NetAgent,
 
     neighbor_agents = [ nodes_to_agents[n]
         for n ∈  neighbors(graph, AN[agobj])
-        if nodes_to_agents[n].a.sugar_level > params[:proto_threshold] ]
+        if nodes_to_agents[n].a.sugar_level ≥ params[:proto_threshold] ]
 
     other_eligible_agents = [ ag for ag ∈  keys(AN)
         if AN[ag] ∉  neighbors(graph, AN[ag])  &&
-        ag.a.sugar_level > params[:proto_threshold] ]
+        ag.a.sugar_level ≥ params[:proto_threshold] ]
 
     agents_to_return = neighbor_agents
 

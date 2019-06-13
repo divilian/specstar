@@ -5,4 +5,3 @@ include("sim.jl")
 include("setup_params.jl")
 
 results = specnet()
-hell=0
