@@ -7,6 +7,15 @@ mutable struct StarAgent
     proto_id::Int64
 end
 
+function Base.hash(sa::StarAgent, h::UInt)
+    hash(sa.agent_id) + h
+end
+
+function Base.isequal(sa1::StarAgent, sa2::StarAgent)
+    sa1.agent_id == sa2.agent_id
+end
+
+
 function Base.show(io::IO, sa::StarAgent)
     show(io, "Agent($(sa.agent_id))")
 end
