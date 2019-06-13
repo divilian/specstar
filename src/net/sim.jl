@@ -13,6 +13,12 @@ include("NetAgents.jl")
 include("../star/misc.jl")
 include("setup_params.jl")
 
+mutable struct SimState
+    graph::SimpleGraph
+    AN::Dict{NetAgent,Any}
+    arr_protos::Array{Proto,1}
+end
+
 # Run the SPECnet simulation once, for the set of parameters in the global
 # variable "params".
 # Any keyword arguments provided will override settings in "params". For
@@ -103,8 +109,18 @@ function specnet(;additional_params...)
 
         global graph, locs_x, locs_y
 
+
         if verbosity == 1
-            if iter % 10 == 0 println(iter) else print(".") end
+            stage = get_stage(SimState(graph, AN, arr_protos))
+            @assert stage ∈  [1,2,3]
+            if stage == 1
+                print("-")
+            elseif stage == 2
+                print("+")
+            elseif stage == 3
+                print("#")
+            end
+            if iter % 10 == 0 println(iter) end
         else
             println(" --- Iteration $(iter) of $(params[:num_iters]) ---")
         end
@@ -390,4 +406,24 @@ function plot_iteration_graphs(iter)
     run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
     run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
 
+end
+
+
+# Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
+#   S1: No agent has yet created a proto.
+#   S2: Agents are creating and joining protos.
+#   S3: All agents are either (a) graph isolates, (b) dead, or (c) in a proto.
+function get_stage(sim_state::SimState)
+    if length(sim_state.arr_protos) == 1   # See arr_protos hack
+        return 1
+    else
+        for agent in keys(AN)
+            if length(neighbors(graph,AN[agent])) > 0  &&
+                    agent.a.alive  &&
+                    agent.a.proto_id == -1
+                return 2
+            end
+        end
+        return 3
+    end
 end
