@@ -110,26 +110,25 @@ function specnet(;additional_params...)
         global graph, locs_x, locs_y
 
 
-        if verbosity == 1
-            stage = get_stage(SimState(graph, AN, arr_protos))
-            @assert stage ∈  [1,2,3]
-            if stage == 1
-                print("-")
-            elseif stage == 2
-                print("+")
-            elseif stage == 3
-                print("#")
-            end
-            if iter % 10 == 0 println(iter) end
-        else
-            println(" --- Iteration $(iter) of $(params[:num_iters]) ---")
+        stage = get_stage(SimState(graph, AN, arr_protos))
+
+        @assert stage ∈  [1,2,3]
+        if stage == 1
+            print("-")
+        elseif stage == 2
+            print("+")
+        elseif stage == 3
+            print("#")
         end
+        if iter % 10 == 0 println(iter) end
+
 
         if locs_x == nothing
             locs_x, locs_y = spring_layout(graph)
         else
             locs_x, locs_y = spring_layout(graph, locs_x, locs_y)
         end
+
 
         # Plot the graph at the *start* of each iteration (i.e., before any
         # activity has occurred) rather than the end.
