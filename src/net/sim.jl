@@ -93,7 +93,7 @@ function specnet(;additional_params...)
     ## the following is a hack; see comment in ../scape/run-simulation.jl
     arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
-
+	
     # (Erase old images.)
     rm("$(tempdir())/graph"*".png", force=true)
     rm("$(tempdir())/graph"*".svg", force=true)
@@ -104,6 +104,7 @@ function specnet(;additional_params...)
 
 
     println("Iterations:")
+
 
     total_iters = 0   # The actual number of iterations run.
 

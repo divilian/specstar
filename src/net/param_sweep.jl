@@ -8,18 +8,18 @@ include("sim.jl")
 include("setup_params.jl")
 
 
-param_to_sweep=:λ             #parameter to iterate over *any parameter*
+param_to_sweep=:metabolic_rate             #parameter to iterate over *any parameter*
                               #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=1                 #value to begin sweep
-end_value=4                   #value to end sweep
+start_value=4                #value to begin sweep
+end_value=5                #value to end sweep
 num_values=3                  #number of distinct values to run
 trials_per_value=4            #for each distinct value, number of independent sims to run
 graph_sweep=false             #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global comp_df=convert(DataFrame,components')
-rename!(comp_df,Dict(:x1 => :Agents_per_component, :x2 => :Number_of_components))
+global comp_df=DataFrame(size_largest_comp=Int64[],num_comps=Float64[])
+
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
@@ -60,11 +60,12 @@ function param_sweeper(graph_name)
 
 			#finding the breakdown of graph components and pushing that to component data frame
 			component_vertices=connected_components(graph)
-	        single_sim_components=[]
-            for comp in component_vertices
-	            push!(single_sim_components,length(comp))
-	        end
-			push!(comp_df,(single_sim_components',[length(component_vertices)]'))
+	        global num_comps=length(component_vertices)
+			largest_comp=findmax(length.(component_vertices))
+			global size_of_largest_comp=largest_comp[1][1]
+			push!(comp_df,(size_of_largest_comp,num_comps))
+			
+			
             
 			
           
@@ -123,7 +124,7 @@ function param_sweeper(graph_name)
 
 	#one line per run of sim.jl
     global matching_comp_df = comp_df[setdiff(1:end, 1), :]
-    trial_line_df=hcat(trial_line_df,matching_comp_df)
+    trial_line_df=hcat(trial_line_df,comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     #drawing plot
