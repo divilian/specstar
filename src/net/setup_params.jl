@@ -2,14 +2,16 @@
 ## Input parameters
 params = Dict{Symbol,Any}(
     :N => 30,                       # number of agents
-    :num_iters => 50,               # number of iterations the simulation runs
+    :max_iters => 50,               # maximum number of iterations the simulation
+                                    #   runs before termination (will terminate
+                                    #   earlier if stopping condition reached)
     :openness => 0.0,               # 0 <=> openness <=> 1
                                     #   (0: always choose from neighbor,
                                     #    1: always choose from entire city)
     :init_sg_lvl => 100,            # each agent starts with wealth
                                     #   ~U(1, init_sg_lvl)
     :metabolic_rate => 5,           # each iteration, each agent consumes exactly
-                                    #   this much sugar.
+                                    #   this much sugar
     :salary => 10,                  # each iteration, each agent receives exactly
                                     #   this much sugar
     :white_noise_intensity => 1,    # each iteration, an agent receives (or loses)

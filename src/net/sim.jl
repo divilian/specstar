@@ -24,8 +24,8 @@ end
 # Any keyword arguments provided will override settings in "params". For
 # instance:
 #     specnet()
-#     specnet(num_iters=20)
-#     specnet(num_iters=20, N=100)
+#     specnet(max_iters=20)
+#     specnet(max_iters=20, N=100)
 function specnet(;additional_params...)
 
     merge!(params, Dict(additional_params))
@@ -105,7 +105,9 @@ function specnet(;additional_params...)
 
     println("Iterations:")
 
-    for iter in 1:params[:num_iters]
+    total_iters = 0   # The actual number of iterations run.
+
+    for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
 
@@ -122,6 +124,10 @@ function specnet(;additional_params...)
         end
         if iter % 10 == 0 println(iter) end
 
+        if stage == 3
+            total_iters = iter - 1
+            break   # End simulation at stopping condition.
+        end
 
         if locs_x == nothing
             locs_x, locs_y = spring_layout(graph)
@@ -215,7 +221,7 @@ function specnet(;additional_params...)
 
     if params[:make_anims]
         #drawing the gini index plot
-        giniPlot=plot(x=1:params[:num_iters],y=ginis, Geom.point, Geom.line,
+        giniPlot=plot(x=1:total_iters,y=ginis, Geom.point, Geom.line,
             Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
         draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 
@@ -402,7 +408,7 @@ function plot_iteration_graphs(iter)
                                                             graphp)
 
     #iteration label for svg files
-    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of up to $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
     run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
 
 end
