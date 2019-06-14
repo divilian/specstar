@@ -22,7 +22,7 @@ params = Dict{Symbol,Any}(
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
-    :make_final_wealth_hist=>true,  # create a histogram of the final agent wealth
+    :make_sim_plots => true,        # create plots (for individual simulations)?
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 
@@ -33,12 +33,12 @@ params = Dict{Symbol,Any}(
                                     #   - "complete"
                                     #   - "empty"
 
-    :λ => 2,                        # expected number if edges per node
+    :λ => 2,                        # ER: expected number if edges per node
 
-    :SF_edges => 40,                # number of edges in SF model
-    :SF_degree => 2,                # exponent of expected power law degree
+    :SF_edges => 40,                # SF: number of edges
+    :SF_degree => 2,                # SF: exponent of expected power law degree
                                     #   distribution
 
-
-    :SW_prob => 0.2,                # probability of rewiring (between 0/1)
+    :β => 0.2,                      # SW: prob. of rewiring
+    :k => 2,                        # SW: degree of nodes
 )

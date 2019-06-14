@@ -8,6 +8,7 @@ using Random
 using Distributions
 using Cairo, Fontconfig
 using DataFrames
+using Glob
 
 include("NetAgents.jl")
 include("../star/misc.jl")
@@ -28,11 +29,12 @@ end
 #     specnet(max_iters=20, N=100)
 function specnet(;additional_params...)
 
+    @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
 
     pri("SPECnet simulation parameters:")
-    for (param, val) in params
-        pri("   $(param) = $(val)")
+    for param in sort(collect(keys(params)), by=x->lowercase(string(x)))
+        pri("   $(param) = $(params[param])")
     end
 
     global locs_x, locs_y
@@ -95,11 +97,16 @@ function specnet(;additional_params...)
 
     
     # (Erase old images.)
-    rm("$(tempdir())/graph"*".png", force=true)
-    rm("$(tempdir())/graph"*".svg", force=true)
-    rm("$(tempdir())/wealth"*".png", force=true)
-    rm("$(tempdir())/wealth"*".svg", force=true)
-    rm("$(tempdir())/GiniPlot.png", force=true)
+    save_dir = pwd()
+    cd("$(tempdir())")
+    rm.(glob("graph*.png"))
+    rm.(glob("graph*.svg"))
+    rm.(glob("wealth*.png"))
+    rm.(glob("wealth*.svg"))
+    rm.(glob("GiniPlot.png"))
+    rm.(glob("final_wealth_histogram.png"))
+    cd(save_dir)
+
     locs_x, locs_y = nothing, nothing
 
 
@@ -108,6 +115,8 @@ function specnet(;additional_params...)
 
     local starvation_timer = 0   # The number of stage 3 iterations run so far.
     local total_iters = 0        # The actual total number of iterations run.
+
+    local ginis=[]
 
     for iter in 1:params[:max_iters]
 
@@ -228,19 +237,20 @@ function specnet(;additional_params...)
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
 
-    if params[:make_anims]
+    if params[:make_sim_plots]
         #drawing the gini index plot
         giniPlot=plot(x=1:total_iters,y=ginis, Geom.point, Geom.line,
             Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
         draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 
+        plot_final_wealth_hist()
+    end
+
+    if params[:make_anims]
         println("Building wealth animation (be unbelievably patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
         println("Building graph animation (be mind-bogglingly patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
-    end
-    if params[:make_final_wealth_hist]
-        plot_final_wealth_hist()
     end
     println("\n...ending SPECnet.")
 
@@ -324,7 +334,7 @@ function choose_graph()
 
     elseif params[:whichGraph]=="small_world"
         graph = LightGraphs.SimpleGraphs.watts_strogatz(
-            params[:N], params[:λ], params[:SW_prob])
+            params[:N], params[:k], params[:β])
 
     elseif params[:whichGraph]=="complete"
         graph = LightGraphs.SimpleGraphs.CompleteGraph(params[:N])
@@ -338,7 +348,6 @@ function choose_graph()
     return graph
 end
 
-ginis=[]
 rev_dict(d) = Dict(y=>x for (x,y) in d)
 
 function plot_final_wealth_hist()
@@ -458,4 +467,16 @@ function get_stage(sim_state::SimState)
         end
         return 3
     end
+end
+
+function all_parameters_legit(additional_params)
+    if !all([ word in keys(params) for word in keys(additional_params) ])
+        for word in keys(additional_params)
+            if word ∉  keys(params)
+                println("No such SPECnet parameter \"$(word)\".")
+            end
+        end
+        return false
+    end
+    return true
 end
