@@ -8,13 +8,13 @@ include("sim.jl")
 include("setup_params.jl")
 
 
-param_to_sweep=:metabolic_rate             #parameter to iterate over *any parameter*
-                              #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=4                #value to begin sweep
-end_value=5                #value to end sweep
-num_values=3                  #number of distinct values to run
-trials_per_value=4            #for each distinct value, number of independent sims to run
-graph_sweep=false             #run the sweep once for each graph type
+param_to_sweep=:metabolic_rate    #parameter to iterate over *any parameter*
+                                  #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
+start_value=4                     #value to begin sweep
+end_value=5                       #value to end sweep
+num_values=3                      #number of distinct values to run
+trials_per_value=4                #for each distinct value, number of independent sims to run
+graph_sweep=false                 #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
@@ -36,7 +36,6 @@ function param_sweeper(graph_name)
 
     trial_line_df=DataFrame(
         replace_this=Float64[],
-	
         seed=Int[],
         gini=Float64[])
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
@@ -59,18 +58,13 @@ function param_sweeper(graph_name)
             # Actually run the simulation!
             results=specnet()
 
-			#finding the breakdown of graph components and pushing that to component data frame
-			component_vertices=connected_components(graph)
-	        global num_comps=length(component_vertices)
-			largest_comp=findmax(length.(component_vertices))
-			global size_of_largest_comp=largest_comp[1][1]
-			push!(comp_df,(size_of_largest_comp,num_comps))
-			
-			
+            #finding the breakdown of graph components and pushing that to component data frame
+            component_vertices=connected_components(graph)
+            global num_comps=length(component_vertices)
+            largest_comp=findmax(length.(component_vertices))
+            global size_of_largest_comp=largest_comp[1][1]
+            push!(comp_df,(size_of_largest_comp,num_comps))
             
-			
-          
-
             insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
             insertcols!(results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(results)))
 
@@ -100,7 +94,7 @@ function param_sweeper(graph_name)
 
 
     #change values of this dataframe to create other plots
-	
+    
     #loop to populate dataframe
     counter=start_value
     #weak solution to acccessing seed value, should be reworked
@@ -109,18 +103,13 @@ function param_sweeper(graph_name)
         total_gini=0
         for i=1:trials_per_value
             current_sim_gini=convert(Float64,
-
                 ineq((agent_line_df[agent_line_df.seed.==mark_seed_value,:sugar]), "Gini"))
             #adding to total gini to be averaged for plot (plot_df)
             total_gini+=current_sim_gini
             #adding the gini sim results to the df
             push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
-            
-
             #averaging and pushing data for wealth histogram
-             			
-		   mark_seed_value+=1
-
+            mark_seed_value+=1
         end
         mark_seed_value=original_seed
         #change this code to populate above dataframe with alt data
@@ -129,7 +118,7 @@ function param_sweeper(graph_name)
     end
     #this file contains (currently) only the resulting Gini index from each simulation
 
-	#one line per run of sim.jl
+    #one line per run of sim.jl
     global matching_comp_df = comp_df[setdiff(1:end, 1), :]
     trial_line_df=hcat(trial_line_df,comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
@@ -138,9 +127,9 @@ function param_sweeper(graph_name)
     println("Creating $(param_to_sweep) plot...")
     plotLG=plot(x=plot_df.param_to_sweep,y=plot_df.gini, Geom.point, Geom.line,
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
-	wealth_heat_map=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
+    wealth_heat_map=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
-	draw(PNG("$(tempdir())/$(graph_name) wealth_heat_map.png"), wealth_heat_map)
+    draw(PNG("$(tempdir())/$(graph_name) wealth_heat_map.png"), wealth_heat_map)
 
 end
 
