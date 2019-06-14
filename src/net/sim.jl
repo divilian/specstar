@@ -116,6 +116,8 @@ function specnet(;additional_params...)
     local starvation_timer = 0   # The number of stage 3 iterations run so far.
     local total_iters = 0        # The actual total number of iterations run.
 
+    local ginis=[]
+
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
@@ -346,7 +348,6 @@ function choose_graph()
     return graph
 end
 
-ginis=[]
 rev_dict(d) = Dict(y=>x for (x,y) in d)
 
 function plot_final_wealth_hist()
