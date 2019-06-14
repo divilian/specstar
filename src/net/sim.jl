@@ -237,7 +237,9 @@ function specnet(;additional_params...)
         println("Building graph animation (be mind-bogglingly patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
-
+    if params[:make_final_wealth_hist]
+	    plot_final_wealth_hist()
+	end
     println("\n...ending SPECnet.")
 
     return sort(results, :agent)
@@ -335,6 +337,20 @@ end
 ginis=[]
 rev_dict(d) = Dict(y=>x for (x,y) in d)
 
+function plot_final_wealth_hist()
+    final_wealths=[]
+    
+    [push!(final_wealths,ag.a.sugar_level)
+    for ag in keys(AN) ]       
+	
+	final_wealthp = plot(
+        x=final_wealths,
+        Geom.histogram(density=true, bincount=20), 
+        Guide.xlabel("Agent Wealth"),
+        Guide.ylabel("Density of agents"))
+        
+	draw(PNG("$(tempdir())/final_wealth_histogram.png"),final_wealthp)	
+end
 
 function plot_iteration_graphs(iter)
 
