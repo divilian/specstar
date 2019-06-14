@@ -8,6 +8,7 @@ using Random
 using Distributions
 using Cairo, Fontconfig
 using DataFrames
+using Glob
 
 include("NetAgents.jl")
 include("../star/misc.jl")
@@ -95,11 +96,16 @@ function specnet(;additional_params...)
 
     
     # (Erase old images.)
-    rm("$(tempdir())/graph"*".png", force=true)
-    rm("$(tempdir())/graph"*".svg", force=true)
-    rm("$(tempdir())/wealth"*".png", force=true)
-    rm("$(tempdir())/wealth"*".svg", force=true)
-    rm("$(tempdir())/GiniPlot.png", force=true)
+    save_dir = pwd()
+    cd("$(tempdir())")
+    rm.(glob("graph*.png"))
+    rm.(glob("graph*.svg"))
+    rm.(glob("wealth*.png"))
+    rm.(glob("wealth*.svg"))
+    rm.(glob("GiniPlot.png"))
+    rm.(glob("final_wealth_histogram.png"))
+    cd(save_dir)
+
     locs_x, locs_y = nothing, nothing
 
 
