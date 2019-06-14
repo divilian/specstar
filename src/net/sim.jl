@@ -113,8 +113,14 @@ function specnet(;additional_params...)
     println("Iterations:")
 
 
-    local starvation_timer = 0   # The number of stage 3 iterations run so far.
-    local total_iters = 0        # The actual total number of iterations run.
+    # The number of stage 3 iterations run so far.
+    local starvation_timer = 0   
+
+    # The actual total number of iterations run. Assume pessimistically that it
+    # will be terminated by the iteration limit; if the stopping condition is
+    # encountered before that time, the loop will break out and this variable
+    # will be set to a lower number at that time.
+    local total_iters = params[:max_iters]   
 
     local ginis=[]
 
@@ -229,6 +235,7 @@ function specnet(;additional_params...)
         push!(ginis,gIndex)
 
     end   # End main simulation for loop
+
 
     # Collect results in DataFrame.
     results = DataFrame(
