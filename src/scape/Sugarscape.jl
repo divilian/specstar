@@ -6,8 +6,8 @@ using Statistics
 ## using Match
 
 mutable struct Sugarcell
-    location_x::Int64
-    location_y::Int64
+    location_x::Int
+    location_y::Int
     growth_rate::Float64
     carrying_capacity::Float64    
     sugar_level::Float64

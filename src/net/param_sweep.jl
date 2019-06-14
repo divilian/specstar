@@ -18,7 +18,7 @@ graph_sweep=false             #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global comp_df=DataFrame(size_largest_comp=Int64[],num_comps=Float64[])
+global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Float64[])
 colored_wealth_hist_df=
 
 function param_sweeper(graph_name)
@@ -28,7 +28,7 @@ function param_sweeper(graph_name)
 
     global agent_line_df = DataFrame(
         replace_this=Float64[],
-        seed=Int64[],
+        seed=Int[],
         agent=String[],
         sugar=Float64[],
         proto_id=Int[])
@@ -37,7 +37,7 @@ function param_sweeper(graph_name)
     trial_line_df=DataFrame(
         replace_this=Float64[],
 	
-        seed=Int64[],
+        seed=Int[],
         gini=Float64[])
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
 
@@ -48,8 +48,8 @@ function param_sweeper(graph_name)
             #setting the random seed and adding it to the DataFrame of the final gini of each simulation
             Random.seed!(params[:random_seed])
             
-            if typeof(params[param_to_sweep])==Int64
-                param_counter=convert(Int64,floor(counter))
+            if typeof(params[param_to_sweep])==Int
+                param_counter=convert(Int,floor(counter))
             else
                 param_counter=counter
             end

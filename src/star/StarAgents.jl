@@ -1,10 +1,10 @@
 
 mutable struct StarAgent
     agent_id::String
-    metabolic_rate::Int64
+    metabolic_rate::Int
     sugar_level::Float64
     alive::Bool
-    proto_id::Int64
+    proto_id::Int
 end
 
 function Base.hash(sa::StarAgent, h::UInt)

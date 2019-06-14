@@ -12,7 +12,7 @@ mutable struct Transaction
 end
 
 mutable struct Proto
-    proto_id::Int64
+    proto_id::Int
     balance::Float64
     alive::Bool
     arr_member_ids::Array{String, 1}

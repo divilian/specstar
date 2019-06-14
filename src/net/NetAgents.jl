@@ -8,10 +8,10 @@ mutable struct NetAgent
 
     function NetAgent(
         agent_id::String,
-        metabolic_rate::Int64,
+        metabolic_rate::Int,
         sugar_level,
         alive::Bool,
-        proto_id::Int64)
+        proto_id::Int)
         starAgent = StarAgent(agent_id, metabolic_rate, sugar_level, alive,
             proto_id)
         return new(starAgent)
@@ -33,7 +33,7 @@ end
 
 function fetch_eligible_neighbors(agobj::NetAgent,
     arr_agents::Array{NetAgent,1},
-    specnet_graph::SimpleGraph{Int64})
+    specnet_graph::SimpleGraph{Int})
 
     """
     For a given agent, identify some agents that it "may be interested in,"

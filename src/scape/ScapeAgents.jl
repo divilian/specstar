@@ -10,19 +10,19 @@ maxnumchannel = Channel(producer);
 
 mutable struct ScapeAgent
     a::StarAgent
-    location_x::Int64
-    location_y::Int64
-    vision::Int64
+    location_x::Int
+    location_y::Int
+    vision::Int
 
     function ScapeAgent(
         agent_id::String,
-        metabolic_rate::Int64,
+        metabolic_rate::Int,
         sugar_level,
         alive::Bool,
-        proto_id::Int64,
-        location_x::Int64,
-        location_y::Int64,
-        vision::Int64)
+        proto_id::Int,
+        location_x::Int,
+        location_y::Int,
+        vision::Int)
         starAgent = StarAgent(agent_id, metabolic_rate, sugar_level, alive,
             proto_id)
         return new(starAgent, location_x, location_y, vision)
