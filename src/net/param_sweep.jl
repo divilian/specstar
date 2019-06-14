@@ -60,10 +60,15 @@ function param_sweeper(graph_name)
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)
-            global num_comps=length(component_vertices)
-            largest_comp=findmax(length.(component_vertices))
-            global size_of_largest_comp=largest_comp[1][1]
-            push!(comp_df,(size_of_largest_comp,num_comps))
+            if nv(graph) == 0
+                global num_comps=0
+                global size_largest_comp=0
+            else
+                global num_comps=length(component_vertices)
+                largest_comp=findmax(length.(component_vertices))
+                global size_of_largest_comp=largest_comp[1][1]
+                push!(comp_df,(size_of_largest_comp,num_comps))
+            end
             
             insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
             insertcols!(results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(results)))
