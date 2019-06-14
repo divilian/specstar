@@ -254,8 +254,10 @@ end
 function kill_agent(dying_agent)
     global graph, AN, locs_x, locs_y
     dying_node = AN[dying_agent]
-    deleteat!(locs_x, dying_node)
-    deleteat!(locs_y, dying_node)
+    if locs_x ≠ nothing
+        deleteat!(locs_x, dying_node)
+        deleteat!(locs_y, dying_node)
+    end
 
     neighbor_nodes = neighbors(graph, dying_node)
     while length(neighbor_nodes) > 0
