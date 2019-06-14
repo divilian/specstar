@@ -234,19 +234,20 @@ function specnet(;additional_params...)
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
 
-    if params[:make_anims]
+    if params[:make_sim_plots]
         #drawing the gini index plot
         giniPlot=plot(x=1:total_iters,y=ginis, Geom.point, Geom.line,
             Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
         draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 
+        plot_final_wealth_hist()
+    end
+
+    if params[:make_anims]
         println("Building wealth animation (be unbelievably patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
         println("Building graph animation (be mind-bogglingly patient)...")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
-    end
-    if params[:make_final_wealth_hist]
-        plot_final_wealth_hist()
     end
     println("\n...ending SPECnet.")
 

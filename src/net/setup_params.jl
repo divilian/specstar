@@ -22,7 +22,7 @@ params = Dict{Symbol,Any}(
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
-    :make_final_wealth_hist=>true,  # create a histogram of the final agent wealth
+    :make_sim_plots => true,        # create plots (for individual simulations)?
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 
