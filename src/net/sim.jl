@@ -106,7 +106,8 @@ function specnet(;additional_params...)
     println("Iterations:")
 
 
-    total_iters = 0   # The actual number of iterations run.
+    local starvation_timer = 0   # The number of stage 3 iterations run so far.
+    local total_iters = 0        # The actual total number of iterations run.
 
     for iter in 1:params[:max_iters]
 
@@ -126,8 +127,11 @@ function specnet(;additional_params...)
         if iter % 10 == 0 println(iter) end
 
         if stage == 3
-            total_iters = iter - 1
-            break   # End simulation at stopping condition.
+            starvation_timer += 1
+            if starvation_timer == params[:starvation_period]
+                total_iters = iter - 1
+                break   # End simulation after starvation.
+            end
         end
 
         if locs_x == nothing
@@ -153,7 +157,9 @@ function specnet(;additional_params...)
 
         # Payday!
         for ag in keys(AN)
-            ag.a.sugar_level += params[:salary]
+            if starvation_timer == 0
+                ag.a.sugar_level += params[:salary]
+            end
             ag.a.sugar_level -= ag.a.metabolic_rate
             ag.a.sugar_level += rand(white_noise_distrib)
         end
@@ -232,7 +238,7 @@ function specnet(;additional_params...)
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
 
-    println("...ending SPECnet.")
+    println("\n...ending SPECnet.")
 
     return sort(results, :agent)
 end
@@ -379,7 +385,7 @@ function plot_iteration_graphs(iter)
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
                 maxvalue=params[:init_sg_lvl]*
-                    params[:num_iters]/10)
+                    params[:max_iters]/10)
     )
 
     draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
@@ -409,7 +415,7 @@ function plot_iteration_graphs(iter)
                                                             graphp)
 
     #iteration label for svg files
-    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of up to $(params[:num_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of up to $(params[:max_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
     run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
 
 end

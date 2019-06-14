@@ -18,6 +18,14 @@ mutable struct NetAgent
     end
 end
 
+function Base.hash(na::NetAgent, h::UInt)
+    hash(na.a) + h
+end
+
+function Base.isequal(na1::NetAgent, na2::NetAgent)
+    na1.a == na2.a
+end
+
 function Base.show(io::IO, na::NetAgent)
     show(io, na.a)
 end
