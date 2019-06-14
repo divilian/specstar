@@ -19,14 +19,14 @@ original_seed=params[:random_seed]
 
 components=[[],[]]
 global comp_df=DataFrame(size_largest_comp=Int64[],num_comps=Float64[])
-
+colored_wealth_hist_df=
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
     print("Sweeping for: $(param_to_sweep)")
     counter=start_value
 
-    agent_line_df = DataFrame(
+    global agent_line_df = DataFrame(
         replace_this=Float64[],
         seed=Int64[],
         agent=String[],
@@ -36,6 +36,7 @@ function param_sweeper(graph_name)
 
     trial_line_df=DataFrame(
         replace_this=Float64[],
+	
         seed=Int64[],
         gini=Float64[])
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
@@ -84,6 +85,8 @@ function param_sweeper(graph_name)
     rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)ParameterSweepPlot.png", force=true)
+    rm("$(tempdir())/$(graph_name) wealth_heat_map.png", force=true)
+
     #this file contains all info with one line per agent in a given run of siml.jl
     CSV.write("$(tempdir())/$(graph_name)_agent_results.csv",agent_line_df)
     
@@ -112,7 +115,11 @@ function param_sweeper(graph_name)
             total_gini+=current_sim_gini
             #adding the gini sim results to the df
             push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
-            mark_seed_value+=1
+            
+
+            #averaging and pushing data for wealth histogram
+             			
+		   mark_seed_value+=1
 
         end
         mark_seed_value=original_seed
@@ -131,7 +138,10 @@ function param_sweeper(graph_name)
     println("Creating $(param_to_sweep) plot...")
     plotLG=plot(x=plot_df.param_to_sweep,y=plot_df.gini, Geom.point, Geom.line,
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
+	wealth_heat_map=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
+	draw(PNG("$(tempdir())/$(graph_name) wealth_heat_map.png"), wealth_heat_map)
+
 end
 
 #runs a sweep for a given parameter once for each graph type,
