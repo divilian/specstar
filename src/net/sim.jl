@@ -29,6 +29,7 @@ end
 #     specnet(max_iters=20, N=100)
 function specnet(;additional_params...)
 
+    @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
 
     pri("SPECnet simulation parameters:")
@@ -465,4 +466,16 @@ function get_stage(sim_state::SimState)
         end
         return 3
     end
+end
+
+function all_parameters_legit(additional_params)
+    if !all([ word in keys(params) for word in keys(additional_params) ])
+        for word in keys(additional_params)
+            if word ∉  keys(params)
+                println("No such SPECnet parameter \"$(word)\".")
+            end
+        end
+        return false
+    end
+    return true
 end

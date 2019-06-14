@@ -21,7 +21,11 @@ components=[[],[]]
 global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Float64[])
 colored_wealth_hist_df=
 
-function param_sweeper(graph_name)
+function param_sweeper(graph_name; additional_params...)
+
+    @assert all_parameters_legit(additional_params)
+    merge!(params, Dict(additional_params))
+
     println("Starting sweep..")
     print("Sweeping for: $(param_to_sweep)")
     counter=start_value
