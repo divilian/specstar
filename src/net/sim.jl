@@ -332,7 +332,7 @@ function choose_graph()
 
     elseif params[:whichGraph]=="small_world"
         graph = LightGraphs.SimpleGraphs.watts_strogatz(
-            params[:N], params[:λ], params[:SW_prob])
+            params[:N], params[:k], params[:β])
 
     elseif params[:whichGraph]=="complete"
         graph = LightGraphs.SimpleGraphs.CompleteGraph(params[:N])
