@@ -10,16 +10,16 @@ include("setup_params.jl")
 
 param_to_sweep=:metabolic_rate    #parameter to iterate over *any parameter*
                                   #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=4                     #value to begin sweep
-end_value=5                       #value to end sweep
-num_values=3                      #number of distinct values to run
+start_value=1                   #value to begin sweep
+end_value=50                       #value to end sweep
+num_values=50                     #number of distinct values to run
 trials_per_value=4                #for each distinct value, number of independent sims to run
 graph_sweep=false                 #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
 global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Float64[])
-colored_wealth_hist_df=
+
 
 function param_sweeper(graph_name)
     println("Starting sweep..")
@@ -34,7 +34,7 @@ function param_sweeper(graph_name)
         proto_id=Int[])
     names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id])
 
-    trial_line_df=DataFrame(
+    global trial_line_df=DataFrame(
         replace_this=Float64[],
         seed=Int[],
         gini=Float64[])
@@ -60,14 +60,19 @@ function param_sweeper(graph_name)
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)
-            if nv(graph) == 0
-                global num_comps=0
-                global size_largest_comp=0
-            else
-                global num_comps=length(component_vertices)
+            println(component_vertices)
+			if nv(graph) == 0
+                            
+			    global num_comps=0
+                global largest_comp=0
+                push!(comp_df,(largest_comp,num_comps))
+
+			else
+                
+				global num_comps=length(component_vertices)
                 largest_comp=findmax(length.(component_vertices))
-                global size_of_largest_comp=largest_comp[1][1]
-                push!(comp_df,(size_of_largest_comp,num_comps))
+                global largest_comp=largest_comp[1][1]
+                push!(comp_df,(largest_comp,num_comps))
             end
             
             insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
@@ -124,7 +129,6 @@ function param_sweeper(graph_name)
     #this file contains (currently) only the resulting Gini index from each simulation
 
     #one line per run of sim.jl
-    global matching_comp_df = comp_df[setdiff(1:end, 1), :]
     trial_line_df=hcat(trial_line_df,comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
