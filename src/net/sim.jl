@@ -32,8 +32,8 @@ function specnet(;additional_params...)
     merge!(params, Dict(additional_params))
 
     pri("SPECnet simulation parameters:")
-    for (param, val) in params
-        pri("   $(param) = $(val)")
+    for param in sort(collect(keys(params)), by=x->lowercase(string(x)))
+        pri("   $(param) = $(params[param])")
     end
 
     global locs_x, locs_y
