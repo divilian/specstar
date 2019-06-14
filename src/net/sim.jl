@@ -134,10 +134,12 @@ function specnet(;additional_params...)
             end
         end
 
-        if locs_x == nothing
-            locs_x, locs_y = spring_layout(graph)
-        else
-            locs_x, locs_y = spring_layout(graph, locs_x, locs_y)
+        if params[:make_anims]
+            if locs_x == nothing
+                locs_x, locs_y = spring_layout(graph)
+            else
+                locs_x, locs_y = spring_layout(graph, locs_x, locs_y)
+            end
         end
 
 
