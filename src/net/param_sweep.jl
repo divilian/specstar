@@ -47,7 +47,11 @@ function param_sweeper(graph_name; additional_params...)
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
 
     params[:make_anims] = false  # We would never want this true for a sweep
-    
+
+
+    params[:make_sim_plots] = false  # We would never want this true for a sweep
+
+
     for i = 1:num_values
         for j = 1:trials_per_value
             #setting the random seed and adding it to the DataFrame of the final gini of each simulation
@@ -66,6 +70,7 @@ function param_sweeper(graph_name; additional_params...)
 
             # Actually run the simulation!
             results=specnet()
+            agent_results = results[1]
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)
@@ -79,11 +84,14 @@ function param_sweeper(graph_name; additional_params...)
             end
             push!(comp_df,(largest_comp,num_comps))
             
-            insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
-            insertcols!(results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(results)))
-            insertcols!(results, 3, :simulation_tag => repeat((i*num_values+j):(i*num_values+j),nrow(results)))
 
-            agent_line_df=[agent_line_df;results]
+
+            insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
+            insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
+            insertcols!(agent_results, 3, :simulation_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
+
+
+            agent_line_df=[agent_line_df;agent_results]
 
             #increment the random seed to vary the results of simulations with the same params
             params[:random_seed]+=1

@@ -123,31 +123,34 @@ function specnet(;additional_params...)
     local total_iters = params[:max_iters]   
 
     local ginis=[]
+    local stages=[]
+    local nums_agents=[]
 
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
 
-
-        stage = get_stage(SimState(graph, AN, arr_protos))
-
-        @assert stage ∈  [1,2,3]
-        if stage == 1
+        push!(stages, get_stage(SimState(graph, AN, arr_protos)))
+        @assert stages[end] ∈  [1,2,3]
+        if stages[end] == 1
             print("-")
-        elseif stage == 2
+        elseif stages[end] == 2
             print("+")
-        elseif stage == 3
+        elseif stages[end] == 3
             print("#")
         end
         if iter % 10 == 0 println(iter) end
 
-        if stage == 3
+        if stages[end] == 3
             starvation_timer += 1
             if starvation_timer == params[:starvation_period]
                 total_iters = iter - 1
+                pop!(stages)    # (Remove what we prematurely added.)
                 break   # End simulation after starvation.
             end
         end
+
+        push!(nums_agents, length([ a for a ∈  keys(AN) if a.a.alive ]))
 
         if params[:make_anims]
             if locs_x == nothing
@@ -238,18 +241,21 @@ function specnet(;additional_params...)
 
 
     # Collect results in DataFrame.
-    results = DataFrame(
+    agent_results = DataFrame(
         agent = [ ag.a.agent_id for ag in keys(AN) ],
         sugar = [ ag.a.sugar_level for ag in keys(AN) ],
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
+    iter_results = DataFrame(
+        iter = 1:length(ginis),
+        gini = ginis,
+        stage = stages,
+        num_agents = nums_agents
+    )
 
     if params[:make_sim_plots]
-        #drawing the gini index plot
-        giniPlot=plot(x=1:total_iters,y=ginis, Geom.point, Geom.line,
-            Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
-        draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
-
+        plot_gini_livingfrac_over_time(iter_results,
+            [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist()
     end
 
@@ -261,7 +267,7 @@ function specnet(;additional_params...)
     end
     println("\n...ending SPECnet.")
 
-    return sort(results, :agent)
+    return [sort(agent_results, :agent), iter_results]
 end
 
 
@@ -370,6 +376,31 @@ function plot_final_wealth_hist()
         Guide.ylabel("Density of agents"))
         
     draw(PNG("$(tempdir())/final_wealth_histogram.png"),final_wealthp)    
+end
+
+# Plot the Gini coefficient, and the fraction of agents still alive, over time.
+# The callouts parameter should be a list of symbols which should appear in the
+# title's plot.
+function plot_gini_livingfrac_over_time(iter_results, callouts)
+    stage_names = Dict(1=>"1", 2=>"2", 3=>"3")
+    iter_results.stage = [ stage_names[s] for s in iter_results.stage ]
+    iter_results.num_agents /= maximum(iter_results.num_agents)
+    giniPlot=plot(iter_results,
+        layer(
+            x=:iter, y=:gini,
+            Geom.line, Geom.point,
+            color=:stage,
+        ),
+        layer(
+            x=:iter, y=:num_agents,
+            Geom.line,
+            Theme(default_color=colorant"black")
+        ),
+        Guide.xlabel("Iteration"), Guide.ylabel("Gini / fraction living"),
+        Scale.color_discrete_manual("blue","green","red",
+            levels=["1","2","3"]),
+        Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])))
+    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 end
 
 function plot_iteration_graphs(iter)
@@ -487,3 +518,4 @@ function all_parameters_legit(additional_params)
     end
     return true
 end
+
