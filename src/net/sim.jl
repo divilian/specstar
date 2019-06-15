@@ -93,7 +93,7 @@ function specnet(;additional_params...)
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
-    arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
+   global arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
     
     # (Erase old images.)
@@ -365,17 +365,40 @@ rev_dict(d) = Dict(y=>x for (x,y) in d)
 
 function plot_final_wealth_hist()
     final_wealths=[]
-    
+	final_proto_wealths_alive=[]
+    final_proto_wealths=[]
     [push!(final_wealths,ag.a.sugar_level)
     for ag in keys(AN) ]       
+    for p in arr_protos
+        if(p.balance!=-1)
+	        push!(final_proto_wealths_alive, p.balance)
+            push!(final_proto_wealths, p.balance) 
+	    else
+	        push!(final_proto_wealths, p.balance)
+
+	    end
+    end
     
-    final_wealthp = plot(
+	final_wealthp = plot(
         x=final_wealths,
         Geom.histogram(density=true, bincount=20), 
         Guide.xlabel("Agent Wealth"),
         Guide.ylabel("Density of agents"))
-        
-    draw(PNG("$(tempdir())/final_wealth_histogram.png"),final_wealthp)    
+    final_proto_wealthp = plot(
+        x=final_proto_wealths,
+        Geom.histogram(density=true, bincount=20), 
+        Guide.xlabel("Proto Wealth"),
+        Guide.ylabel("Density of protos"))
+    final_proto_wealth_alivep = plot(
+        x=final_proto_wealths_alive,
+        Geom.histogram(density=true, bincount=20), 
+        Guide.xlabel("Proto Wealth"),
+        Guide.ylabel("Density of protos"))		
+    draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp) 
+	draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)    
+
+    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)    
+	
 end
 
 # Plot the Gini coefficient, and the fraction of agents still alive, over time.
