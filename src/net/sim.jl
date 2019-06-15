@@ -123,28 +123,28 @@ function specnet(;additional_params...)
     local total_iters = params[:max_iters]   
 
     local ginis=[]
+    local stages=[]
 
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
 
-
-        stage = get_stage(SimState(graph, AN, arr_protos))
-
-        @assert stage ∈  [1,2,3]
-        if stage == 1
+        push!(stages, get_stage(SimState(graph, AN, arr_protos)))
+        @assert stages[end] ∈  [1,2,3]
+        if stages[end] == 1
             print("-")
-        elseif stage == 2
+        elseif stages[end] == 2
             print("+")
-        elseif stage == 3
+        elseif stages[end] == 3
             print("#")
         end
         if iter % 10 == 0 println(iter) end
 
-        if stage == 3
+        if stages[end] == 3
             starvation_timer += 1
             if starvation_timer == params[:starvation_period]
                 total_iters = iter - 1
+                pop!(stages)    # (Remove what we prematurely added.)
                 break   # End simulation after starvation.
             end
         end
@@ -238,18 +238,19 @@ function specnet(;additional_params...)
 
 
     # Collect results in DataFrame.
-    results = DataFrame(
+    agent_results = DataFrame(
         agent = [ ag.a.agent_id for ag in keys(AN) ],
         sugar = [ ag.a.sugar_level for ag in keys(AN) ],
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
+    iter_results = DataFrame(
+        iter = 1:length(ginis),
+        gini = ginis,
+        stage = stages
+    )
 
     if params[:make_sim_plots]
-        #drawing the gini index plot
-        giniPlot=plot(x=1:total_iters,y=ginis, Geom.point, Geom.line,
-            Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"))
-        draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
-
+        plot_gini_vs_time(iter_results, [:proto_threshold, :λ])
         plot_final_wealth_hist()
     end
 
@@ -261,7 +262,7 @@ function specnet(;additional_params...)
     end
     println("\n...ending SPECnet.")
 
-    return sort(results, :agent)
+    return [sort(agent_results, :agent), iter_results]
 end
 
 
@@ -370,6 +371,21 @@ function plot_final_wealth_hist()
         Guide.ylabel("Density of agents"))
         
     draw(PNG("$(tempdir())/final_wealth_histogram.png"),final_wealthp)    
+end
+
+function plot_gini_vs_time(iter_results, callouts)
+
+    stage_names = Dict(1=>"1", 2=>"2", 3=>"3")
+    iter_results.stage = [ stage_names[s] for s in iter_results.stage ]
+    giniPlot=plot(iter_results,
+        x=:iter, y=:gini,
+        Geom.line, Geom.point,
+        color=:stage,
+        Scale.color_discrete_manual("black","green","red",
+            levels=["1","2","3"]),
+        Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"),
+        Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])))
+    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 end
 
 function plot_iteration_graphs(iter)
@@ -487,3 +503,4 @@ function all_parameters_legit(additional_params)
     end
     return true
 end
+

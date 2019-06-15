@@ -62,6 +62,7 @@ function param_sweeper(graph_name; additional_params...)
 
             # Actually run the simulation!
             results=specnet()
+            agent_results = results[1]
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)
@@ -75,10 +76,10 @@ function param_sweeper(graph_name; additional_params...)
             end
             push!(comp_df,(largest_comp,num_comps))
             
-            insertcols!(results, 1, param_to_sweep => repeat(counter:counter,nrow(results)))
-            insertcols!(results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(results)))
+            insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
+            insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
 
-            agent_line_df=[agent_line_df;results]
+            agent_line_df=[agent_line_df;agent_results]
 
             #increment the random seed to vary the results of simulations with the same params
             params[:random_seed]+=1
