@@ -124,6 +124,7 @@ function specnet(;additional_params...)
 
     local ginis=[]
     local stages=[]
+    local nums_agents=[]
 
     for iter in 1:params[:max_iters]
 
@@ -148,6 +149,8 @@ function specnet(;additional_params...)
                 break   # End simulation after starvation.
             end
         end
+
+        push!(nums_agents, length([ a for a ∈  keys(AN) if a.a.alive ]))
 
         if params[:make_anims]
             if locs_x == nothing
@@ -246,11 +249,13 @@ function specnet(;additional_params...)
     iter_results = DataFrame(
         iter = 1:length(ginis),
         gini = ginis,
-        stage = stages
+        stage = stages,
+        num_agents = nums_agents
     )
 
     if params[:make_sim_plots]
-        plot_gini_vs_time(iter_results, [:proto_threshold, :λ])
+        plot_gini_livingfrac_over_time(iter_results,
+            [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist()
     end
 
@@ -373,17 +378,27 @@ function plot_final_wealth_hist()
     draw(PNG("$(tempdir())/final_wealth_histogram.png"),final_wealthp)    
 end
 
-function plot_gini_vs_time(iter_results, callouts)
-
+# Plot the Gini coefficient, and the fraction of agents still alive, over time.
+# The callouts parameter should be a list of symbols which should appear in the
+# title's plot.
+function plot_gini_livingfrac_over_time(iter_results, callouts)
     stage_names = Dict(1=>"1", 2=>"2", 3=>"3")
     iter_results.stage = [ stage_names[s] for s in iter_results.stage ]
+    iter_results.num_agents /= maximum(iter_results.num_agents)
     giniPlot=plot(iter_results,
-        x=:iter, y=:gini,
-        Geom.line, Geom.point,
-        color=:stage,
-        Scale.color_discrete_manual("black","green","red",
+        layer(
+            x=:iter, y=:gini,
+            Geom.line, Geom.point,
+            color=:stage,
+        ),
+        layer(
+            x=:iter, y=:num_agents,
+            Geom.line,
+            Theme(default_color=colorant"black")
+        ),
+        Guide.xlabel("Iteration"), Guide.ylabel("Gini / fraction living"),
+        Scale.color_discrete_manual("blue","green","red",
             levels=["1","2","3"]),
-        Guide.xlabel("Iteration"), Guide.ylabel("Gini Index"),
         Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])))
     draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
 end
