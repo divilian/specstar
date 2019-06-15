@@ -45,6 +45,7 @@ function param_sweeper(graph_name; additional_params...)
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
 
     params[:make_anims] = false  # We would never want this true for a sweep
+    params[:make_sim_plots] = false  # We would never want this true for a sweep
 
     for i = 1:num_values
         for j = 1:trials_per_value
