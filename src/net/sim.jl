@@ -93,9 +93,9 @@ function specnet(;additional_params...)
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
-   global arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
+    arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
-    
+
     # (Erase old images.)
     save_dir = pwd()
     cd("$(tempdir())")
@@ -114,13 +114,13 @@ function specnet(;additional_params...)
 
 
     # The number of stage 3 iterations run so far.
-    local starvation_timer = 0   
+    local starvation_timer = 0
 
     # The actual total number of iterations run. Assume pessimistically that it
     # will be terminated by the iteration limit; if the stopping condition is
     # encountered before that time, the loop will break out and this variable
     # will be set to a lower number at that time.
-    local total_iters = params[:max_iters]   
+    local total_iters = params[:max_iters]
 
     local ginis=[]
     local stages=[]
@@ -256,7 +256,7 @@ function specnet(;additional_params...)
     if params[:make_sim_plots]
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
-        plot_final_wealth_hist()
+        plot_final_wealth_hist(SimState(graph, AN, arr_protos))
     end
 
     if params[:make_anims]
@@ -363,41 +363,38 @@ end
 
 rev_dict(d) = Dict(y=>x for (x,y) in d)
 
-function plot_final_wealth_hist()
+function plot_final_wealth_hist(sim_state::SimState)
     final_wealths=[]
 	final_proto_wealths_alive=[]
     final_proto_wealths=[]
-    [push!(final_wealths,ag.a.sugar_level)
-    for ag in keys(AN) ]       
-    for p in arr_protos
+    [push!(final_wealths,ag.a.sugar_level) for ag in keys(AN) ]
+    for p in sim_state.arr_protos
         if(p.balance!=-1)
 	        push!(final_proto_wealths_alive, p.balance)
-            push!(final_proto_wealths, p.balance) 
+            push!(final_proto_wealths, p.balance)
 	    else
 	        push!(final_proto_wealths, p.balance)
-
 	    end
     end
-    
+
 	final_wealthp = plot(
         x=final_wealths,
-        Geom.histogram(density=true, bincount=20), 
+        Geom.histogram(density=true, bincount=20),
         Guide.xlabel("Agent Wealth"),
         Guide.ylabel("Density of agents"))
     final_proto_wealthp = plot(
         x=final_proto_wealths,
-        Geom.histogram(density=true, bincount=20), 
+        Geom.histogram(density=true, bincount=20),
         Guide.xlabel("Proto Wealth"),
         Guide.ylabel("Density of protos"))
     final_proto_wealth_alivep = plot(
         x=final_proto_wealths_alive,
-        Geom.histogram(density=true, bincount=20), 
+        Geom.histogram(density=true, bincount=20),
         Guide.xlabel("Proto Wealth"),
         Guide.ylabel("Density of protos"))		
-    draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp) 
-	draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)    
-
-    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)    
+    draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
+	draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
+    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
 	
 end
 

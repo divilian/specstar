@@ -9,12 +9,12 @@ include("setup_params.jl")
 
 
 param_to_sweep=:λ    #parameter to iterate over *any parameter*
-                                  #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=0.0                  #   value to begin sweep
-end_value=2                    #value to end sweep
-num_values=50                     #number of distinct values to run
-trials_per_value=4                #for each distinct value, number of independent sims to run
-graph_sweep=false                 #run the sweep once for each graph type
+                     #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
+start_value=0.0      #value to begin sweep
+end_value=2          #value to end sweep
+num_values=50        #number of distinct values to run
+trials_per_value=4   #for each distinct value, number of independent sims to run
+graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
@@ -36,8 +36,8 @@ function param_sweeper(graph_name; additional_params...)
         agent=String[],
         sugar=Float64[],
         proto_id=Int[],
-		simulation_tag=Int[]
-	)
+        simulation_tag=Int[]
+    )
     names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id, :simulation_tag])
 
     global trial_line_df=DataFrame(
@@ -47,23 +47,17 @@ function param_sweeper(graph_name; additional_params...)
     names!(trial_line_df,[param_to_sweep,:seed,:gini])
 
     params[:make_anims] = false  # We would never want this true for a sweep
-
-
     params[:make_sim_plots] = false  # We would never want this true for a sweep
-
 
     for i = 1:num_values
         for j = 1:trials_per_value
             #setting the random seed and adding it to the DataFrame of the final gini of each simulation
             Random.seed!(params[:random_seed])
-            
+
             if typeof(params[param_to_sweep])==Int
                 param_counter=convert(Int,floor(counter))
-                println("Converting Param to Int")         
-     		else
+             else
                 param_counter=counter
-				println("Param Remains Float")         
-
             end
 
             params[param_to_sweep]=param_counter
@@ -74,7 +68,6 @@ function param_sweeper(graph_name; additional_params...)
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)
-            println(component_vertices)
             if nv(graph) == 0
                 global num_comps=0
                 global largest_comp=0
@@ -83,8 +76,6 @@ function param_sweeper(graph_name; additional_params...)
                 global largest_comp=findmax(length.(component_vertices))[1][1]
             end
             push!(comp_df,(largest_comp,num_comps))
-            
-
 
             insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
             insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
@@ -99,7 +90,7 @@ function param_sweeper(graph_name; additional_params...)
         params[:random_seed]=original_seed
         counter += (end_value-start_value)/num_values
     end
-	simulation_tag=0
+    simulation_tag=0
     rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)ParameterSweepPlot.png", force=true)
@@ -107,18 +98,18 @@ function param_sweeper(graph_name; additional_params...)
 
     #this file contains all info with one line per agent in a given run of siml.jl
     CSV.write("$(tempdir())/$(graph_name)_agent_results.csv",agent_line_df)
-    
+
 
     #once the main dataframe is made, plots may be drawn with data from agent_line_df
     #plotting and construction of dataframe is in separate for loop for optimal organiztion
 
     #dataframe containing only values to be plotted
 
-    global plot_df=DataFrame(gini=Float64[],param_to_sweep=Float64[])
+    plot_df=DataFrame(gini=Float64[],param_to_sweep=Float64[])
 
 
     #change values of this dataframe to create other plots
-    
+
     #loop to populate dataframe
     counter=start_value
     #weak solution to acccessing seed value, should be reworked
@@ -126,10 +117,10 @@ function param_sweeper(graph_name; additional_params...)
     for j = 1:num_values
         total_gini=0
         for i=1:trials_per_value
-		    simulation_tag=(j*num_values+i)
+            simulation_tag=(j*num_values+i)
             current_sim_gini=convert(Float64,
                 ineq((agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar]), "Gini"))
-		    #adding to total gini to be averaged for plot (plot_df)
+            #adding to total gini to be averaged for plot (plot_df)
             total_gini+=current_sim_gini
             #adding the gini sim results to the df
             push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
