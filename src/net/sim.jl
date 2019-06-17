@@ -122,7 +122,8 @@ function specnet(;additional_params...)
     # will be set to a lower number at that time.
     local total_iters = params[:max_iters]
 
-    local ginis=[]
+    # Each row will have three values: the low CI, the value, and the high CI.
+    local ginis=Array{Float16}(undef,params[:max_iters],3)
     local stages=[]
     local nums_agents=[]
 
@@ -224,7 +225,6 @@ function specnet(;additional_params...)
             end
         end
 
-        #adding current gini index to ginis array
         wealthArray=[]
         empty!(wealthArray)
         for ag in keys(AN)
@@ -235,10 +235,8 @@ function specnet(;additional_params...)
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
         #   the CI, and (3) the upper bound.
-        cGini=Gini(wealthArray; Symbol("conf.level")=>.95)[1]
-
-        gIndex=convert(Float16,cGini)
-        push!(ginis,gIndex)
+        rGini=Gini(wealthArray; Symbol("conf.level")=>.95)
+        ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
 
     end   # End main simulation for loop
 
@@ -250,8 +248,10 @@ function specnet(;additional_params...)
         proto_id = [ ag.a.proto_id for ag in keys(AN) ]
     )
     iter_results = DataFrame(
-        iter = 1:length(ginis),
-        gini = ginis,
+        iter = 1:length(stages),
+        gini_lowCI = ginis[1:length(stages),2],
+        gini = ginis[1:length(stages),1],
+        gini_highCI = ginis[1:length(stages),3],
         stage = stages,
         num_agents = nums_agents
     )
