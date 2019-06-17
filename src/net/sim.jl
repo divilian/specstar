@@ -1,5 +1,5 @@
 using RCall
-@rlibrary ineq
+@rlibrary DescTools
 using Gadfly
 using LightGraphs
 using GraphPlot, Compose
@@ -232,7 +232,10 @@ function specnet(;additional_params...)
                 push!(wealthArray,ag.a.sugar_level)
             end
         end
-        cGini=ineq(wealthArray, type="Gini")
+        # The R function Gini() from DescTools returns a vector of three values
+        #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
+        #   the CI, and (3) the upper bound.
+        cGini=Gini(wealthArray; Symbol("conf.level")=>.95)[1]
 
         gIndex=convert(Float16,cGini)
         push!(ginis,gIndex)
