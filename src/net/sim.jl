@@ -415,6 +415,11 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
             color=:stage,
         ),
         layer(
+            x=:iter, y=:gini, ymin=:gini_lowCI, ymax=:gini_highCI,
+            Geom.line, Geom.point, Geom.errorbar,
+            Theme(default_color=colorant"black")
+        ),
+        layer(
             x=:iter, y=:num_agents,
             Geom.line,
             Theme(default_color=colorant"black")
