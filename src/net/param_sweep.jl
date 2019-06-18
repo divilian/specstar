@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 using Revise
 using RCall
-@rlibrary ineq
+@rlibrary DescTools
 using DataFrames
 using CSV
 include("sim.jl")
@@ -118,8 +118,12 @@ function param_sweeper(graph_name; additional_params...)
         total_gini=0
         for i=1:trials_per_value
             simulation_tag=(j*num_values+i)
+            # The R function Gini() from DescTools returns a vector of three
+            #   values if conf.level is not NA: (1) the estimate, (2) the lower
+            #   bound of the CI, and (3) the upper bound.
             current_sim_gini=convert(Float64,
-                ineq((agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar]), "Gini"))
+                Gini(agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar];
+                    Symbol("conf.level")=>.95)[1])
             #adding to total gini to be averaged for plot (plot_df)
             total_gini+=current_sim_gini
             #adding the gini sim results to the df
