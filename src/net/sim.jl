@@ -235,8 +235,16 @@ function specnet(;additional_params...)
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
         #   the CI, and (3) the upper bound.
-        rGini=Gini(wealthArray; Symbol("conf.level")=>.95)
-        ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+        # If we're going to end up making a single-sim plot, use Gini's CI's
+        #   (which use bootstrapping, and are therefore time-consuming) to get
+        #   all three. Otherwise, just get (1).
+        if params[:make_sim_plots]
+            rGini=Gini(wealthArray; Symbol("conf.level")=>.95)
+            ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+        else
+            rGini=Gini(wealthArray)
+            ginis[iter,1] = convert(Float16,rGini)
+        end
 
     end   # End main simulation for loop
 
