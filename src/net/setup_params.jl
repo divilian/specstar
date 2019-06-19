@@ -23,6 +23,12 @@ params = Dict{Symbol,Any}(
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
     :make_sim_plots => true,        # create plots (for individual simulations)?
+    :num_boot_samples => 1000,      # for single sims, the number of bootstrap
+                                    #   samples used in computing CI for single
+                                    #   Gini
+                                    # for param sweeps, the number of bootstrap
+                                    #   samples used in computing CI for all
+                                    #   Ginis in runs with same parameters
     :animation_delay => 20,         # milliseconds between animation frames
     :random_seed => 1234,           # random number generator starting seed
 
