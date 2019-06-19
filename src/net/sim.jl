@@ -240,7 +240,7 @@ function specnet(;additional_params...)
         #   all three. Otherwise, just get (1).
         if params[:make_sim_plots]
             rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
-                R=>params[:num_boot_samples])
+                :R=>params[:num_boot_samples])
             ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
         else
             rGini=Gini(wealthArray)
