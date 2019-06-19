@@ -157,14 +157,24 @@ function param_sweeper(graph_name; additional_params...)
     println("Creating $(param_to_sweep) plot...")
     plotLG=plot(plot_df,
         layer(
-            x=param_to_sweep, y=:gini,
-            Geom.line, Geom.point,
-            Theme(default_color=colorant"navy")
+            x=param_to_sweep, y=:gini_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
-            x=param_to_sweep, y=:gini, ymin=:gini_lowCI, ymax=:gini_highCI,
-            Geom.errorbar,
-            Theme(default_color=colorant"grey")
+            x=param_to_sweep, y=:gini,
+            Geom.line,
+            Theme(default_color=colorant"navy", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:gini_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:gini_lowCI, ymax=:gini_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue")
         ),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))

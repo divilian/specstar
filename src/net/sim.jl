@@ -419,14 +419,24 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
     iter_results.num_agents /= maximum(iter_results.num_agents)
     giniPlot=plot(iter_results,
         layer(
+            x=:iter, y=:gini_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
             x=:iter, y=:gini,
             Geom.line, Geom.point,
             color=:stage,
         ),
         layer(
+            x=:iter, y=:gini_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
             x=:iter, y=:gini, ymin=:gini_lowCI, ymax=:gini_highCI,
-            Geom.line, Geom.point, Geom.errorbar,
-            Theme(default_color=colorant"black")
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue")
         ),
         layer(
             x=:iter, y=:num_agents,
