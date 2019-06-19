@@ -33,7 +33,7 @@ params = Dict{Symbol,Any}(
                                     #   - "complete"
                                     #   - "empty"
 
-    :λ => 2,                        # ER: expected number if edges per node
+    :λ => 2.0,                        # ER: expected number if edges per node
 
     :SF_edges => 40,                # SF: number of edges
     :SF_degree => 2,                # SF: exponent of expected power law degree
