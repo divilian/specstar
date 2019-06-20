@@ -9,3 +9,8 @@
 *.swp
 outputfile*.csv
 **/.ipynb_checkpoints
+# LaTeX/BibTeX stuff
+*.bbl
+*.blg
+# You also might want to do:
+# git update-index --assume-unchanged ../../manuscript/draftcssa19.synctex.gz
