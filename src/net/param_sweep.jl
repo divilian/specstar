@@ -37,15 +37,17 @@ function param_sweeper(graph_name; additional_params...)
         agent=String[],
         sugar=Float64[],
         proto_id=Int[],
-        simulation_tag=Int[]
+        sim_tag=Int[]
     )
-    names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id, :simulation_tag])
+    names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id,:sim_tag])
 
     global trial_line_df=DataFrame(
         replace_this=Float64[],
         seed=Int[],
-        gini=Float64[])
-    names!(trial_line_df,[param_to_sweep,:seed,:gini])
+        gini=Float64[],
+        sim_tag=Int[]
+    )
+    names!(trial_line_df,[param_to_sweep,:seed,:gini,:sim_tag])
 
     params[:make_anims] = false  # We would never want this true for a sweep
     params[:make_sim_plots] = false  # We would never want this true for a sweep
@@ -74,7 +76,7 @@ function param_sweeper(graph_name; additional_params...)
 
             insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
             insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
-            insertcols!(agent_results, 3, :simulation_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
+            insertcols!(agent_results, 3, :sim_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
 
             agent_line_df=[agent_line_df;agent_results]
 
@@ -84,7 +86,7 @@ function param_sweeper(graph_name; additional_params...)
         params[:random_seed]=original_seed
         counter += (end_value-start_value)/num_values
     end
-    simulation_tag=0
+    sim_tag=0
     rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)ParameterSweepPlot.png", force=true)
@@ -114,20 +116,29 @@ function param_sweeper(graph_name; additional_params...)
     counter=start_value
     #weak solution to acccessing seed value, should be reworked
     mark_seed_value=original_seed
+
     for j = 1:num_values
+
         curr_param_value_ginis = []
+        curr_param_value_sizes = []
+
         for i=1:trials_per_value
-            simulation_tag=(j*num_values+i)
+
+            sim_tag=(j*num_values+i)
+
             # When not given a conf.level parameter, the R function Gini() from
             #   DescTools returns a single value: the Gini coefficient. We're
             #   not using DescTools bootstrapping to estimate the CI here,
             #   because we want a CI from the set of Gini coefficients from our
             #   trials_per_value runs, not the CI of a single run.
             current_sim_gini = convert(Float64, Gini(
-                agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar]))
+                agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
             push!(curr_param_value_ginis, current_sim_gini)
-            #adding the gini sim results to the df
-            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
+
+            #adding results to the df
+            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini,
+                sim_tag))
+
             #averaging and pushing data for wealth histogram
             mark_seed_value+=1
         end
