@@ -146,8 +146,8 @@ function param_sweeper(graph_name; additional_params...)
     trial_line_df=hcat(trial_line_df,comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
-    #drawing plot
-    println("Creating $(param_to_sweep) plot...")
+    #drawing plots
+    println("Creating $(param_to_sweep) Gini plot...")
     plotLG=plot(plot_df,
         layer(
             x=param_to_sweep, y=:gini_lowCI,
@@ -170,8 +170,10 @@ function param_sweeper(graph_name; additional_params...)
             Theme(default_color=colorant"lightblue")
         ),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
-    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
+
+    println("Creating $(param_to_sweep) agent heatmap...")
+    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
     return Dict(:agent_line_df => agent_line_df,
