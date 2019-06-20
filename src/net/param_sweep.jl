@@ -65,7 +65,7 @@ function param_sweeper(graph_name; additional_params...)
 
             # Actually run the simulation!
             results=specnet()
-            agent_results = results[1]
+            agent_results = results[:agent_results]
 
             #finding the breakdown of graph components and pushing that to component data frame
             component_vertices=connected_components(graph)

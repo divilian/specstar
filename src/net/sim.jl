@@ -279,7 +279,8 @@ function specnet(;additional_params...)
     end
     println("\n...ending SPECnet.")
 
-    return [sort(agent_results, :agent), iter_results]
+    return Dict(:agent_results => sort(agent_results, :agent),
+        :iter_results => iter_results)
 end
 
 
