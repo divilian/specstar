@@ -39,7 +39,8 @@ function param_sweeper(graph_name; additional_params...)
         proto_id=Int[],
         sim_tag=Int[]
     )
-    names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id,:sim_tag])
+    names!(agent_line_df,
+        prepend!(names(agent_line_df)[2:end], [param_to_sweep]))
 
     global trial_line_df=DataFrame(
         replace_this=Float64[],
@@ -47,7 +48,8 @@ function param_sweeper(graph_name; additional_params...)
         gini=Float64[],
         sim_tag=Int[]
     )
-    names!(trial_line_df,[param_to_sweep,:seed,:gini,:sim_tag])
+    names!(trial_line_df,
+        prepend!(names(trial_line_df)[2:end], [param_to_sweep]))
 
     params[:make_anims] = false  # We would never want this true for a sweep
     params[:make_sim_plots] = false  # We would never want this true for a sweep
@@ -107,7 +109,7 @@ function param_sweeper(graph_name; additional_params...)
         gini_lowCI=Float64[],
         gini_highCI=Float64[],
     )
-    names!(plot_df,[param_to_sweep,:gini,:gini_lowCI,:gini_highCI])
+    names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
 
     #change values of this dataframe to create other plots
