@@ -4,6 +4,7 @@ using RCall
 @rlibrary DescTools
 using DataFrames
 using CSV
+using Bootstrap
 include("sim.jl")
 include("setup_params.jl")
 
@@ -105,7 +106,13 @@ function param_sweeper(graph_name; additional_params...)
 
     #dataframe containing only values to be plotted
 
-    plot_df=DataFrame(gini=Float64[],param_to_sweep=Float64[])
+    plot_df=DataFrame(
+        replace_this=Float64[],
+        gini=Float64[],
+        gini_lowCI=Float64[],
+        gini_highCI=Float64[],
+    )
+    names!(plot_df,[param_to_sweep,:gini,:gini_lowCI,:gini_highCI])
 
 
     #change values of this dataframe to create other plots
@@ -115,25 +122,29 @@ function param_sweeper(graph_name; additional_params...)
     #weak solution to acccessing seed value, should be reworked
     mark_seed_value=original_seed
     for j = 1:num_values
-        total_gini=0
+        curr_param_value_ginis = []
         for i=1:trials_per_value
             simulation_tag=(j*num_values+i)
-            # The R function Gini() from DescTools returns a vector of three
-            #   values if conf.level is not NA: (1) the estimate, (2) the lower
-            #   bound of the CI, and (3) the upper bound.
-            current_sim_gini=convert(Float64,
-                Gini(agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar];
-                    Symbol("conf.level")=>.95)[1])
-            #adding to total gini to be averaged for plot (plot_df)
-            total_gini+=current_sim_gini
+            # When not given a conf.level parameter, the R function Gini() from
+            #   DescTools returns a single value: the Gini coefficient. We're
+            #   not using DescTools bootstrapping to estimate the CI here,
+            #   because we want a CI from the set of Gini coefficients from our
+            #   trials_per_value runs, not the CI of a single run.
+            current_sim_gini = convert(Float64, Gini(
+                agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar]))
+            push!(curr_param_value_ginis, current_sim_gini)
             #adding the gini sim results to the df
             push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
             #averaging and pushing data for wealth histogram
             mark_seed_value+=1
         end
         mark_seed_value=original_seed
-        #change this code to populate above dataframe with alt data
-        push!(plot_df, (total_gini/trials_per_value,counter))
+
+        # Compute the average Gini, with CI, for this set of param values.
+        bs = bootstrap(x->Gini(x), curr_param_value_ginis,
+            BasicSampling(params[:num_boot_samples]))
+        ci = confint(bs, BasicConfInt(.95))[1]
+        push!(plot_df, (counter, ci[1], ci[2], ci[3]))
         counter+=((end_value-start_value)/num_values)
     end
     #this file contains (currently) only the resulting Gini index from each simulation
@@ -144,7 +155,27 @@ function param_sweeper(graph_name; additional_params...)
 
     #drawing plot
     println("Creating $(param_to_sweep) plot...")
-    plotLG=plot(x=plot_df.param_to_sweep,y=plot_df.gini, Geom.point, Geom.line,
+    plotLG=plot(plot_df,
+        layer(
+            x=param_to_sweep, y=:gini_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, y=:gini,
+            Geom.line,
+            Theme(default_color=colorant"navy", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:gini_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:gini_lowCI, ymax=:gini_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue")
+        ),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
