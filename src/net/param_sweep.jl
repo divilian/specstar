@@ -181,18 +181,20 @@ function param_sweeper(graph_name; additional_params...)
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
+    return [ agent_line_df, trial_line_df, plot_df ]
 end
 
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
 
 if graph_sweep
+    sweep_results = Dict()
     graphs=["erdos_renyi","scale_free","small_world","complete","empty"]
     println("sweeping for graph type")
     for graph in graphs
         params[:whichGraph]=graph
-        param_sweeper(string(graph))
+        sweep_results[graph] = param_sweeper(string(graph))
     end
 else
-    param_sweeper(params[:whichGraph])
+    sweep_results = param_sweeper(params[:whichGraph])
 end
