@@ -66,22 +66,15 @@ function param_sweeper(graph_name; additional_params...)
             # Actually run the simulation!
             results=specnet()
             agent_results = results[:agent_results]
+            overall_results = results[:overall_results]
 
-            #finding the breakdown of graph components and pushing that to component data frame
-            component_vertices=connected_components(graph)
-            if nv(graph) == 0
-                global num_comps=0
-                global largest_comp=0
-            else
-                global num_comps=length(component_vertices)
-                global largest_comp=findmax(length.(component_vertices))[1][1]
-            end
-            push!(comp_df,(largest_comp,num_comps))
+            push!(comp_df,
+                (overall_results[:size_largest_comp],
+                 overall_results[:num_comps]))
 
             insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
             insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
             insertcols!(agent_results, 3, :simulation_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
-
 
             agent_line_df=[agent_line_df;agent_results]
 
@@ -181,7 +174,9 @@ function param_sweeper(graph_name; additional_params...)
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
-    return [ agent_line_df, trial_line_df, plot_df ]
+    return Dict(:agent_line_df => agent_line_df,
+        :trial_line_df => trial_line_df,
+        :plot_df => plot_df)
 end
 
 #runs a sweep for a given parameter once for each graph type,
@@ -189,11 +184,11 @@ end
 
 if graph_sweep
     sweep_results = Dict()
-    graphs=["erdos_renyi","scale_free","small_world","complete","empty"]
+    graph_types=["erdos_renyi","scale_free","small_world","complete","empty"]
     println("sweeping for graph type")
-    for graph in graphs
-        params[:whichGraph]=graph
-        sweep_results[graph] = param_sweeper(string(graph))
+    for graph_type in graph_types
+        params[:whichGraph]=graph_type
+        sweep_results[graph_type] = param_sweeper(graph_type)
     end
 else
     sweep_results = param_sweeper(params[:whichGraph])
