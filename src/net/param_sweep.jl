@@ -19,7 +19,7 @@ graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Float64[])
+global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Int[])
 
 
 function param_sweeper(graph_name; additional_params...)
