@@ -263,7 +263,8 @@ function param_sweeper(graph_name; additional_params...)
     compGiniPlot=vstack(plotLG,plotComponents)
 
     draw(PNG("$(tempdir())/$(graph_name)GiniSweepPlot.png"), plotLG)
-    draw(PNG("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png"), compGiniPlot)
+    draw(PNG("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png",
+        4inch, 6inch), compGiniPlot)
     draw(PNG("$(tempdir())/$(graph_name)ComponentSweepPlot.png"), plotComponents)
     println("Creating $(param_to_sweep) agent heatmap...")
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
