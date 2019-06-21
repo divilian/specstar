@@ -75,7 +75,7 @@ function param_sweeper(graph_name; additional_params...)
             push!(comp_df,
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
-				 (i*num_values+j)))
+                 (i*num_values+j)))
 
             insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
             insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
@@ -94,7 +94,7 @@ function param_sweeper(graph_name; additional_params...)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)GiniSweepPlot.png", force=true)
     rm("$(tempdir())/$(graph_name)_wealth_heatmap.png", force=true)
-    rm("$(tempdir())/$(graph_name)Component&GiniSweepPlots.png", force=true)
+    rm("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png", force=true)
     rm("$(tempdir())/$(graph_name)ComponentSweepPlot.png", force=true)
 
 
@@ -112,13 +112,13 @@ function param_sweeper(graph_name; additional_params...)
         gini=Float64[],
         gini_lowCI=Float64[],
         gini_highCI=Float64[],
-		number_components=Float64[],
-		number_components_lowCI=Float64[],
+        number_components=Float64[],
+        number_components_lowCI=Float64[],
         number_components_highCI=Float64[],
-		size_largest_component=Float64[],
-		size_largest_component_lowCI=Float64[],
+        size_largest_component=Float64[],
+        size_largest_component_lowCI=Float64[],
         size_largest_component_highCI=Float64[],
-	)
+    )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
 
@@ -147,7 +147,7 @@ function param_sweeper(graph_name; additional_params...)
                 agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
             push!(curr_param_value_ginis, current_sim_gini)
             push!(curr_param_value_sizes,comp_df[comp_df[:sim_tag].==sim_tag,:size_largest_comp])
-			push!(curr_param_value_components,comp_df[comp_df[:sim_tag].==sim_tag,:num_comps])
+            push!(curr_param_value_components,comp_df[comp_df[:sim_tag].==sim_tag,:num_comps])
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,current_sim_gini,
                 sim_tag))
@@ -161,28 +161,28 @@ function param_sweeper(graph_name; additional_params...)
         bs = bootstrap(x->Gini(x), curr_param_value_ginis,
             BasicSampling(params[:num_boot_samples]))
         ciGinis = confint(bs, BasicConfInt(.95))[1]
-        
-		#Compute the average size of the largest component, with a CI for current params
-		
-		bs1 = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
+
+        #Compute the average size of the largest component, with a CI for current params
+
+        bs1 = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
         ciSizes = confint(bs1, BasicConfInt(.95))[1]
 
         #Compute the average size of the largest component, with a CI for current params
-		
-		bs2 = bootstrap(mean, curr_param_value_components, BasicSampling(params[:num_boot_samples]))
+
+        bs2 = bootstrap(mean, curr_param_value_components, BasicSampling(params[:num_boot_samples]))
         ciNumbers = confint(bs2, BasicConfInt(.95))[1]
-		
-		push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
-		                        ciNumbers[1], ciNumbers[2], ciNumbers[3],
-								ciSizes[1], ciSizes[2], ciSizes[3]))
+
+        push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
+                                ciNumbers[1], ciNumbers[2], ciNumbers[3],
+                                ciSizes[1], ciSizes[2], ciSizes[3]))
         counter+=((end_value-start_value)/num_values)
-		
-	
+
+
     end
     #this file contains (currently) only the resulting Gini index from each simulation
     #trial_line_df=hcat(trial_line_df,comp_df)
     trial_line_df=join(trial_line_df, comp_df, on = :sim_tag)
-    
+
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     #drawing plots
@@ -209,8 +209,8 @@ function param_sweeper(graph_name; additional_params...)
             Theme(default_color=colorant"lightblue")
         ),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
-		
-	plotComponents=plot(plot_df,
+
+    plotComponents=plot(plot_df,
         layer(
             x=param_to_sweep, y=:number_components_lowCI,
             Geom.line,
@@ -231,7 +231,7 @@ function param_sweeper(graph_name; additional_params...)
             Geom.ribbon,
             Theme(default_color=colorant"yellow")
         ),
-		layer(
+        layer(
             x=param_to_sweep, y=:size_largest_component_lowCI,
             Geom.line,
             Theme(default_color=colorant"orange")
@@ -254,7 +254,7 @@ function param_sweeper(graph_name; additional_params...)
         Guide.xlabel(string(param_to_sweep)),Guide.ylabel(nothing), Guide.manual_color_key("Legend", ["Agents in Largest Component", "Number of Components"], ["red", "green"]),style(key_position=:bottom))
     compGiniPlot=vstack(plotLG,plotComponents)
     draw(PNG("$(tempdir())/$(graph_name)GiniSweepPlot.png"), plotLG)
-    draw(PNG("$(tempdir())/$(graph_name)Component&GiniSweepPlots.png"), compGiniPlot)
+    draw(PNG("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png"), compGiniPlot)
     draw(PNG("$(tempdir())/$(graph_name)ComponentSweepPlot.png"), plotComponents)
     println("Creating $(param_to_sweep) agent heatmap...")
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
