@@ -4,6 +4,7 @@ using RCall
 @rlibrary DescTools
 using DataFrames
 using CSV
+using Bootstrap
 include("sim.jl")
 include("setup_params.jl")
 
@@ -18,7 +19,7 @@ graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Float64[])
+global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Int[])
 
 
 function param_sweeper(graph_name; additional_params...)
@@ -36,15 +37,19 @@ function param_sweeper(graph_name; additional_params...)
         agent=String[],
         sugar=Float64[],
         proto_id=Int[],
-        simulation_tag=Int[]
+        sim_tag=Int[]
     )
-    names!(agent_line_df,[param_to_sweep,:seed,:agent,:sugar,:proto_id, :simulation_tag])
+    names!(agent_line_df,
+        prepend!(names(agent_line_df)[2:end], [param_to_sweep]))
 
     global trial_line_df=DataFrame(
         replace_this=Float64[],
         seed=Int[],
-        gini=Float64[])
-    names!(trial_line_df,[param_to_sweep,:seed,:gini])
+        gini=Float64[],
+        sim_tag=Int[]
+    )
+    names!(trial_line_df,
+        prepend!(names(trial_line_df)[2:end], [param_to_sweep]))
 
     params[:make_anims] = false  # We would never want this true for a sweep
     params[:make_sim_plots] = false  # We would never want this true for a sweep
@@ -64,23 +69,16 @@ function param_sweeper(graph_name; additional_params...)
 
             # Actually run the simulation!
             results=specnet()
-            agent_results = results[1]
+            agent_results = results[:agent_results]
+            overall_results = results[:overall_results]
 
-            #finding the breakdown of graph components and pushing that to component data frame
-            component_vertices=connected_components(graph)
-            if nv(graph) == 0
-                global num_comps=0
-                global largest_comp=0
-            else
-                global num_comps=length(component_vertices)
-                global largest_comp=findmax(length.(component_vertices))[1][1]
-            end
-            push!(comp_df,(largest_comp,num_comps))
+            push!(comp_df,
+                (overall_results[:size_largest_comp],
+                 overall_results[:num_comps]))
 
             insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
             insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
-            insertcols!(agent_results, 3, :simulation_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
-
+            insertcols!(agent_results, 3, :sim_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
 
             agent_line_df=[agent_line_df;agent_results]
 
@@ -90,7 +88,7 @@ function param_sweeper(graph_name; additional_params...)
         params[:random_seed]=original_seed
         counter += (end_value-start_value)/num_values
     end
-    simulation_tag=0
+    sim_tag=0
     rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)ParameterSweepPlot.png", force=true)
@@ -105,7 +103,13 @@ function param_sweeper(graph_name; additional_params...)
 
     #dataframe containing only values to be plotted
 
-    plot_df=DataFrame(gini=Float64[],param_to_sweep=Float64[])
+    plot_df=DataFrame(
+        replace_this=Float64[],
+        gini=Float64[],
+        gini_lowCI=Float64[],
+        gini_highCI=Float64[],
+    )
+    names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
 
     #change values of this dataframe to create other plots
@@ -114,26 +118,39 @@ function param_sweeper(graph_name; additional_params...)
     counter=start_value
     #weak solution to acccessing seed value, should be reworked
     mark_seed_value=original_seed
+
     for j = 1:num_values
-        total_gini=0
+
+        curr_param_value_ginis = []
+        curr_param_value_sizes = []
+
         for i=1:trials_per_value
-            simulation_tag=(j*num_values+i)
-            # The R function Gini() from DescTools returns a vector of three
-            #   values if conf.level is not NA: (1) the estimate, (2) the lower
-            #   bound of the CI, and (3) the upper bound.
-            current_sim_gini=convert(Float64,
-                Gini(agent_line_df[agent_line_df.simulation_tag.==simulation_tag,:sugar];
-                    Symbol("conf.level")=>.95)[1])
-            #adding to total gini to be averaged for plot (plot_df)
-            total_gini+=current_sim_gini
-            #adding the gini sim results to the df
-            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini))
+
+            sim_tag=(j*num_values+i)
+
+            # When not given a conf.level parameter, the R function Gini() from
+            #   DescTools returns a single value: the Gini coefficient. We're
+            #   not using DescTools bootstrapping to estimate the CI here,
+            #   because we want a CI from the set of Gini coefficients from our
+            #   trials_per_value runs, not the CI of a single run.
+            current_sim_gini = convert(Float64, Gini(
+                agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
+            push!(curr_param_value_ginis, current_sim_gini)
+
+            #adding results to the df
+            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini,
+                sim_tag))
+
             #averaging and pushing data for wealth histogram
             mark_seed_value+=1
         end
         mark_seed_value=original_seed
-        #change this code to populate above dataframe with alt data
-        push!(plot_df, (total_gini/trials_per_value,counter))
+
+        # Compute the average Gini, with CI, for this set of param values.
+        bs = bootstrap(x->Gini(x), curr_param_value_ginis,
+            BasicSampling(params[:num_boot_samples]))
+        ci = confint(bs, BasicConfInt(.95))[1]
+        push!(plot_df, (counter, ci[1], ci[2], ci[3]))
         counter+=((end_value-start_value)/num_values)
     end
     #this file contains (currently) only the resulting Gini index from each simulation
@@ -142,26 +159,52 @@ function param_sweeper(graph_name; additional_params...)
     trial_line_df=hcat(trial_line_df,comp_df)
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
-    #drawing plot
-    println("Creating $(param_to_sweep) plot...")
-    plotLG=plot(x=plot_df.param_to_sweep,y=plot_df.gini, Geom.point, Geom.line,
+    #drawing plots
+    println("Creating $(param_to_sweep) Gini plot...")
+    plotLG=plot(plot_df,
+        layer(
+            x=param_to_sweep, y=:gini_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, y=:gini,
+            Geom.line,
+            Theme(default_color=colorant"navy", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:gini_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:gini_lowCI, ymax=:gini_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue")
+        ),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
-    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)ParameterSweepPlot.png"), plotLG)
+
+    println("Creating $(param_to_sweep) agent heatmap...")
+    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
+    return Dict(:agent_line_df => agent_line_df,
+        :trial_line_df => trial_line_df,
+        :plot_df => plot_df)
 end
 
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
 
 if graph_sweep
-    graphs=["erdos_renyi","scale_free","small_world","complete","empty"]
+    sweep_results = Dict()
+    graph_types=["erdos_renyi","scale_free","small_world","complete","empty"]
     println("sweeping for graph type")
-    for graph in graphs
-        params[:whichGraph]=graph
-        param_sweeper(string(graph))
+    for graph_type in graph_types
+        params[:whichGraph]=graph_type
+        sweep_results[graph_type] = param_sweeper(graph_type)
     end
 else
-    param_sweeper(params[:whichGraph])
+    sweep_results = param_sweeper(params[:whichGraph])
 end

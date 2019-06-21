@@ -235,8 +235,17 @@ function specnet(;additional_params...)
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
         #   the CI, and (3) the upper bound.
-        rGini=Gini(wealthArray; Symbol("conf.level")=>.95)
-        ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+        # If we're going to end up making a single-sim plot, use Gini's CI's
+        #   (which use bootstrapping, and are therefore time-consuming) to get
+        #   all three. Otherwise, just get (1).
+        if params[:make_sim_plots]
+            rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
+                :R=>params[:num_boot_samples])
+            ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+        else
+            rGini=Gini(wealthArray)
+            ginis[iter,1] = convert(Float16,rGini)
+        end
 
     end   # End main simulation for loop
 
@@ -255,6 +264,13 @@ function specnet(;additional_params...)
         stage = stages,
         num_agents = nums_agents
     )
+    component_vertices=connected_components(graph)
+    overall_results = Dict(
+        :size_largest_comp => nv(graph) == 0 ? 0 : 
+            findmax(length.(component_vertices))[1][1],
+        :num_comps => nv(graph) == 0 ? 0 : 
+            length(component_vertices)
+    )
 
     if params[:make_sim_plots]
         plot_gini_livingfrac_over_time(iter_results,
@@ -270,7 +286,9 @@ function specnet(;additional_params...)
     end
     println("\n...ending SPECnet.")
 
-    return [sort(agent_results, :agent), iter_results]
+    return Dict(:agent_results => sort(agent_results, :agent),
+        :iter_results => iter_results,
+        :overall_results => overall_results)
 end
 
 
@@ -410,14 +428,24 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
     iter_results.num_agents /= maximum(iter_results.num_agents)
     giniPlot=plot(iter_results,
         layer(
+            x=:iter, y=:gini_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
             x=:iter, y=:gini,
             Geom.line, Geom.point,
             color=:stage,
         ),
         layer(
+            x=:iter, y=:gini_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
             x=:iter, y=:gini, ymin=:gini_lowCI, ymax=:gini_highCI,
-            Geom.line, Geom.point, Geom.errorbar,
-            Theme(default_color=colorant"black")
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue")
         ),
         layer(
             x=:iter, y=:num_agents,
