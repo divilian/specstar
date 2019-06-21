@@ -252,10 +252,11 @@ function param_sweeper(graph_name; additional_params...)
             Geom.ribbon,
             Theme(default_color=colorant"pink",key_position=:top)
         ),
-        Theme(background_color=colorant"white"),
-        Guide.xlabel(string(param_to_sweep)), Guide.ylabel(nothing),
+        Guide.xlabel(string(param_to_sweep)),
+        Guide.ylabel("Components", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
         Guide.manual_color_key("Legend",
-            ["Agents in Largest Component", "Number of Components"],
+            ["Agents in Largest Component      .", "Number of Components"],
             ["red", "green"]),
         style(background_color=colorant"white",key_position=:bottom))
 
