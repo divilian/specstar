@@ -208,6 +208,7 @@ function param_sweeper(graph_name; additional_params...)
             Geom.ribbon,
             Theme(default_color=colorant"lightblue")
         ),
+        Theme(background_color=colorant"white"),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
 
     plotComponents=plot(plot_df,
@@ -251,13 +252,24 @@ function param_sweeper(graph_name; additional_params...)
             Geom.ribbon,
             Theme(default_color=colorant"pink",key_position=:top)
         ),
-        Guide.xlabel(string(param_to_sweep)),Guide.ylabel(nothing), Guide.manual_color_key("Legend", ["Agents in Largest Component", "Number of Components"], ["red", "green"]),style(key_position=:bottom))
+        Theme(background_color=colorant"white"),
+        Guide.xlabel(string(param_to_sweep)), Guide.ylabel(nothing),
+        Guide.manual_color_key("Legend",
+            ["Agents in Largest Component", "Number of Components"],
+            ["red", "green"]),
+        style(background_color=colorant"white",key_position=:bottom))
+
     compGiniPlot=vstack(plotLG,plotComponents)
+
     draw(PNG("$(tempdir())/$(graph_name)GiniSweepPlot.png"), plotLG)
     draw(PNG("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png"), compGiniPlot)
     draw(PNG("$(tempdir())/$(graph_name)ComponentSweepPlot.png"), plotComponents)
     println("Creating $(param_to_sweep) agent heatmap...")
-    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
+    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
+        Geom.histogram2d,
+        Theme(background_color=colorant"white"),
+        Guide.ylabel(string(param_to_sweep)),
+        Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
     return Dict(:agent_line_df => agent_line_df,
