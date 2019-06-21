@@ -34,10 +34,10 @@ function param_sweeper(graph_name; additional_params...)
     global agent_line_df = DataFrame(
         replace_this=Float64[],
         seed=Int[],
+        sim_tag=Int[],
         agent=String[],
         sugar=Float64[],
         proto_id=Int[],
-        sim_tag=Int[]
     )
     names!(agent_line_df,
         prepend!(names(agent_line_df)[2:end], [param_to_sweep]))
@@ -45,11 +45,21 @@ function param_sweeper(graph_name; additional_params...)
     global trial_line_df=DataFrame(
         replace_this=Float64[],
         seed=Int[],
+        sim_tag=Int[],
         gini=Float64[],
-        sim_tag=Int[]
     )
     names!(trial_line_df,
         prepend!(names(trial_line_df)[2:end], [param_to_sweep]))
+
+    global iter_line_df=DataFrame(
+        replace_this=Float64[],
+        seed=Int[],
+        sim_tag=Int[],
+        iter=Int[],
+        stage=Int[],
+    )
+    names!(iter_line_df,
+        prepend!(names(iter_line_df)[2:end], [param_to_sweep]))
 
     params[:make_anims] = false  # We would never want this true for a sweep
     params[:make_sim_plots] = false  # We would never want this true for a sweep
@@ -70,6 +80,7 @@ function param_sweeper(graph_name; additional_params...)
             # Actually run the simulation!
             results=specnet()
             agent_results = results[:agent_results]
+            iter_results = results[:iter_results]
             overall_results = results[:overall_results]
 
             push!(comp_df,
@@ -77,11 +88,12 @@ function param_sweeper(graph_name; additional_params...)
                  overall_results[:num_comps],
                  (i*num_values+j)))
 
-            insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
-            insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
-            insertcols!(agent_results, 3, :sim_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
+            add_sim_info!(agent_results, param_counter, counter, i*num_values+j)
+            iter_results = iter_results[[:iter,:stage]]  # only need these for now
+            add_sim_info!(iter_results, param_counter, counter, i*num_values+j)
 
             agent_line_df=[agent_line_df;agent_results]
+            iter_line_df=[iter_line_df;iter_results]
 
             #increment the random seed to vary the results of simulations with the same params
             params[:random_seed]+=1
@@ -149,8 +161,8 @@ function param_sweeper(graph_name; additional_params...)
             push!(curr_param_value_sizes,comp_df[comp_df[:sim_tag].==sim_tag,:size_largest_comp])
             push!(curr_param_value_components,comp_df[comp_df[:sim_tag].==sim_tag,:num_comps])
             #adding results to the df
-            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini,
-                sim_tag))
+            push!(trial_line_df,(counter,mark_seed_value,sim_tag,
+                current_sim_gini))
 
             #averaging and pushing data for wealth histogram
             mark_seed_value+=1
@@ -277,6 +289,12 @@ function param_sweeper(graph_name; additional_params...)
     return Dict(:agent_line_df => agent_line_df,
         :trial_line_df => trial_line_df,
         :plot_df => plot_df)
+end
+
+function add_sim_info!(df, param_counter, counter, sim_tag)
+    insertcols!(df, 1, param_to_sweep => repeat(counter:counter,nrow(df)))
+    insertcols!(df, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(df)))
+    insertcols!(df, 3, :sim_tag => repeat(sim_tag:sim_tag,nrow(df)))
 end
 
 #runs a sweep for a given parameter once for each graph type,
