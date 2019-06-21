@@ -158,7 +158,7 @@ function param_sweeper(graph_name; additional_params...)
         mark_seed_value=original_seed
 
         # Compute the average Gini, with CI, for this set of param values.
-        bs = bootstrap(x->Gini(x), curr_param_value_ginis,
+        bs = bootstrap(mean, curr_param_value_ginis,
             BasicSampling(params[:num_boot_samples]))
         ciGinis = confint(bs, BasicConfInt(.95))[1]
 
