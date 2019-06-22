@@ -19,7 +19,7 @@ graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global comp_df=DataFrame(size_largest_comp=Int[],num_comps=Int[],sim_tag=Int[])
+global social_connectivity_df=DataFrame(size_largest_comp=Int[],num_comps=Int[],average_proto_size=Float64[], num_protos=Int[],sim_tag=Int[])
 
 
 function param_sweeper(graph_name; additional_params...)
@@ -34,10 +34,10 @@ function param_sweeper(graph_name; additional_params...)
     global agent_line_df = DataFrame(
         replace_this=Float64[],
         seed=Int[],
+        sim_tag=Int[],
         agent=String[],
         sugar=Float64[],
         proto_id=Int[],
-        sim_tag=Int[]
     )
     names!(agent_line_df,
         prepend!(names(agent_line_df)[2:end], [param_to_sweep]))
@@ -45,11 +45,21 @@ function param_sweeper(graph_name; additional_params...)
     global trial_line_df=DataFrame(
         replace_this=Float64[],
         seed=Int[],
+        sim_tag=Int[],
         gini=Float64[],
-        sim_tag=Int[]
     )
     names!(trial_line_df,
         prepend!(names(trial_line_df)[2:end], [param_to_sweep]))
+
+    global iter_line_df=DataFrame(
+        replace_this=Float64[],
+        seed=Int[],
+        sim_tag=Int[],
+        iter=Int[],
+        stage=Int[],
+    )
+    names!(iter_line_df,
+        prepend!(names(iter_line_df)[2:end], [param_to_sweep]))
 
     params[:make_anims] = false  # We would never want this true for a sweep
     params[:make_sim_plots] = false  # We would never want this true for a sweep
@@ -70,18 +80,23 @@ function param_sweeper(graph_name; additional_params...)
             # Actually run the simulation!
             results=specnet()
             agent_results = results[:agent_results]
+            iter_results = results[:iter_results]
             overall_results = results[:overall_results]
 
-            push!(comp_df,
+            push!(social_connectivity_df,
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
-				 (i*num_values+j)))
+				 overall_results[:average_proto_size],
+	             overall_results[:num_protos],
 
-            insertcols!(agent_results, 1, param_to_sweep => repeat(counter:counter,nrow(agent_results)))
-            insertcols!(agent_results, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(agent_results)))
-            insertcols!(agent_results, 3, :sim_tag => repeat((i*num_values+j):(i*num_values+j),nrow(agent_results)))
+                 (i*num_values+j)))
+
+            add_sim_info!(agent_results, param_counter, counter, i*num_values+j)
+            iter_results = iter_results[[:iter,:stage]]  # only need these for now
+            add_sim_info!(iter_results, param_counter, counter, i*num_values+j)
 
             agent_line_df=[agent_line_df;agent_results]
+            iter_line_df=[iter_line_df;iter_results]
 
             #increment the random seed to vary the results of simulations with the same params
             params[:random_seed]+=1
@@ -94,9 +109,9 @@ function param_sweeper(graph_name; additional_params...)
     rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
     rm("$(tempdir())/$(graph_name)GiniSweepPlot.png", force=true)
     rm("$(tempdir())/$(graph_name)_wealth_heatmap.png", force=true)
-    rm("$(tempdir())/$(graph_name)Component&GiniSweepPlots.png", force=true)
+    rm("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png", force=true)
     rm("$(tempdir())/$(graph_name)ComponentSweepPlot.png", force=true)
-
+    rm("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png", force=true)
 
     #this file contains all info with one line per agent in a given run of siml.jl
     CSV.write("$(tempdir())/$(graph_name)_agent_results.csv",agent_line_df)
@@ -112,13 +127,25 @@ function param_sweeper(graph_name; additional_params...)
         gini=Float64[],
         gini_lowCI=Float64[],
         gini_highCI=Float64[],
-		number_components=Float64[],
-		number_components_lowCI=Float64[],
+        number_components=Float64[],
+        number_components_lowCI=Float64[],
         number_components_highCI=Float64[],
-		size_largest_component=Float64[],
-		size_largest_component_lowCI=Float64[],
+        size_largest_component=Float64[],
+        size_largest_component_lowCI=Float64[],
         size_largest_component_highCI=Float64[],
-	)
+        time_to_stage2=Float64[],
+        time_to_stage2_lowCI=Float64[],
+        time_to_stage2_highCI=Float64[],
+        time_to_stage3=Float64[],
+        time_to_stage3_lowCI=Float64[],
+        time_to_stage3_highCI=Float64[],
+		average_proto_size=Float64[],
+        average_proto_size_lowCI=Float64[],
+        average_proto_size_highCI=Float64[],
+		num_protos=Float64[],
+        num_protos_lowCI=Float64[],
+        num_protos_highCI=Float64[]
+    )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
 
@@ -132,8 +159,12 @@ function param_sweeper(graph_name; additional_params...)
     for j = 1:num_values
 
         curr_param_value_ginis = []
-        global curr_param_value_sizes = []
-        global curr_param_value_components=[]
+        curr_param_value_sizes = []
+        curr_param_value_components = []
+		curr_param_value_proto_size=[]
+		curr_param_value_num_protos=[]
+        curr_param_value_p2s=[]
+        curr_param_value_p3s=[]
         for i=1:trials_per_value
 
             sim_tag=(j*num_values+i)
@@ -146,11 +177,15 @@ function param_sweeper(graph_name; additional_params...)
             current_sim_gini = convert(Float64, Gini(
                 agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
             push!(curr_param_value_ginis, current_sim_gini)
-            push!(curr_param_value_sizes,comp_df[comp_df[:sim_tag].==sim_tag,:size_largest_comp])
-			push!(curr_param_value_components,comp_df[comp_df[:sim_tag].==sim_tag,:num_comps])
+            push!(curr_param_value_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp])
+            push!(curr_param_value_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps])
+            push!(curr_param_value_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size])
+			push!(curr_param_value_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos])
+			push!(curr_param_value_p2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
+            push!(curr_param_value_p3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             #adding results to the df
-            push!(trial_line_df,(counter,mark_seed_value,current_sim_gini,
-                sim_tag))
+            push!(trial_line_df,(counter,mark_seed_value,sim_tag,
+                current_sim_gini))
 
             #averaging and pushing data for wealth histogram
             mark_seed_value+=1
@@ -158,31 +193,46 @@ function param_sweeper(graph_name; additional_params...)
         mark_seed_value=original_seed
 
         # Compute the average Gini, with CI, for this set of param values.
-        bs = bootstrap(x->Gini(x), curr_param_value_ginis,
+        bs = bootstrap(mean, curr_param_value_ginis,
             BasicSampling(params[:num_boot_samples]))
         ciGinis = confint(bs, BasicConfInt(.95))[1]
-        
-		#Compute the average size of the largest component, with a CI for current params
-		
-		bs1 = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
-        ciSizes = confint(bs1, BasicConfInt(.95))[1]
 
         #Compute the average size of the largest component, with a CI for current params
-		
-		bs2 = bootstrap(mean, curr_param_value_components, BasicSampling(params[:num_boot_samples]))
-        ciNumbers = confint(bs2, BasicConfInt(.95))[1]
-		
-		push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
-		                        ciNumbers[1], ciNumbers[2], ciNumbers[3],
-								ciSizes[1], ciSizes[2], ciSizes[3]))
+        bs = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
+        ciSizes = confint(bs, BasicConfInt(.95))[1]
+        #CI for average proto size for current params
+        bs = bootstrap(mean, curr_param_value_proto_size, BasicSampling(params[:num_boot_samples]))
+        ciProtoSizes = confint(bs, BasicConfInt(.95))[1]
+        #CI for number of protos for current params
+        bs = bootstrap(mean, curr_param_value_num_protos, BasicSampling(params[:num_boot_samples]))
+        ciNumProtos = confint(bs, BasicConfInt(.95))[1]
+        #Compute the average number of components, with a CI for current params
+        bs = bootstrap(mean, curr_param_value_components, BasicSampling(params[:num_boot_samples]))
+        ciNumbers = confint(bs, BasicConfInt(.95))[1]
+
+        #Compute the average time to stage 2, with a CI for current params
+        bs = bootstrap(mean, curr_param_value_p2s, BasicSampling(params[:num_boot_samples]))
+        p2Times = confint(bs, BasicConfInt(.95))[1]
+
+        #Compute the average time to stage 3, with a CI for current params
+        bs = bootstrap(mean, curr_param_value_p3s, BasicSampling(params[:num_boot_samples]))
+        p3Times = confint(bs, BasicConfInt(.95))[1]
+
+        push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
+                                ciNumbers[1], ciNumbers[2], ciNumbers[3],
+                                ciSizes[1], ciSizes[2], ciSizes[3],
+                                p2Times[1], p2Times[2], p2Times[3],
+                                p3Times[1], p3Times[2], p3Times[3],
+								ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
+								ciNumProtos[1], ciNumProtos[2], ciNumProtos[3]))
         counter+=((end_value-start_value)/num_values)
-		
-	
+
+
     end
     #this file contains (currently) only the resulting Gini index from each simulation
-    #trial_line_df=hcat(trial_line_df,comp_df)
-    trial_line_df=join(trial_line_df, comp_df, on = :sim_tag)
-    
+    #trial_line_df=hcat(trial_line_df,social_connectivity_df)
+    trial_line_df=join(trial_line_df, social_connectivity_df, on = :sim_tag)
+
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     #drawing plots
@@ -208,13 +258,16 @@ function param_sweeper(graph_name; additional_params...)
             Geom.ribbon,
             Theme(default_color=colorant"lightblue")
         ),
+        Theme(background_color=colorant"white"),
         Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
 		
-	plotComponents=plot(plot_df,
+
+    println("Creating $(param_to_sweep) components plot...")
+    plotComponents=plot(plot_df,
         layer(
             x=param_to_sweep, y=:number_components_lowCI,
             Geom.line,
-            Theme(default_color=colorant"lightgreen")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, y=:number_components,
@@ -224,17 +277,17 @@ function param_sweeper(graph_name; additional_params...)
         layer(
             x=param_to_sweep, y=:number_components_highCI,
             Geom.line,
-            Theme(default_color=colorant"lightgreen")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, ymin=:number_components_lowCI, ymax=:number_components_highCI,
             Geom.ribbon,
-            Theme(default_color=colorant"yellow")
+            Theme(default_color=colorant"lightgreen")
         ),
-		layer(
+        layer(
             x=param_to_sweep, y=:size_largest_component_lowCI,
             Geom.line,
-            Theme(default_color=colorant"orange")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, y=:size_largest_component,
@@ -244,25 +297,152 @@ function param_sweeper(graph_name; additional_params...)
         layer(
             x=param_to_sweep, y=:size_largest_component_highCI,
             Geom.line,
-            Theme(default_color=colorant"orange")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, ymin=:size_largest_component_lowCI, ymax=:size_largest_component_highCI,
             Geom.ribbon,
             Theme(default_color=colorant"pink",key_position=:top)
         ),
-        Guide.xlabel(string(param_to_sweep)),Guide.ylabel(nothing), Guide.manual_color_key("Legend", ["Agents in Largest Component", "Number of Components"], ["red", "green"]),style(key_position=:bottom))
-    compGiniPlot=vstack(plotLG,plotComponents)
+        Guide.xlabel(string(param_to_sweep)),
+        Guide.ylabel("Components", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
+        Guide.manual_color_key("Legend",
+            ["Agents in Largest Component      .", "Number of Components"],
+            ["red", "green"]),
+        style(background_color=colorant"white",key_position=:bottom))
+
+    println("Creating $(param_to_sweep) time-to-stop plot...")
+    to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
+    plotTTS=plot(to_stage_df,
+        layer(
+            x=param_to_sweep, y=:time_to_stage2_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, y=:time_to_stage2,
+            Geom.line,
+            Theme(default_color=colorant"blue", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:time_to_stage2_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:time_to_stage2_lowCI, ymax=:time_to_stage2_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"lightblue",key_position=:top)
+        ),
+        layer(
+            x=param_to_sweep, y=:time_to_stage3_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, y=:time_to_stage3,
+            Geom.line,
+            Theme(default_color=colorant"red", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:time_to_stage3_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgray")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:time_to_stage3_lowCI, ymax=:time_to_stage3_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"pink",key_position=:top)
+        ),
+        Guide.xlabel(string(param_to_sweep)),
+        Guide.ylabel("Time to reach stage", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
+        Guide.manual_color_key("Legend",
+            ["Stage 2", "Stage 3"],
+            ["blue", "red"]),
+        style(background_color=colorant"white",key_position=:bottom))
+    plotProtos=plot(plot_df,
+        layer(
+            x=param_to_sweep, y=:num_protos_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgreen")
+        ),
+        layer(
+            x=param_to_sweep, y=:num_protos,
+            Geom.line,
+            Theme(default_color=colorant"darkgreen", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:num_protos_highCI,
+            Geom.line,
+            Theme(default_color=colorant"lightgreen")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:num_protos_lowCI, ymax=:num_protos_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"green",key_position=:top)
+        ),
+        layer(
+            x=param_to_sweep, y=:average_proto_size_lowCI,
+            Geom.line,
+            Theme(default_color=colorant"orange")
+        ),
+        layer(
+            x=param_to_sweep, y=:average_proto_size,
+            Geom.line,
+            Theme(default_color=colorant"brown", line_width=.5mm)
+        ),
+        layer(
+            x=param_to_sweep, y=:average_proto_size_highCI,
+            Geom.line,
+            Theme(default_color=colorant"orange")
+        ),
+        layer(
+            x=param_to_sweep, ymin=:average_proto_size_lowCI, ymax=:average_proto_size_highCI,
+            Geom.ribbon,
+            Theme(default_color=colorant"darkorange",key_position=:top)
+        ),
+        Guide.xlabel(string(param_to_sweep)),
+        Guide.ylabel("Protos", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
+        Guide.manual_color_key("Legend",
+            [ "Average Agent Size of Protos","Number of Protos"],
+            ["brown", "green"]),
+        style(background_color=colorant"white",key_position=:bottom))
+		
+		
+    tallPlot=vstack(plotLG,plotComponents,plotProtos,plotTTS)
+
     draw(PNG("$(tempdir())/$(graph_name)GiniSweepPlot.png"), plotLG)
-    draw(PNG("$(tempdir())/$(graph_name)Component&GiniSweepPlots.png"), compGiniPlot)
     draw(PNG("$(tempdir())/$(graph_name)ComponentSweepPlot.png"), plotComponents)
+    draw(PNG("$(tempdir())/$(graph_name)TimeToStages.png"), plotTTS)
+	draw(PNG("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png"), plotProtos)
+
+    draw(PNG("$(tempdir())/$(graph_name)TallPlot.png",
+        5inch, 9inch), tallPlot)
     println("Creating $(param_to_sweep) agent heatmap...")
-    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],Geom.histogram2d,Guide.ylabel(string(param_to_sweep)), Guide.xlabel("Agent Wealth"))
+    wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
+        Geom.histogram2d,
+        Theme(background_color=colorant"white"),
+        Guide.ylabel(string(param_to_sweep)),
+        Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
 
     return Dict(:agent_line_df => agent_line_df,
         :trial_line_df => trial_line_df,
         :plot_df => plot_df)
+end
+
+function add_sim_info!(df, param_counter, counter, sim_tag)
+    insertcols!(df, 1, param_to_sweep => repeat(counter:counter,nrow(df)))
+    insertcols!(df, 2, :seed => repeat(params[:random_seed]:params[:random_seed],nrow(df)))
+    insertcols!(df, 3, :sim_tag => repeat(sim_tag:sim_tag,nrow(df)))
+end
+
+function first_iter_of_stage(df, stage_num, sim_tag)
+    iters = df[(df[:sim_tag].==sim_tag).&(df[:stage].==stage_num), :iter]
+    length(iters) > 0 ? minimum(iters) : 0
 end
 
 #runs a sweep for a given parameter once for each graph type,

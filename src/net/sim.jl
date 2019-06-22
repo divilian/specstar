@@ -265,12 +265,20 @@ function specnet(;additional_params...)
         num_agents = nums_agents
     )
     component_vertices=connected_components(graph)
+    total_proto_size=0
+	for p in arr_protos
+	    total_proto_size+=length(p.arr_member_ids)
+	end
+	proto_average_size=total_proto_size/length(arr_protos)
+	
     overall_results = Dict(
         :size_largest_comp => nv(graph) == 0 ? 0 : 
             findmax(length.(component_vertices))[1][1],
         :num_comps => nv(graph) == 0 ? 0 : 
-            length(component_vertices)
-    )
+            length(component_vertices),
+        :average_proto_size=>proto_average_size,
+        :num_protos=>length(arr_protos)		
+   )
 
     if params[:make_sim_plots]
         plot_gini_livingfrac_over_time(iter_results,
@@ -401,16 +409,19 @@ function plot_final_wealth_hist(sim_state::SimState)
 	final_wealthp = plot(
         x=final_wealths,
         Geom.histogram(density=true, bincount=20),
+        Theme(background_color=colorant"white"),
         Guide.xlabel("Agent Wealth"),
         Guide.ylabel("Density of agents"))
     final_proto_wealthp = plot(
         x=final_proto_wealths,
         Geom.histogram(density=true, bincount=20),
+        Theme(background_color=colorant"white"),
         Guide.xlabel("Proto Wealth"),
         Guide.ylabel("Density of protos"))
     final_proto_wealth_alivep = plot(
         x=final_proto_wealths_alive,
         Geom.histogram(density=true, bincount=20),
+        Theme(background_color=colorant"white"),
         Guide.xlabel("Proto Wealth"),
         Guide.ylabel("Density of protos"))		
     draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
@@ -453,6 +464,7 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
             Theme(default_color=colorant"black")
         ),
         Guide.xlabel("Iteration"), Guide.ylabel("Gini / fraction living"),
+        Theme(background_color=colorant"white"),
         Scale.color_discrete_manual("blue","green","red",
             levels=["1","2","3"]),
         Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])))
@@ -508,7 +520,9 @@ function plot_iteration_graphs(iter)
             # Hard to know what to set the max value to.
             Scale.x_continuous(minvalue=0,
                 maxvalue=params[:init_sg_lvl]*
-                    params[:max_iters]/10)
+                    params[:max_iters]/10),
+
+        Theme(background_color=colorant"white"),
     )
 
     draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
@@ -574,4 +588,3 @@ function all_parameters_legit(additional_params)
     end
     return true
 end
-
