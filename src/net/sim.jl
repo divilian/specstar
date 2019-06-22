@@ -265,12 +265,20 @@ function specnet(;additional_params...)
         num_agents = nums_agents
     )
     component_vertices=connected_components(graph)
+    total_proto_size=0
+	for p in arr_protos
+	    total_proto_size+=length(p.arr_member_ids)
+	end
+	proto_average_size=total_proto_size/length(arr_protos)
+	
     overall_results = Dict(
         :size_largest_comp => nv(graph) == 0 ? 0 : 
             findmax(length.(component_vertices))[1][1],
         :num_comps => nv(graph) == 0 ? 0 : 
-            length(component_vertices)
-    )
+            length(component_vertices),
+        :average_proto_size=>proto_average_size,
+        :num_protos=>length(arr_protos)		
+   )
 
     if params[:make_sim_plots]
         plot_gini_livingfrac_over_time(iter_results,
@@ -580,4 +588,3 @@ function all_parameters_legit(additional_params)
     end
     return true
 end
-
