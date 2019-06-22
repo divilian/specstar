@@ -200,10 +200,10 @@ function param_sweeper(graph_name; additional_params...)
         #Compute the average size of the largest component, with a CI for current params
         bs = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
         ciSizes = confint(bs, BasicConfInt(.95))[1]
-        #Compute the average proto size, with a CI for current params
+        #CI for average proto size for current params
         bs = bootstrap(mean, curr_param_value_proto_size, BasicSampling(params[:num_boot_samples]))
         ciProtoSizes = confint(bs, BasicConfInt(.95))[1]
-		#Compute the average size of the largest component, with a CI for current params
+        #CI for number of protos for current params
         bs = bootstrap(mean, curr_param_value_num_protos, BasicSampling(params[:num_boot_samples]))
         ciNumProtos = confint(bs, BasicConfInt(.95))[1]
         #Compute the average number of components, with a CI for current params
