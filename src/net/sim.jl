@@ -249,6 +249,11 @@ function specnet(;additional_params...)
 
     end   # End main simulation for loop
 
+    terminated_early = false
+    if total_iters == params[:max_iters]
+        pri("\n*WARNING* sim terminated early at iteration $(total_iters)!\n")
+        terminated_early = true
+    end
 
     # Collect results in DataFrame.
     agent_results = DataFrame(
@@ -276,8 +281,9 @@ function specnet(;additional_params...)
             findmax(length.(component_vertices))[1][1],
         :num_comps => nv(graph) == 0 ? 0 : 
             length(component_vertices),
-        :average_proto_size=>proto_average_size,
-        :num_protos=>length(arr_protos)		
+        :average_proto_size => proto_average_size,
+        :num_protos => length(arr_protos),
+        :terminated_early => terminated_early,
    )
 
     if params[:make_sim_plots]
