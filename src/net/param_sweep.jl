@@ -88,6 +88,7 @@ function param_sweeper(graph_name; additional_params...)
             agent_results = results[:agent_results]
             iter_results = results[:iter_results]
             overall_results = results[:overall_results]
+            starvation_results = results[:starvation_results]
 
             push!(social_connectivity_df,
                 (overall_results[:size_largest_comp],

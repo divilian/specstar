@@ -127,6 +127,7 @@ function specnet(;additional_params...)
     local stages=[]
     local nums_agents=[]
 
+    local overall_results
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
@@ -143,6 +144,8 @@ function specnet(;additional_params...)
         if iter % 10 == 0 println(iter) end
 
         if stages[end] == 3
+            # Collect stats on the model right before the starvation period.
+            overall_results = collect_stats(SimState(graph, AN, arr_protos))
             starvation_timer += 1
             if starvation_timer == params[:starvation_period]
                 total_iters = iter - 1
@@ -269,24 +272,13 @@ function specnet(;additional_params...)
         stage = stages,
         num_agents = nums_agents
     )
-    component_vertices=connected_components(graph)
-    total_proto_size=0
-	for p in arr_protos
-	    total_proto_size+=length(p.arr_member_ids)
-	end
-	proto_average_size=total_proto_size/length(arr_protos)
-    num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
 	
-    overall_results = Dict(
-        :size_largest_comp => nv(graph) == 0 ? 0 : 
-            findmax(length.(component_vertices))[1][1],
-        :num_comps => nv(graph) == 0 ? 0 : 
-            length(component_vertices),
-        :average_proto_size => proto_average_size,
-        :num_protos => length(arr_protos),
-        :terminated_early => terminated_early,
-        :num_agents_in_proto => num_agents_in_proto,
-   )
+    # Collect stats on the model after the starvation period.
+    starvation_results = collect_stats(SimState(graph, AN, arr_protos))
+    if !isdefined(Main, :overall_results)
+        # Not totally sure what to do in this WARNING case.
+        overall_results = starvation_results
+    end
 
     if params[:make_sim_plots]
         plot_gini_livingfrac_over_time(iter_results,
@@ -304,7 +296,9 @@ function specnet(;additional_params...)
 
     return Dict(:agent_results => sort(agent_results, :agent),
         :iter_results => iter_results,
-        :overall_results => overall_results)
+        :overall_results => overall_results,
+        :starvation_results => starvation_results,
+        :terminated_early => terminated_early)
 end
 
 
@@ -583,6 +577,21 @@ function get_stage(sim_state::SimState)
         end
         return 3
     end
+end
+
+function collect_stats(s::SimState)
+    total_proto_sz = sum([ length(p.arr_member_ids) for p ∈  s.arr_protos ])
+    component_vertices = connected_components(s.graph)
+	proto_average_size=total_proto_sz/length(s.arr_protos)
+    num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
+    return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
+            findmax(length.(component_vertices))[1][1],
+        :num_comps => nv(s.graph) == 0 ? 0 :
+            length(component_vertices),
+        :average_proto_size => proto_average_size,
+        :num_protos => length(s.arr_protos),
+        :num_agents_in_proto => num_agents_in_proto,
+   )
 end
 
 function all_parameters_legit(additional_params)
