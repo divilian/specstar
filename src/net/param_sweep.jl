@@ -190,12 +190,12 @@ function param_sweeper(graph_name; additional_params...)
             current_sim_gini = convert(Float64, Gini(
                 agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
             push!(curr_ginis, current_sim_gini)
-            push!(curr_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp])
-            push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps])
-            push!(curr_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size])
-			push!(curr_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos])
-			push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto])
-			push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
+            push!(curr_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp][1])
+            push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps][1])
+            push!(curr_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size][1])
+            push!(curr_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos][1])
+            push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
+            push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
             push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
@@ -370,7 +370,7 @@ lighter_shade_of = Dict(
     "brown" => "orange",
 )
 
-		
+
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
 
