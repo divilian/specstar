@@ -207,9 +207,14 @@ function param_sweeper(graph_name; additional_params...)
         mark_seed_value=original_seed
 
         # Compute the average Gini, with CI, for this set of param values.
-        bs = bootstrap(mean, curr_ginis,
-            BasicSampling(params[:num_boot_samples]))
-        ciGinis = confint(bs, BasicConfInt(.95))[1]
+        if all([isnan(g) for g in curr_ginis])
+            # TODO: getting around a numerical error for now
+            ciGinis = [.5,.5,.5]
+        else
+            bs = bootstrap(mean, curr_ginis,
+                BasicSampling(params[:num_boot_samples]))
+            ciGinis = confint(bs, BasicConfInt(.95))[1]
+        end
 
         #Compute the average size of the largest component, with a CI for current params
         bs = bootstrap(mean, curr_sizes, BasicSampling(params[:num_boot_samples]))
