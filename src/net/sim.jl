@@ -275,6 +275,7 @@ function specnet(;additional_params...)
 	    total_proto_size+=length(p.arr_member_ids)
 	end
 	proto_average_size=total_proto_size/length(arr_protos)
+    num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
 	
     overall_results = Dict(
         :size_largest_comp => nv(graph) == 0 ? 0 : 
@@ -284,6 +285,7 @@ function specnet(;additional_params...)
         :average_proto_size => proto_average_size,
         :num_protos => length(arr_protos),
         :terminated_early => terminated_early,
+        :num_agents_in_proto => num_agents_in_proto,
    )
 
     if params[:make_sim_plots]

@@ -19,7 +19,13 @@ graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
 components=[[],[]]
-global social_connectivity_df=DataFrame(size_largest_comp=Int[],num_comps=Int[],average_proto_size=Float64[], num_protos=Int[],sim_tag=Int[])
+global social_connectivity_df=DataFrame(
+    size_largest_comp=Int[],
+    num_comps=Int[],
+    average_proto_size=Float64[],
+    num_protos=Int[],
+    num_agents_in_proto=Int[],
+    sim_tag=Int[])
 
 
 function param_sweeper(graph_name; additional_params...)
@@ -88,6 +94,7 @@ function param_sweeper(graph_name; additional_params...)
                  overall_results[:num_comps],
 				 overall_results[:average_proto_size],
 	             overall_results[:num_protos],
+	             overall_results[:num_agents_in_proto],
 
                  (i*num_values+j)))
 
@@ -144,7 +151,10 @@ function param_sweeper(graph_name; additional_params...)
         average_proto_size_highCI=Float64[],
 		num_protos=Float64[],
         num_protos_lowCI=Float64[],
-        num_protos_highCI=Float64[]
+        num_protos_highCI=Float64[],
+		num_agents_in_proto=Float64[],
+        num_agents_in_proto_lowCI=Float64[],
+        num_agents_in_proto_highCI=Float64[],
     )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
@@ -158,13 +168,15 @@ function param_sweeper(graph_name; additional_params...)
 
     for j = 1:num_values
 
-        curr_param_value_ginis = []
-        curr_param_value_sizes = []
-        curr_param_value_components = []
-		curr_param_value_proto_size=[]
-		curr_param_value_num_protos=[]
-        curr_param_value_p2s=[]
-        curr_param_value_p3s=[]
+        # "curr" means "for all trials of the CURRent parameter value."
+        curr_ginis = []
+        curr_sizes = []
+        curr_components = []
+		curr_proto_size=[]
+		curr_num_protos=[]
+		curr_num_agents_in_proto=[]
+        curr_s2s=[]
+        curr_s3s=[]
         for i=1:trials_per_value
 
             sim_tag=(j*num_values+i)
@@ -176,13 +188,14 @@ function param_sweeper(graph_name; additional_params...)
             #   trials_per_value runs, not the CI of a single run.
             current_sim_gini = convert(Float64, Gini(
                 agent_line_df[agent_line_df.sim_tag.==sim_tag,:sugar]))
-            push!(curr_param_value_ginis, current_sim_gini)
-            push!(curr_param_value_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp])
-            push!(curr_param_value_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps])
-            push!(curr_param_value_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size])
-			push!(curr_param_value_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos])
-			push!(curr_param_value_p2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
-            push!(curr_param_value_p3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
+            push!(curr_ginis, current_sim_gini)
+            push!(curr_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp])
+            push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps])
+            push!(curr_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size])
+			push!(curr_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos])
+			push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto])
+			push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
+            push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
@@ -193,38 +206,43 @@ function param_sweeper(graph_name; additional_params...)
         mark_seed_value=original_seed
 
         # Compute the average Gini, with CI, for this set of param values.
-        bs = bootstrap(mean, curr_param_value_ginis,
+        bs = bootstrap(mean, curr_ginis,
             BasicSampling(params[:num_boot_samples]))
         ciGinis = confint(bs, BasicConfInt(.95))[1]
 
         #Compute the average size of the largest component, with a CI for current params
-        bs = bootstrap(mean, curr_param_value_sizes, BasicSampling(params[:num_boot_samples]))
+        bs = bootstrap(mean, curr_sizes, BasicSampling(params[:num_boot_samples]))
         ciSizes = confint(bs, BasicConfInt(.95))[1]
         #CI for average proto size for current params
-        bs = bootstrap(mean, curr_param_value_proto_size, BasicSampling(params[:num_boot_samples]))
+        bs = bootstrap(mean, curr_proto_size, BasicSampling(params[:num_boot_samples]))
         ciProtoSizes = confint(bs, BasicConfInt(.95))[1]
         #CI for number of protos for current params
-        bs = bootstrap(mean, curr_param_value_num_protos, BasicSampling(params[:num_boot_samples]))
+        bs = bootstrap(mean, curr_num_protos, BasicSampling(params[:num_boot_samples]))
         ciNumProtos = confint(bs, BasicConfInt(.95))[1]
+        #CI for number of agents in proto for current params
+        bs = bootstrap(mean, curr_num_agents_in_proto, BasicSampling(params[:num_boot_samples]))
+        ciNumAginP = confint(bs, BasicConfInt(.95))[1]
         #Compute the average number of components, with a CI for current params
-        bs = bootstrap(mean, curr_param_value_components, BasicSampling(params[:num_boot_samples]))
+        bs = bootstrap(mean, curr_components, BasicSampling(params[:num_boot_samples]))
         ciNumbers = confint(bs, BasicConfInt(.95))[1]
 
         #Compute the average time to stage 2, with a CI for current params
-        bs = bootstrap(mean, curr_param_value_p2s, BasicSampling(params[:num_boot_samples]))
-        p2Times = confint(bs, BasicConfInt(.95))[1]
+        bs = bootstrap(mean, curr_s2s, BasicSampling(params[:num_boot_samples]))
+        s2Times = confint(bs, BasicConfInt(.95))[1]
 
         #Compute the average time to stage 3, with a CI for current params
-        bs = bootstrap(mean, curr_param_value_p3s, BasicSampling(params[:num_boot_samples]))
-        p3Times = confint(bs, BasicConfInt(.95))[1]
+        bs = bootstrap(mean, curr_s3s, BasicSampling(params[:num_boot_samples]))
+        s3Times = confint(bs, BasicConfInt(.95))[1]
 
         push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
                                 ciNumbers[1], ciNumbers[2], ciNumbers[3],
                                 ciSizes[1], ciSizes[2], ciSizes[3],
-                                p2Times[1], p2Times[2], p2Times[3],
-                                p3Times[1], p3Times[2], p3Times[3],
+                                s2Times[1], s2Times[2], s2Times[3],
+                                s3Times[1], s3Times[2], s3Times[3],
 								ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
-								ciNumProtos[1], ciNumProtos[2], ciNumProtos[3]))
+								ciNumProtos[1], ciNumProtos[2], ciNumProtos[3],
+								ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
+        ))
         counter+=((end_value-start_value)/num_values)
 
 
@@ -240,8 +258,16 @@ function param_sweeper(graph_name; additional_params...)
         Dict("number_components"=>"green", "size_largest_component" => "red"),
         "Components")
     protop = draw_plot(plot_df, param_to_sweep,
-        Dict("num_protos"=>"green", "average_proto_size" => "brown"),
-        "Protos")
+        Dict(
+            "num_protos"=>"green",
+            "average_proto_size" => "brown",
+            "num_agents_in_proto" => "red",
+        ),
+        "Protos",
+        [Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
+    push!(protop.layers,layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1])
+    push!(protop,Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))))
 
     # zeros are meaningless in time-to-stage plots
     to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
@@ -275,16 +301,18 @@ function first_iter_of_stage(df, stage_num, sim_tag)
     length(iters) > 0 ? minimum(iters) : 0
 end
 
-lighter_shade_of = Dict(
-    "navy" => "lightblue",
-    "blue" => "lightblue",
-    "red" => "pink",
-    "green" => "lightgreen",
-    "brown" => "orange",
-)
-
+# draw_plot() -- create, write to file, and return a parameter sweep line plot.
+# Parameters:
+#  plot_df -- the master plotting data frame, created in param_sweeper().
+#  param_to_sweep -- the name of the main independent variable.
+#  vars_colors -- maps names of dependent variable(s) (which, if plot_CIs
+#    is true, must also be present with _lowCI and _highCI suffixes) to
+#    line colors.
+#  y_label -- text to plot vertically on the lefft
+#  extra -- an optional array of other layers or geoms to add to plot.
+#  plot_CIs -- if true, include confidence interval bands (in lighter color)
 function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
-        y_label=nothing, plot_CIs=true)
+        y_label=nothing, extra=nothing, plot_CIs=true)
 
     prd("Drawing: $(vars_colors)")
     layers = Layer[]
@@ -327,9 +355,20 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         push!(p, Guide.manual_color_key(nothing,
             vars, collect(values(vars_colors))))
     end
+    if !isnothing(extra)
+        [ push!(p, e) for e in extra ]
+    end
     draw(PNG("$(tempdir())/$(join(keys(vars_colors),"_")).png"), p)
     return p
 end
+lighter_shade_of = Dict(
+    "navy" => "lightblue",
+    "blue" => "lightblue",
+    "red" => "pink",
+    "green" => "lightgreen",
+    "brown" => "orange",
+)
+
 		
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
