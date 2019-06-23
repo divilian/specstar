@@ -127,7 +127,7 @@ function specnet(;additional_params...)
     local stages=[]
     local nums_agents=[]
 
-    local overall_results
+    global overall_results
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
@@ -144,8 +144,10 @@ function specnet(;additional_params...)
         if iter % 10 == 0 println(iter) end
 
         if stages[end] == 3
-            # Collect stats on the model right before the starvation period.
-            overall_results = collect_stats(SimState(graph, AN, arr_protos))
+            if starvation_timer == 0
+                # Collect stats on the model right before the starvation period.
+                overall_results = collect_stats(SimState(graph, AN, arr_protos))
+            end
             starvation_timer += 1
             if starvation_timer == params[:starvation_period]
                 total_iters = iter - 1
@@ -277,7 +279,7 @@ function specnet(;additional_params...)
     starvation_results = collect_stats(SimState(graph, AN, arr_protos))
     if !isdefined(Main, :overall_results)
         # Not totally sure what to do in this WARNING case.
-        overall_results = starvation_results
+        overall_results = copy(starvation_results)
     end
 
     if params[:make_sim_plots]
@@ -591,6 +593,7 @@ function collect_stats(s::SimState)
         :average_proto_size => proto_average_size,
         :num_protos => length(s.arr_protos),
         :num_agents_in_proto => num_agents_in_proto,
+        :num_living_agents => length([ a for a ∈  keys(s.AN) if a.a.alive ]),
    )
 end
 

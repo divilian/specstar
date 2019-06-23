@@ -25,6 +25,8 @@ global social_connectivity_df=DataFrame(
     average_proto_size=Float64[],
     num_protos=Int[],
     num_agents_in_proto=Int[],
+    num_living_agents_pre=Float64[],
+    num_living_agents_post=Float64[],
     sim_tag=Int[])
 
 
@@ -96,6 +98,8 @@ function param_sweeper(graph_name; additional_params...)
                  overall_results[:average_proto_size],
                  overall_results[:num_protos],
                  overall_results[:num_agents_in_proto],
+                 overall_results[:num_living_agents],     # shouldn't be here
+                 starvation_results[:num_living_agents],  # shouldn't be here
 
                  (i*trials_per_value+j)))
 
@@ -156,6 +160,12 @@ function param_sweeper(graph_name; additional_params...)
         num_agents_in_proto=Float64[],
         num_agents_in_proto_lowCI=Float64[],
         num_agents_in_proto_highCI=Float64[],
+        num_living_agents_pre=Float64[],
+        num_living_agents_pre_lowCI=Float64[],
+        num_living_agents_pre_highCI=Float64[],
+        num_living_agents_post=Float64[],
+        num_living_agents_post_lowCI=Float64[],
+        num_living_agents_post_highCI=Float64[],
     )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
@@ -178,6 +188,8 @@ function param_sweeper(graph_name; additional_params...)
         curr_num_agents_in_proto=[]
         curr_s2s=[]
         curr_s3s=[]
+        curr_num_living_agents_pre=[]
+        curr_num_living_agents_post=[]
         for i=1:trials_per_value
 
             sim_tag=(j*trials_per_value+i)
@@ -197,6 +209,8 @@ function param_sweeper(graph_name; additional_params...)
             push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
             push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
             push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
+            push!(curr_num_living_agents_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_pre][1])
+            push!(curr_num_living_agents_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_post][1])
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
@@ -234,35 +248,47 @@ function param_sweeper(graph_name; additional_params...)
 
         #Compute the average time to stage 2, with a CI for current params
         bs = bootstrap(mean, curr_s2s, BasicSampling(params[:num_boot_samples]))
-        s2Times = confint(bs, BasicConfInt(.95))[1]
+        ciS2Times = confint(bs, BasicConfInt(.95))[1]
 
         #Compute the average time to stage 3, with a CI for current params
         bs = bootstrap(mean, curr_s3s, BasicSampling(params[:num_boot_samples]))
-        s3Times = confint(bs, BasicConfInt(.95))[1]
+        ciS3Times = confint(bs, BasicConfInt(.95))[1]
+
+        #CI for average number of living agents, pre-starvation
+        bs = bootstrap(mean, curr_num_living_agents_pre,
+            BasicSampling(params[:num_boot_samples]))
+        ciNumLivingPre = confint(bs, BasicConfInt(.95))[1]
+        #CI for average number of living agents, post-starvation
+        bs = bootstrap(mean, curr_num_living_agents_post,
+            BasicSampling(params[:num_boot_samples]))
+        ciNumLivingPost = confint(bs, BasicConfInt(.95))[1]
 
         push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
                                 ciNumbers[1], ciNumbers[2], ciNumbers[3],
                                 ciSizes[1], ciSizes[2], ciSizes[3],
-                                s2Times[1], s2Times[2], s2Times[3],
-                                s3Times[1], s3Times[2], s3Times[3],
+                                ciS2Times[1], ciS2Times[2], ciS2Times[3],
+                                ciS3Times[1], ciS3Times[2], ciS3Times[3],
                                 ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
                                 ciNumProtos[1], ciNumProtos[2], ciNumProtos[3],
                                 ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
+                                ciNumLivingPre[1], ciNumLivingPre[2], ciNumLivingPre[3],
+                                ciNumLivingPost[1], ciNumLivingPost[2], ciNumLivingPost[3],
         ))
         counter+=((end_value-start_value)/num_values)
 
 
     end
     #this file contains (currently) only the resulting Gini index from each simulation
-    #trial_line_df=hcat(trial_line_df,social_connectivity_df)
     trial_line_df=join(trial_line_df, social_connectivity_df, on = :sim_tag)
 
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"), "Gini")
+
     compp = draw_plot(plot_df, param_to_sweep,
         Dict("number_components"=>"green", "size_largest_component" => "red"),
         "Components")
+
     protop = draw_plot(plot_df, param_to_sweep,
         Dict(
             "num_protos"=>"green",
@@ -272,8 +298,13 @@ function param_sweeper(graph_name; additional_params...)
         "Protos",
         [Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
          layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
-    push!(protop.layers,layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1])
-    push!(protop,Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))))
+
+    numlivingp = draw_plot(plot_df, param_to_sweep,
+        Dict("num_living_agents_pre"=>"green", "num_living_agents_post" => "red"),
+        "Number of living agents",
+        [Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+         Coord.Cartesian(ymin=0, ymax=params[:N]),
+         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
     # zeros are meaningless in time-to-stage plots
     to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
