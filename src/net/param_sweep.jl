@@ -96,11 +96,11 @@ function param_sweeper(graph_name; additional_params...)
 	             overall_results[:num_protos],
 	             overall_results[:num_agents_in_proto],
 
-                 (i*num_values+j)))
+                 (i*trials_per_value+j)))
 
-            add_sim_info!(agent_results, param_counter, counter, i*num_values+j)
+            add_sim_info!(agent_results, param_counter, counter, i*trials_per_value+j)
             iter_results = iter_results[[:iter,:stage]]  # only need these for now
-            add_sim_info!(iter_results, param_counter, counter, i*num_values+j)
+            add_sim_info!(iter_results, param_counter, counter, i*trials_per_value+j)
 
             agent_line_df=[agent_line_df;agent_results]
             iter_line_df=[iter_line_df;iter_results]
@@ -179,7 +179,7 @@ function param_sweeper(graph_name; additional_params...)
         curr_s3s=[]
         for i=1:trials_per_value
 
-            sim_tag=(j*num_values+i)
+            sim_tag=(j*trials_per_value+i)
 
             # When not given a conf.level parameter, the R function Gini() from
             #   DescTools returns a single value: the Gini coefficient. We're
