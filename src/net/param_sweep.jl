@@ -235,199 +235,29 @@ function param_sweeper(graph_name; additional_params...)
 
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
-    #drawing plots
-    println("Creating $(param_to_sweep) Gini plot...")
-    plotLG=plot(plot_df,
-        layer(
-            x=param_to_sweep, y=:gini_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:gini,
-            Geom.line,
-            Theme(default_color=colorant"navy", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:gini_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:gini_lowCI, ymax=:gini_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"lightblue")
-        ),
-        Theme(background_color=colorant"white"),
-        Guide.xlabel(string(param_to_sweep)), Guide.ylabel("Gini Index"))
-		
+    ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"), "Gini")
+    compp = draw_plot(plot_df, param_to_sweep,
+        Dict("number_components"=>"green", "size_largest_component" => "red"),
+        "Components")
+    protop = draw_plot(plot_df, param_to_sweep,
+        Dict("num_protos"=>"green", "average_proto_size" => "brown"),
+        "Components")
 
-    println("Creating $(param_to_sweep) components plot...")
-    plotComponents=plot(plot_df,
-        layer(
-            x=param_to_sweep, y=:number_components_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:number_components,
-            Geom.line,
-            Theme(default_color=colorant"green", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:number_components_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:number_components_lowCI, ymax=:number_components_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"lightgreen")
-        ),
-        layer(
-            x=param_to_sweep, y=:size_largest_component_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:size_largest_component,
-            Geom.line,
-            Theme(default_color=colorant"red", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:size_largest_component_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:size_largest_component_lowCI, ymax=:size_largest_component_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"pink",key_position=:top)
-        ),
-        Guide.xlabel(string(param_to_sweep)),
-        Guide.ylabel("Components", orientation=:vertical),
-        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
-        Guide.manual_color_key("Legend",
-            ["Agents in Largest Component      .", "Number of Components"],
-            ["red", "green"]),
-        style(background_color=colorant"white",key_position=:bottom))
-
-    println("Creating $(param_to_sweep) time-to-stop plot...")
+    # zeros are meaningless in time-to-stage plots
     to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
-    plotTTS=plot(to_stage_df,
-        layer(
-            x=param_to_sweep, y=:time_to_stage2_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:time_to_stage2,
-            Geom.line,
-            Theme(default_color=colorant"blue", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:time_to_stage2_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:time_to_stage2_lowCI, ymax=:time_to_stage2_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"lightblue",key_position=:top)
-        ),
-        layer(
-            x=param_to_sweep, y=:time_to_stage3_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:time_to_stage3,
-            Geom.line,
-            Theme(default_color=colorant"red", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:time_to_stage3_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:time_to_stage3_lowCI, ymax=:time_to_stage3_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"pink",key_position=:top)
-        ),
-        Guide.xlabel(string(param_to_sweep)),
-        Guide.ylabel("Time to reach stage", orientation=:vertical),
-        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
-        Guide.manual_color_key("Legend",
-            ["Stage 2      .", "Stage 3"],
-            ["blue", "red"]),
-        style(background_color=colorant"white",key_position=:bottom))
-    plotProtos=plot(plot_df,
-        layer(
-            x=param_to_sweep, y=:num_protos_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:num_protos,
-            Geom.line,
-            Theme(default_color=colorant"darkgreen", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:num_protos_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:num_protos_lowCI, ymax=:num_protos_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"lightgreen",key_position=:top)
-        ),
-        layer(
-            x=param_to_sweep, y=:average_proto_size_lowCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, y=:average_proto_size,
-            Geom.line,
-            Theme(default_color=colorant"brown", line_width=.5mm)
-        ),
-        layer(
-            x=param_to_sweep, y=:average_proto_size_highCI,
-            Geom.line,
-            Theme(default_color=colorant"lightgray")
-        ),
-        layer(
-            x=param_to_sweep, ymin=:average_proto_size_lowCI, ymax=:average_proto_size_highCI,
-            Geom.ribbon,
-            Theme(default_color=colorant"orange",key_position=:top)
-        ),
-        Guide.xlabel(string(param_to_sweep)),
-        Guide.ylabel("Protos", orientation=:vertical),
-        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
-        Guide.manual_color_key("Legend",
-            [ "Average Size of Proto      .","Number of Protos"],
-            ["brown", "green"]),
-        style(background_color=colorant"white",key_position=:bottom))
-		
-		
-    tallPlot=vstack(plotLG,plotComponents,plotProtos,plotTTS)
+    ttsp = draw_plot(to_stage_df, param_to_sweep,
+        Dict("time_to_stage2"=>"blue", "time_to_stage3" => "red"),
+        "Time to reach stage")
 
-    draw(PNG("$(tempdir())/$(graph_name)GiniSweepPlot.png"), plotLG)
-    draw(PNG("$(tempdir())/$(graph_name)ComponentSweepPlot.png"), plotComponents)
-    draw(PNG("$(tempdir())/$(graph_name)TimeToStages.png"), plotTTS)
-	draw(PNG("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png"), plotProtos)
+    tallPlot=vstack(ginip,compp,protop,ttsp)
+    draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
 
-    draw(PNG("$(tempdir())/$(graph_name)TallPlot.png",
-        5inch, 9inch), tallPlot)
-    println("Creating $(param_to_sweep) agent heatmap...")
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
         Geom.histogram2d,
         Theme(background_color=colorant"white"),
         Guide.ylabel(string(param_to_sweep)),
         Guide.xlabel("Agent Wealth"))
-    draw(PNG("$(tempdir())/$(graph_name)_wealth_heatmap.png"), wealth_heatmap)
+    draw(PNG("$(tempdir())/wealth_heatmap.png"), wealth_heatmap)
 
     return Dict(:agent_line_df => agent_line_df,
         :trial_line_df => trial_line_df,
@@ -445,6 +275,62 @@ function first_iter_of_stage(df, stage_num, sim_tag)
     length(iters) > 0 ? minimum(iters) : 0
 end
 
+lighter_shade_of = Dict(
+    "navy" => "lightblue",
+    "blue" => "lightblue",
+    "red" => "pink",
+    "green" => "lightgreen",
+    "brown" => "orange",
+)
+
+function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
+        y_label=nothing, plot_CIs=true)
+
+    prd("Drawing: $(vars_colors)")
+    layers = Layer[]
+    for (var, color) in vars_colors
+        append!(layers, layer(plot_df,
+            x=param_to_sweep, y=var,
+            Geom.line,
+            Theme(default_color=color, line_width=.5mm)
+        ))
+        if plot_CIs
+            append!(layers, layer(plot_df,
+                x=param_to_sweep, y=var*"_lowCI",
+                Geom.line,
+                Theme(default_color=colorant"lightgray")
+            ))
+            append!(layers, layer(plot_df,
+                x=param_to_sweep, y=var*"_highCI",
+                Geom.line,
+                Theme(default_color=colorant"lightgray")
+            ))
+            append!(layers, layer(plot_df,
+                x=param_to_sweep, ymin=var*"_lowCI", ymax=var*"_highCI",
+                Geom.ribbon,
+                Theme(default_color=lighter_shade_of[color])
+            ))
+        end
+
+    end
+
+    p = plot(plot_df, layers,
+        Theme(background_color=colorant"white"),
+        Guide.xlabel(string(param_to_sweep)),
+        Guide.ylabel(y_label, orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
+        style(background_color=colorant"white",key_position=:bottom)
+    )
+    if length(vars_colors) > 1
+        vars = collect(keys(vars_colors))
+        vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
+        push!(p, Guide.manual_color_key(nothing,
+            vars, collect(values(vars_colors))))
+    end
+    draw(PNG("$(tempdir())/$(join(keys(vars_colors),"_")).png"), p)
+    return p
+end
+		
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
 
