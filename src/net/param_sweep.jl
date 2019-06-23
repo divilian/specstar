@@ -93,9 +93,9 @@ function param_sweeper(graph_name; additional_params...)
             push!(social_connectivity_df,
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
-				 overall_results[:average_proto_size],
-	             overall_results[:num_protos],
-	             overall_results[:num_agents_in_proto],
+                 overall_results[:average_proto_size],
+                 overall_results[:num_protos],
+                 overall_results[:num_agents_in_proto],
 
                  (i*trials_per_value+j)))
 
@@ -147,13 +147,13 @@ function param_sweeper(graph_name; additional_params...)
         time_to_stage3=Float64[],
         time_to_stage3_lowCI=Float64[],
         time_to_stage3_highCI=Float64[],
-		average_proto_size=Float64[],
+        average_proto_size=Float64[],
         average_proto_size_lowCI=Float64[],
         average_proto_size_highCI=Float64[],
-		num_protos=Float64[],
+        num_protos=Float64[],
         num_protos_lowCI=Float64[],
         num_protos_highCI=Float64[],
-		num_agents_in_proto=Float64[],
+        num_agents_in_proto=Float64[],
         num_agents_in_proto_lowCI=Float64[],
         num_agents_in_proto_highCI=Float64[],
     )
@@ -173,9 +173,9 @@ function param_sweeper(graph_name; additional_params...)
         curr_ginis = []
         curr_sizes = []
         curr_components = []
-		curr_proto_size=[]
-		curr_num_protos=[]
-		curr_num_agents_in_proto=[]
+        curr_proto_size=[]
+        curr_num_protos=[]
+        curr_num_agents_in_proto=[]
         curr_s2s=[]
         curr_s3s=[]
         for i=1:trials_per_value
@@ -240,9 +240,9 @@ function param_sweeper(graph_name; additional_params...)
                                 ciSizes[1], ciSizes[2], ciSizes[3],
                                 s2Times[1], s2Times[2], s2Times[3],
                                 s3Times[1], s3Times[2], s3Times[3],
-								ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
-								ciNumProtos[1], ciNumProtos[2], ciNumProtos[3],
-								ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
+                                ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
+                                ciNumProtos[1], ciNumProtos[2], ciNumProtos[3],
+                                ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
         ))
         counter+=((end_value-start_value)/num_values)
 
