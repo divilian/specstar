@@ -359,14 +359,14 @@ function param_sweeper(graph_name; additional_params...)
         Guide.ylabel("Time to reach stage", orientation=:vertical),
         Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
         Guide.manual_color_key("Legend",
-            ["Stage 2", "Stage 3"],
+            ["Stage 2      .", "Stage 3"],
             ["blue", "red"]),
         style(background_color=colorant"white",key_position=:bottom))
     plotProtos=plot(plot_df,
         layer(
             x=param_to_sweep, y=:num_protos_lowCI,
             Geom.line,
-            Theme(default_color=colorant"lightgreen")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, y=:num_protos,
@@ -376,17 +376,17 @@ function param_sweeper(graph_name; additional_params...)
         layer(
             x=param_to_sweep, y=:num_protos_highCI,
             Geom.line,
-            Theme(default_color=colorant"lightgreen")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, ymin=:num_protos_lowCI, ymax=:num_protos_highCI,
             Geom.ribbon,
-            Theme(default_color=colorant"green",key_position=:top)
+            Theme(default_color=colorant"lightgreen",key_position=:top)
         ),
         layer(
             x=param_to_sweep, y=:average_proto_size_lowCI,
             Geom.line,
-            Theme(default_color=colorant"orange")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, y=:average_proto_size,
@@ -396,18 +396,18 @@ function param_sweeper(graph_name; additional_params...)
         layer(
             x=param_to_sweep, y=:average_proto_size_highCI,
             Geom.line,
-            Theme(default_color=colorant"orange")
+            Theme(default_color=colorant"lightgray")
         ),
         layer(
             x=param_to_sweep, ymin=:average_proto_size_lowCI, ymax=:average_proto_size_highCI,
             Geom.ribbon,
-            Theme(default_color=colorant"darkorange",key_position=:top)
+            Theme(default_color=colorant"orange",key_position=:top)
         ),
         Guide.xlabel(string(param_to_sweep)),
         Guide.ylabel("Protos", orientation=:vertical),
         Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
         Guide.manual_color_key("Legend",
-            [ "Average Agent Size of Protos","Number of Protos"],
+            [ "Average Size of Proto      .","Number of Protos"],
             ["brown", "green"]),
         style(background_color=colorant"white",key_position=:bottom))
 		
