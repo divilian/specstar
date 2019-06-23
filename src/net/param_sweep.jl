@@ -241,7 +241,7 @@ function param_sweeper(graph_name; additional_params...)
         "Components")
     protop = draw_plot(plot_df, param_to_sweep,
         Dict("num_protos"=>"green", "average_proto_size" => "brown"),
-        "Components")
+        "Protos")
 
     # zeros are meaningless in time-to-stage plots
     to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
