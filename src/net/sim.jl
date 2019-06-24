@@ -79,6 +79,7 @@ function specnet(;additional_params...)
     # The initial social network.
     global graph = choose_graph()
 
+    arr_dead_protos=[]
 
     suglvl_distrib = DiscreteUniform(1, params[:init_sg_lvl])
     white_noise_distrib = Normal(0, params[:white_noise_intensity])
@@ -95,7 +96,7 @@ function specnet(;additional_params...)
     ## the following is a hack; see comment in ../scape/run-simulation.jl
     arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
-
+ 
     # (Erase old images.)
     save_dir = pwd()
     cd("$(tempdir())")
@@ -237,6 +238,9 @@ function specnet(;additional_params...)
                 push!(wealthArray,ag.a.sugar_level)
             end
         end
+		
+		kill_proto(SimState(graph, AN, arr_protos))
+		
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
         #   the CI, and (3) the upper bound.
@@ -309,6 +313,25 @@ end
 # Mark the agent "dead" whose agent number is passed. This involves
 # surgically removing it from the graph, adjusting the agent-to-node mappings,
 # and deleting it from the list of last-frame's plot coordinates.
+
+function kill_proto(sim_state::SimState)
+	index=length(sim_state.arr_protos)
+	while index>0
+        if(sim_state.arr_protos[index].balance<=0)
+            for id in sim_state.arr_protos[index].arr_member_ids
+                for ag in keys(AN)
+                    if ag.a.agent_id==id
+                        ag.a.proto_id=-1
+                    end
+                end
+            end
+        push!(arr_dead_protos,sim_state.arr_protos[index])
+		deleteat!(sim_state.arr_protos,index)
+		end
+        index-=1    
+	end
+end	
+		    
 function kill_agent(dying_agent)
     global graph, AN, locs_x, locs_y
     dying_node = AN[dying_agent]
