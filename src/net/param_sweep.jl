@@ -221,10 +221,10 @@ function param_sweeper(graph_name; additional_params...)
         mark_seed_value=original_seed
 
         # Compute the average Gini, with CI, for this set of param values.
-        if all([isnan(g) for g in curr_ginis])
-            # TODO: getting around a numerical error for now
-            ciGinis = [.5,.5,.5]
+        if sum([!isnan(g) for g ∈  curr_ginis]) < 3
+            ciGinis = [NaN, NaN, NaN]
         else
+            curr_ginis = [ g for g ∈  curr_ginis if !isnan(g) ]
             bs = bootstrap(mean, curr_ginis,
                 BasicSampling(params[:num_boot_samples]))
             ciGinis = confint(bs, BasicConfInt(.95))[1]
@@ -345,13 +345,14 @@ end
 #  vars_colors -- maps names of dependent variable(s) (which, if plot_CIs
 #    is true, must also be present with _lowCI and _highCI suffixes) to
 #    line colors.
-#  y_label -- text to plot vertically on the lefft
+#  y_label -- text to plot vertically on the left
 #  extra -- an optional array of other layers or geoms to add to plot.
 #  plot_CIs -- if true, include confidence interval bands (in lighter color)
 function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
-        y_label=nothing, extra=nothing, plot_CIs=true)
+        y_label=nothing, extra=[], plot_CIs=true)
 
     prd("Drawing: $(vars_colors)")
+    plot_df = consolidate(plot_df, param_to_sweep, vars_colors, plot_CIs)
     layers = Layer[]
     for (var, color) in vars_colors
         append!(layers, layer(plot_df,
@@ -392,9 +393,8 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         push!(p, Guide.manual_color_key(nothing,
             vars, collect(values(vars_colors))))
     end
-    if !isnothing(extra)
-        [ push!(p, e) for e in extra ]
-    end
+    [ push!(p, e) for e in extra ]
+
     draw(PNG("$(tempdir())/$(join(keys(vars_colors),"_")).png"), p)
     return p
 end
@@ -406,6 +406,24 @@ lighter_shade_of = Dict(
     "brown" => "orange",
 )
 
+# Keep only columns we will use for this plot, and remove rows with missing
+#   data so it is not (misleadingly) plotted.
+function consolidate(df, param_to_sweep, vars_colors, plot_CIs)
+    the_cols = collect(keys(vars_colors))
+    if plot_CIs
+        extended_cols = vcat(the_cols,
+            [string(q)*"_lowCI" for q in the_cols])
+        extended_cols = vcat(extended_cols,
+            [string(q)*"_highCI" for q in the_cols])
+        the_cols = extended_cols
+    end
+    the_cols = vcat(the_cols, string(param_to_sweep))
+    df = df[[q for q in names(df) if string(q) in the_cols]]
+    for col in names(df)
+        df[col] = map(x->isnan(x) ? missing : x, df[col])
+    end
+    df[completecases(df),:]
+end
 
 #runs a sweep for a given parameter once for each graph type,
 #saving the dataframes and plots to multiple files
