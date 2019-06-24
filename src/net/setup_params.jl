@@ -17,8 +17,8 @@ params = Dict{Symbol,Any}(
                                     #   this much sugar
     :salary => 10,                  # each iteration, each agent receives exactly
                                     #   this much sugar
-    :white_noise_intensity => 1,    # each iteration, an agent receives (or loses)
-                                    #   ~N(0, white_noise_intensity) extra sugar
+    :white_noise_intensity =>       # each iteration, an agent receives (or loses)
+        float(1.0),                 #   ~N(0, white_noise_intensity) extra sugar
     :proto_threshold => 50,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => false,           # create animations of results?
