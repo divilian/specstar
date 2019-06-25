@@ -212,7 +212,7 @@ function specnet(;additional_params...)
                 if ag.a.sugar_level < 0 && ag.a.alive ]
         for dying_agent in dying_agents
             try
-                in_the_hole = ag.a.sugar_level
+                in_the_hole = dying_agent.a.sugar_level
                 withdraw_from_proto!(dying_agent, arr_protos, iter)
                 prd("Agent $(dying_agent) got some money! " *
                     "(had $(in_the_hole), " *
@@ -222,7 +222,7 @@ function specnet(;additional_params...)
             catch exc
                 if isa(exc, NotEnoughSugarException)
                     prd("Agent $(dying_agent) died!! " *
-                        "(needed -$(dying_agent.a.sugar_level), only had " *
+                        "(needed $(-dying_agent.a.sugar_level), only had " *
                         "$(arr_protos[dying_agent.a.proto_id].balance) in proto)")
                 else
                     prd("Agent $(dying_agent) died!! (no proto)")
