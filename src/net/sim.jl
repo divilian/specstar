@@ -193,7 +193,7 @@ function specnet(;additional_params...)
 
         #Makes the agents deposit any excess sugar into their proto
         for ag in keys(AN)
-            if ag.a.proto_id ≠ -1
+            try
                 current = fetch_specific_proto_obj(arr_protos, ag.a.proto_id)
                 if ag.a.sugar_level > params[:proto_threshold]
                     deposit_amt = ag.a.sugar_level - params[:proto_threshold]
@@ -204,6 +204,9 @@ function specnet(;additional_params...)
                     current.balance += deposit_amt
                     push!(current.ledger_transactions, transaction)
                 end
+            catch DomainError
+                # This agent's proto has died because some other agent
+                # exhausted it. Never mind.
             end
         end
 
@@ -212,32 +215,33 @@ function specnet(;additional_params...)
                 if ag.a.sugar_level < 0 && ag.a.alive ]
         for dying_agent in dying_agents
             try
-                in_the_hole = dying_agent.a.sugar_level
-                withdraw_from_proto!(dying_agent, arr_protos, iter)
-                prd("Agent $(dying_agent) got some money! " *
-                    "(had $(in_the_hole), " *
-                    "now has $(dying_agent.a.sugar_level), " *
-                    "proto still has " *
-                    "$(arr_protos[dying_agent.a.proto_id].balance))")
+                if dying_agent.a.proto_id == -1
+                    prd("Agent $(dying_agent) died!! " *
+                        "(needed $(-dying_agent.a.sugar_level), " *
+                        "and had no proto).")
+                else
+                    in_the_hole = dying_agent.a.sugar_level
+                    withdraw_from_proto!(dying_agent, arr_protos, iter)
+                    prd("Agent $(dying_agent) got some money! " *
+                        "(had $(in_the_hole), " *
+                        "now has $(dying_agent.a.sugar_level), " *
+                        "proto still has " *
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                end
             catch exc
                 if isa(exc, NotEnoughSugarException)
                     prd("Agent $(dying_agent) died!! " *
-                        "(needed $(-dying_agent.a.sugar_level), only had " *
-                        "$(arr_protos[dying_agent.a.proto_id].balance) in proto)")
+                        "(needed $(-dying_agent.a.sugar_level) " *
+                        "and proto only had " *
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
                 else
-                    prd("Agent $(dying_agent) died!! (no proto)")
+                    prd("    SHOULD NEVER GET HERE")
+                    quit()
                 end
                 kill_agent(dying_agent)
             end
         end
 
-        wealthArray=[]
-        empty!(wealthArray)
-        for ag in keys(AN)
-            if ag.a.sugar_level>=-400
-                push!(wealthArray,ag.a.sugar_level)
-            end
-        end
 
         kill_sugarless_protos(SimState(graph, AN, arr_protos), arr_dead_protos)
 
@@ -247,8 +251,10 @@ function specnet(;additional_params...)
         # If we're going to end up making a single-sim plot, use Gini's CI's
         #   (which use bootstrapping, and are therefore time-consuming) to get
         #   all three. Otherwise, just get (1).
+        wealthArray=[ ag.a.sugar_level
+                            for ag in keys(AN) if ag.a.sugar_level ≥ 0 ]
         if params[:make_sim_plots]
-            if length(wealthArray) > 0
+            if length(wealthArray) > 1
                 rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
                     :R=>params[:num_boot_samples])
                 ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
