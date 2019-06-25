@@ -29,7 +29,7 @@ function fetch_specific_proto_obj(arr_protos, proto_id)
     """
     matching_protos = [probj for probj in arr_protos
         if probj.proto_id == proto_id]
-    if length(matching_protos) ≠ 1
+    if proto_id == -1  ||  length(matching_protos) ≠ 1
         throw(DomainError(proto_id))
     end
     return matching_protos[1]

@@ -219,6 +219,12 @@ function specnet(;additional_params...)
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
                         "and had no proto).")
+                    kill_agent(dying_agent)
+                elseif dying_agent.a.proto_id == -2
+                    prd("Agent $(dying_agent) died!! " *
+                        "(needed $(-dying_agent.a.sugar_level), " *
+                        "but proto has already been exhausted. (1)")
+                    kill_agent(dying_agent)
                 else
                     in_the_hole = dying_agent.a.sugar_level
                     withdraw_from_proto!(dying_agent, arr_protos, iter)
@@ -234,9 +240,13 @@ function specnet(;additional_params...)
                         "(needed $(-dying_agent.a.sugar_level) " *
                         "and proto only had " *
                         "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                elseif isa(exc, DomainError)
+                    prd("Agent $(dying_agent) died!! " *
+                        "(needed $(-dying_agent.a.sugar_level), " *
+                        "but proto has already been exhausted. (2)")
                 else
                     prd("    SHOULD NEVER GET HERE")
-                    quit()
+                    error(1)
                 end
                 kill_agent(dying_agent)
             end
@@ -328,11 +338,12 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
     while index>0
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
                 sim_state.arr_protos[index].balance<=0)
-            pri("Killing proto $(sim_state.arr_protos[index].proto_id)")
+            prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
             for id in sim_state.arr_protos[index].arr_member_ids
                 for ag in keys(AN)
                     if ag.a.agent_id==id
-                        ag.a.proto_id=-1
+                        ag.a.proto_id=-2    # new value, indicating "was once
+                                            #   in a proto, but no longer."
                     end
                 end
             end
