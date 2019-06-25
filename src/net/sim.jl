@@ -96,7 +96,7 @@ function specnet(;additional_params...)
     ## the following is a hack; see comment in ../scape/run-simulation.jl
     arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
 
- 
+
     # (Erase old images.)
     save_dir = pwd()
     cd("$(tempdir())")
@@ -238,9 +238,9 @@ function specnet(;additional_params...)
                 push!(wealthArray,ag.a.sugar_level)
             end
         end
-		
-		kill_proto(SimState(graph, AN, arr_protos))
-		
+
+        kill_sugarless_protos(SimState(graph, AN, arr_protos), arr_dead_protos)
+
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
         #   the CI, and (3) the upper bound.
@@ -278,7 +278,7 @@ function specnet(;additional_params...)
         stage = stages,
         num_agents = nums_agents
     )
-	
+
     # Collect stats on the model after the starvation period.
     starvation_results = collect_stats(SimState(graph, AN, arr_protos))
     if !isdefined(Main, :overall_results)
@@ -310,14 +310,15 @@ end
 
 ################################ functions ################################
 
-# Mark the agent "dead" whose agent number is passed. This involves
-# surgically removing it from the graph, adjusting the agent-to-node mappings,
-# and deleting it from the list of last-frame's plot coordinates.
-
-function kill_proto(sim_state::SimState)
-	index=length(sim_state.arr_protos)
-	while index>0
-        if(sim_state.arr_protos[index].balance<=0)
+# Remove all protos that have zero (or less) sugar balance, adding them to the
+#   arr_dead_protos variable and setting all its members back to a -1 ("no
+#   proto") proto_id.
+function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
+    index=length(sim_state.arr_protos)
+    while index>0
+        if(sim_state.arr_protos[index].proto_id ≠ -1 &&
+                sim_state.arr_protos[index].balance<=0)
+            pri("Killing proto $(sim_state.arr_protos[index].proto_id)")
             for id in sim_state.arr_protos[index].arr_member_ids
                 for ag in keys(AN)
                     if ag.a.agent_id==id
@@ -325,13 +326,16 @@ function kill_proto(sim_state::SimState)
                     end
                 end
             end
-        push!(arr_dead_protos,sim_state.arr_protos[index])
-		deleteat!(sim_state.arr_protos,index)
-		end
-        index-=1    
-	end
-end	
-		    
+            push!(arr_dead_protos,sim_state.arr_protos[index])
+            deleteat!(sim_state.arr_protos,index)
+        end
+        index-=1
+    end
+end
+
+# Mark the agent "dead" whose agent number is passed. This involves
+# surgically removing it from the graph, adjusting the agent-to-node mappings,
+# and deleting it from the list of last-frame's plot coordinates.
 function kill_agent(dying_agent)
     global graph, AN, locs_x, locs_y
     dying_node = AN[dying_agent]
@@ -421,19 +425,19 @@ rev_dict(d) = Dict(y=>x for (x,y) in d)
 
 function plot_final_wealth_hist(sim_state::SimState)
     final_wealths=[]
-	final_proto_wealths_alive=[]
+    final_proto_wealths_alive=[]
     final_proto_wealths=[]
     [push!(final_wealths,ag.a.sugar_level) for ag in keys(AN) ]
     for p in sim_state.arr_protos
         if(p.balance!=-1)
-	        push!(final_proto_wealths_alive, p.balance)
+            push!(final_proto_wealths_alive, p.balance)
             push!(final_proto_wealths, p.balance)
-	    else
-	        push!(final_proto_wealths, p.balance)
-	    end
+        else
+            push!(final_proto_wealths, p.balance)
+        end
     end
 
-	final_wealthp = plot(
+    final_wealthp = plot(
         x=final_wealths,
         Geom.histogram(density=true, bincount=20),
         Theme(background_color=colorant"white"),
@@ -450,11 +454,11 @@ function plot_final_wealth_hist(sim_state::SimState)
         Geom.histogram(density=true, bincount=20),
         Theme(background_color=colorant"white"),
         Guide.xlabel("Proto Wealth"),
-        Guide.ylabel("Density of protos"))		
+        Guide.ylabel("Density of protos"))
     draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
-	draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
+    draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
     draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
-	
+
 end
 
 # Plot the Gini coefficient, and the fraction of agents still alive, over time.
@@ -607,7 +611,7 @@ end
 function collect_stats(s::SimState)
     total_proto_sz = sum([ length(p.arr_member_ids) for p ∈  s.arr_protos ])
     component_vertices = connected_components(s.graph)
-	proto_average_size=total_proto_sz/length(s.arr_protos)
+    proto_average_size=total_proto_sz/length(s.arr_protos)
     num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],

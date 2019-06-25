@@ -61,6 +61,8 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
     start_proto_id = begin
         if length(arr_protos) == 1 && arr_protos[1].proto_id == -1
             1
+        elseif length(arr_protos) == 0
+            1
         else
             maximum([protoobj.proto_id for protoobj in arr_protos]) + 1
         end
