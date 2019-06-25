@@ -248,9 +248,13 @@ function specnet(;additional_params...)
         #   (which use bootstrapping, and are therefore time-consuming) to get
         #   all three. Otherwise, just get (1).
         if params[:make_sim_plots]
-            rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
-                :R=>params[:num_boot_samples])
-            ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+            if length(wealthArray) > 0
+                rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
+                    :R=>params[:num_boot_samples])
+                ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+            else
+                ginis[iter,:] = [ NaN, NaN, NaN ]
+            end
         else
             rGini=Gini(wealthArray)
             ginis[iter,1] = convert(Float16,rGini)
@@ -465,6 +469,13 @@ end
 # The callouts parameter should be a list of symbols which should appear in the
 # title's plot.
 function plot_gini_livingfrac_over_time(iter_results, callouts)
+
+    # Remove rows with NaNs.
+    for col in names(iter_results)
+        iter_results[col] = map(x->isnan(x) ? missing : x, iter_results[col])
+    end
+    iter_results = iter_results[completecases(iter_results),:]
+
     stage_names = Dict(1=>"1", 2=>"2", 3=>"3")
     iter_results.stage = [ stage_names[s] for s in iter_results.stage ]
     iter_results.num_agents /= maximum(iter_results.num_agents)
