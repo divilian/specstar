@@ -323,7 +323,7 @@ function param_sweeper(graph_name; additional_params...)
             "num_protos_pre" => :dot,
             "num_protos_post" => :dot),
         y_label="Number of living agents/protos",
-        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+        extra=[Guide.annotation(compose(context(), Compose.text(minimum(plot_df[param_to_sweep]), params[:N], "N=$(params[:N])", hleft, vtop))),
          Coord.Cartesian(ymin=0, ymax=params[:N]),
          layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
