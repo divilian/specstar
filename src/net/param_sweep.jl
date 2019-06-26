@@ -412,11 +412,11 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         style(background_color=colorant"white",key_position=:bottom)
     )
     if length(vars_colors) > 1
-        vars = collect(keys(vars_colors))
+        vars = sort(collect(keys(vars_colors)))
+        colors = [ vars_colors[x] for x in vars ]
         vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
         # TODO: add legend that combines both color and linestyle, where appropriate.
-        push!(p, Guide.manual_color_key(nothing,
-            vars, collect(values(vars_colors))))
+        push!(p, Guide.manual_color_key(nothing, vars, colors))
     end
     [ push!(p, e) for e in extra ]
 
