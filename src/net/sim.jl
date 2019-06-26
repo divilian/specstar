@@ -127,6 +127,7 @@ function specnet(;additional_params...)
     local ginis=Array{Float16}(undef,params[:max_iters],3)
     local stages=[]
     local nums_agents=[]
+    local nums_protos=[]
 
     global overall_results
     for iter in 1:params[:max_iters]
@@ -158,6 +159,7 @@ function specnet(;additional_params...)
         end
 
         push!(nums_agents, length([ a for a ∈  keys(AN) if a.a.alive ]))
+        push!(nums_protos, length(arr_protos))
 
         if params[:make_anims]
             if locs_x == nothing
@@ -296,7 +298,8 @@ function specnet(;additional_params...)
         gini = ginis[1:length(stages),1],
         gini_highCI = ginis[1:length(stages),3],
         stage = stages,
-        num_agents = nums_agents
+        num_agents = nums_agents,
+        num_protos = nums_protos,
     )
 
     # Collect stats on the model after the starvation period.
@@ -478,7 +481,7 @@ function plot_final_wealth_hist(sim_state::SimState)
         Guide.ylabel("Density of protos"))
     draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
     draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
-    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
+    #draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
 
 end
 
@@ -496,6 +499,8 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
     stage_names = Dict(1=>"1", 2=>"2", 3=>"3")
     iter_results.stage = [ stage_names[s] for s in iter_results.stage ]
     iter_results.num_agents /= maximum(iter_results.num_agents)
+    iter_results.num_protos /= maximum(iter_results.num_protos)
+
     giniPlot=plot(iter_results,
         layer(
             x=:iter, y=:gini_lowCI,
@@ -517,17 +522,36 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
             Geom.ribbon,
             Theme(default_color=colorant"lightblue")
         ),
-        layer(
-            x=:iter, y=:num_agents,
-            Geom.line,
-            Theme(default_color=colorant"black")
-        ),
-        Guide.xlabel("Iteration"), Guide.ylabel("Gini / fraction living"),
+        Guide.xlabel("Iteration"),
+        Guide.ylabel("Gini", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
         Theme(background_color=colorant"white"),
         Scale.color_discrete_manual("blue","green","red",
             levels=["1","2","3"]),
-        Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])))
-    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
+        Guide.title(join([ "$(c)=$(params[c])\n" for c in callouts ])),
+        style(background_color=colorant"white",key_position=:bottom))
+
+    agent_proto_results = stack(iter_results, [:num_agents,:num_protos],
+        :iter, variable_name=Symbol("Fraction living"), value_name=:frac_living)
+    agent_proto_results[Symbol("Fraction living")] =
+        [ x == :num_agents ? "Agents    ." : "Protos"
+            for x ∈  agent_proto_results[Symbol("Fraction living")] ]
+    livingPlot=plot(agent_proto_results,
+        layer(
+            x=:iter, y=:frac_living, color="Fraction living",
+            Geom.line, Theme(line_width=.8mm)
+        ),
+        Guide.xlabel("Iteration"),
+        Guide.ylabel("Fraction (of max) living", orientation=:vertical),
+        Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
+#        Scale.color_discrete_manual("black","brown",levels=[:num_agents,:num_protos]),
+#        Guide.manual_color_key("Fraction living",
+#            [ string(v)*"   ." for v ∈  [:num_agents,:num_protos]],
+#            ["black","brown"]),
+        style(background_color=colorant"white",key_position=:bottom))
+
+    tall = vstack(giniPlot, livingPlot)
+    draw(PNG("$(tempdir())/GiniPlot.png", 4inch, 6inch), tall)
 end
 
 function plot_iteration_graphs(iter)
