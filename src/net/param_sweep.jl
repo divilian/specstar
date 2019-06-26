@@ -283,11 +283,12 @@ function param_sweeper(graph_name; additional_params...)
 
     CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
 
-    ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"), "Gini")
+    ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
+        y_label="Gini")
 
     compp = draw_plot(plot_df, param_to_sweep,
         Dict("number_components"=>"green", "size_largest_component" => "red"),
-        "Components")
+        y_label="Components")
 
     protop = draw_plot(plot_df, param_to_sweep,
         Dict(
@@ -295,14 +296,15 @@ function param_sweeper(graph_name; additional_params...)
             "average_proto_size" => "brown",
             "num_agents_in_proto" => "red",
         ),
-        "Protos",
-        [Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+        y_label="Protos",
+        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
          layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
     numlivingp = draw_plot(plot_df, param_to_sweep,
-        Dict("num_living_agents_pre"=>"green", "num_living_agents_post" => "red"),
-        "Number of living agents",
-        [Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+        Dict("num_living_agents_pre"=>"green",
+            "num_living_agents_post" => "red"),
+        y_label="Number of living agents",
+        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
          Coord.Cartesian(ymin=0, ymax=params[:N]),
          layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
@@ -310,7 +312,7 @@ function param_sweeper(graph_name; additional_params...)
     to_stage_df = plot_df[plot_df[:time_to_stage3] .> 0, :]
     ttsp = draw_plot(to_stage_df, param_to_sweep,
         Dict("time_to_stage2"=>"blue", "time_to_stage3" => "red"),
-        "Time to reach stage")
+        y_label="Time to reach stage")
 
     tallPlot=vstack(ginip,compp,protop,ttsp)
     draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
@@ -349,6 +351,7 @@ end
 #  extra -- an optional array of other layers or geoms to add to plot.
 #  plot_CIs -- if true, include confidence interval bands (in lighter color)
 function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
+        vars_linestyles=Dict{String,Symbol}();
         y_label=nothing, extra=[], plot_CIs=true)
 
     prd("Drawing: $(vars_colors)")
@@ -358,7 +361,9 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         append!(layers, layer(plot_df,
             x=param_to_sweep, y=var,
             Geom.line,
-            Theme(default_color=color, line_width=.5mm)
+            Theme(default_color=color,
+                line_style=[get(vars_linestyles, var, :solid)],
+                line_width=.5mm)
         ))
         if plot_CIs
             append!(layers, layer(plot_df,
