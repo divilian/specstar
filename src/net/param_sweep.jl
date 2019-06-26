@@ -23,10 +23,11 @@ global social_connectivity_df=DataFrame(
     size_largest_comp=Int[],
     num_comps=Int[],
     average_proto_size=Float64[],
-    num_protos=Int[],
     num_agents_in_proto=Int[],
     num_living_agents_pre=Float64[],
     num_living_agents_post=Float64[],
+    num_protos_pre=Float64[],
+    num_protos_post=Float64[],
     sim_tag=Int[])
 
 
@@ -96,10 +97,11 @@ function param_sweeper(graph_name; additional_params...)
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
                  overall_results[:average_proto_size],
-                 overall_results[:num_protos],
                  overall_results[:num_agents_in_proto],
                  overall_results[:num_living_agents],     # shouldn't be here
                  starvation_results[:num_living_agents],  # shouldn't be here
+                 overall_results[:num_protos],     # shouldn't be here
+                 starvation_results[:num_protos],  # shouldn't be here
 
                  (i*trials_per_value+j)))
 
@@ -154,9 +156,6 @@ function param_sweeper(graph_name; additional_params...)
         average_proto_size=Float64[],
         average_proto_size_lowCI=Float64[],
         average_proto_size_highCI=Float64[],
-        num_protos=Float64[],
-        num_protos_lowCI=Float64[],
-        num_protos_highCI=Float64[],
         num_agents_in_proto=Float64[],
         num_agents_in_proto_lowCI=Float64[],
         num_agents_in_proto_highCI=Float64[],
@@ -166,6 +165,12 @@ function param_sweeper(graph_name; additional_params...)
         num_living_agents_post=Float64[],
         num_living_agents_post_lowCI=Float64[],
         num_living_agents_post_highCI=Float64[],
+        num_protos_pre=Float64[],
+        num_protos_pre_lowCI=Float64[],
+        num_protos_pre_highCI=Float64[],
+        num_protos_post=Float64[],
+        num_protos_post_lowCI=Float64[],
+        num_protos_post_highCI=Float64[],
     )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
@@ -184,12 +189,13 @@ function param_sweeper(graph_name; additional_params...)
         curr_sizes = []
         curr_components = []
         curr_proto_size=[]
-        curr_num_protos=[]
         curr_num_agents_in_proto=[]
         curr_s2s=[]
         curr_s3s=[]
         curr_num_living_agents_pre=[]
         curr_num_living_agents_post=[]
+        curr_num_protos_pre=[]
+        curr_num_protos_post=[]
         for i=1:trials_per_value
 
             sim_tag=(j*trials_per_value+i)
@@ -205,12 +211,13 @@ function param_sweeper(graph_name; additional_params...)
             push!(curr_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp][1])
             push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps][1])
             push!(curr_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size][1])
-            push!(curr_num_protos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos][1])
             push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
             push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
             push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             push!(curr_num_living_agents_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_pre][1])
             push!(curr_num_living_agents_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_post][1])
+            push!(curr_num_protos_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos_pre][1])
+            push!(curr_num_protos_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos_post][1])
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
@@ -236,9 +243,6 @@ function param_sweeper(graph_name; additional_params...)
         #CI for average proto size for current params
         bs = bootstrap(mean, curr_proto_size, BasicSampling(params[:num_boot_samples]))
         ciProtoSizes = confint(bs, BasicConfInt(.95))[1]
-        #CI for number of protos for current params
-        bs = bootstrap(mean, curr_num_protos, BasicSampling(params[:num_boot_samples]))
-        ciNumProtos = confint(bs, BasicConfInt(.95))[1]
         #CI for number of agents in proto for current params
         bs = bootstrap(mean, curr_num_agents_in_proto, BasicSampling(params[:num_boot_samples]))
         ciNumAginP = confint(bs, BasicConfInt(.95))[1]
@@ -263,16 +267,25 @@ function param_sweeper(graph_name; additional_params...)
             BasicSampling(params[:num_boot_samples]))
         ciNumLivingPost = confint(bs, BasicConfInt(.95))[1]
 
+        #CI for average number of protos, pre-starvation
+        bs = bootstrap(mean, curr_num_protos_pre, BasicSampling(params[:num_boot_samples]))
+        ciNumProtosPre = confint(bs, BasicConfInt(.95))[1]
+
+        #CI for average number of protos, pre-starvation
+        bs = bootstrap(mean, curr_num_protos_post, BasicSampling(params[:num_boot_samples]))
+        ciNumProtosPost = confint(bs, BasicConfInt(.95))[1]
+
         push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
                                 ciNumbers[1], ciNumbers[2], ciNumbers[3],
                                 ciSizes[1], ciSizes[2], ciSizes[3],
                                 ciS2Times[1], ciS2Times[2], ciS2Times[3],
                                 ciS3Times[1], ciS3Times[2], ciS3Times[3],
                                 ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
-                                ciNumProtos[1], ciNumProtos[2], ciNumProtos[3],
                                 ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
                                 ciNumLivingPre[1], ciNumLivingPre[2], ciNumLivingPre[3],
                                 ciNumLivingPost[1], ciNumLivingPost[2], ciNumLivingPost[3],
+                                ciNumProtosPre[1], ciNumProtosPre[2], ciNumProtosPre[3],
+                                ciNumProtosPost[1], ciNumProtosPost[2], ciNumProtosPost[3],
         ))
         counter+=((end_value-start_value)/num_values)
 
@@ -290,20 +303,26 @@ function param_sweeper(graph_name; additional_params...)
         Dict("number_components"=>"green", "size_largest_component" => "red"),
         y_label="Components")
 
-    protop = draw_plot(plot_df, param_to_sweep,
-        Dict(
-            "num_protos"=>"green",
-            "average_proto_size" => "brown",
-            "num_agents_in_proto" => "red",
-        ),
-        y_label="Protos",
-        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
-         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
+#    protop = draw_plot(plot_df, param_to_sweep,
+#        Dict(
+#            "num_protos"=>"green",
+#            "average_proto_size" => "brown",
+#            "num_agents_in_proto" => "red",
+#        ),
+#        y_label="Protos",
+#        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
+#         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
     numlivingp = draw_plot(plot_df, param_to_sweep,
-        Dict("num_living_agents_pre"=>"green",
-            "num_living_agents_post" => "red"),
-        y_label="Number of living agents",
+        Dict("num_living_agents_pre" => "green",
+            "num_living_agents_post" => "red",
+            "num_protos_pre" => "green",
+            "num_protos_post" => "red"),
+        Dict("num_living_agents_pre"=> :solid,
+            "num_living_agents_post" => :solid,
+            "num_protos_pre" => :dot,
+            "num_protos_post" => :dot),
+        y_label="Number of living agents/protos",
         extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
          Coord.Cartesian(ymin=0, ymax=params[:N]),
          layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
@@ -314,7 +333,7 @@ function param_sweeper(graph_name; additional_params...)
         Dict("time_to_stage2"=>"blue", "time_to_stage3" => "red"),
         y_label="Time to reach stage")
 
-    tallPlot=vstack(ginip,compp,protop,ttsp)
+    tallPlot=vstack(ginip,compp,ttsp)
     draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
 
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
@@ -395,8 +414,9 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
     if length(vars_colors) > 1
         vars = collect(keys(vars_colors))
         vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
-        push!(p, Guide.manual_color_key(nothing,
-            vars, collect(values(vars_colors))))
+# TODO: add legend that combines both color and linestyle, where appropriate.
+#        push!(p, Guide.manual_color_key(nothing,
+#            vars, collect(values(vars_colors))))
     end
     [ push!(p, e) for e in extra ]
 
