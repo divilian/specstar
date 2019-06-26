@@ -621,10 +621,13 @@ end
 #   S1: No agent has yet created a proto.
 #   S2: Agents are creating and joining protos.
 #   S3: All agents are either (a) graph isolates, (b) dead, or (c) in a proto.
+global left_stage_1 = false
 function get_stage(sim_state::SimState)
-    if length(sim_state.arr_protos) == 1   # See arr_protos hack
+    if length(sim_state.arr_protos) == 1  &&  # See arr_protos hack
+            !left_stage_1
         return 1
     else
+        global left_stage_1 = true
         for agent in keys(AN)
             if length(neighbors(graph,AN[agent])) > 0  &&
                     agent.a.alive  &&
