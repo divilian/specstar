@@ -94,7 +94,7 @@ function specnet(;additional_params...)
             =>k for k in 1:params[:N])
 
     ## the following is a hack; see comment in ../scape/run-simulation.jl
-    arr_protos = [Proto(-1, -1, false, ["-"], [Transaction(-1, -1, "", "-")])]
+    arr_protos = []
 
 
     # (Erase old images.)
@@ -666,7 +666,11 @@ end
 function collect_stats(s::SimState)
     total_proto_sz = sum([ length(p.arr_member_ids) for p ∈  s.arr_protos ])
     component_vertices = connected_components(s.graph)
-    proto_average_size=total_proto_sz/length(s.arr_protos)
+    if length(s.arr_protos) ==0
+	    proto_average_size=0
+    else
+	    proto_average_size=total_proto_sz/length(s.arr_protos)
+	end
     num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
