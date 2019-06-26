@@ -316,8 +316,8 @@ function param_sweeper(graph_name; additional_params...)
     numlivingp = draw_plot(plot_df, param_to_sweep,
         Dict("num_living_agents_pre" => "green",
             "num_living_agents_post" => "red",
-            "num_protos_pre" => "green",
-            "num_protos_post" => "red"),
+            "num_protos_pre" => "blue",
+            "num_protos_post" => "orange"),
         Dict("num_living_agents_pre"=> :solid,
             "num_living_agents_post" => :solid,
             "num_protos_pre" => :dot,
@@ -414,9 +414,9 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
     if length(vars_colors) > 1
         vars = collect(keys(vars_colors))
         vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
-# TODO: add legend that combines both color and linestyle, where appropriate.
-#        push!(p, Guide.manual_color_key(nothing,
-#            vars, collect(values(vars_colors))))
+        # TODO: add legend that combines both color and linestyle, where appropriate.
+        push!(p, Guide.manual_color_key(nothing,
+            vars, collect(values(vars_colors))))
     end
     [ push!(p, e) for e in extra ]
 
@@ -426,9 +426,12 @@ end
 lighter_shade_of = Dict(
     "navy" => "lightblue",
     "blue" => "lightblue",
+    "orange" => "pink",
     "red" => "pink",
     "green" => "lightgreen",
     "brown" => "orange",
+    "black" => "grey",
+    "grey" => "lightgrey",
 )
 
 # Keep only columns we will use for this plot, and remove rows with missing
