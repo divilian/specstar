@@ -32,9 +32,9 @@ function specnet(;additional_params...)
     @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
 
-    pri("SPECnet simulation parameters:")
+    pri("SPECnet simulation parameters:\n")
     for param in sort(collect(keys(params)), by=x->lowercase(string(x)))
-        pri("   $(param) = $(params[param])")
+        pri("   $(param) = $(params[param])\n")
     end
 
     global locs_x, locs_y
@@ -73,7 +73,7 @@ function specnet(;additional_params...)
     # them ruthlessly in sync.)
 
 
-    println("Run SPECnet...")
+    pri("Run SPECnet...\n")
 
 
     # The initial social network.
@@ -111,7 +111,7 @@ function specnet(;additional_params...)
     locs_x, locs_y = nothing, nothing
 
 
-    println("Iterations:")
+    pri("Iterations:\n")
 
 
     # The number of stage 3 iterations run so far.
@@ -137,13 +137,13 @@ function specnet(;additional_params...)
         push!(stages, get_stage(SimState(graph, AN, arr_protos)))
         @assert stages[end] ∈  [1,2,3]
         if stages[end] == 1
-            print("-")
+            pri("-")
         elseif stages[end] == 2
-            print("+")
+            pri("+")
         elseif stages[end] == 3
-            print("#")
+            pri("#")
         end
-        if iter % 10 == 0 println(iter) end
+        if iter % 10 == 0 pri(iter) end
 
         if stages[end] == 3
             if starvation_timer == 0
@@ -220,12 +220,12 @@ function specnet(;additional_params...)
                 if dying_agent.a.proto_id == -1
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "and had no proto).")
+                        "and had no proto).\n")
                     kill_agent(dying_agent)
                 elseif dying_agent.a.proto_id == -2
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "but proto has already been exhausted. (1)")
+                        "but proto has already been exhausted. (1)\n")
                     kill_agent(dying_agent)
                 else
                     in_the_hole = dying_agent.a.sugar_level
@@ -234,20 +234,20 @@ function specnet(;additional_params...)
                         "(had $(in_the_hole), " *
                         "now has $(dying_agent.a.sugar_level), " *
                         "proto still has " *
-                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)\n")
                 end
             catch exc
                 if isa(exc, NotEnoughSugarException)
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level) " *
                         "and proto only had " *
-                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)\n")
                 elseif isa(exc, DomainError)
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "but proto has already been exhausted. (2)")
+                        "but proto has already been exhausted. (2)\n")
                 else
-                    prd("    SHOULD NEVER GET HERE")
+                    prd("    SHOULD NEVER GET HERE\n")
                     error(1)
                 end
                 kill_agent(dying_agent)
@@ -316,12 +316,12 @@ function specnet(;additional_params...)
     end
 
     if params[:make_anims]
-        println("Building wealth animation (be unbelievably patient)...")
+        pri("Building wealth animation (be unbelievably patient)...\n")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
-        println("Building graph animation (be mind-bogglingly patient)...")
+        pri("Building graph animation (be mind-bogglingly patient)...\n")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
-    println("\n...ending SPECnet.")
+    pri("\n...ending SPECnet.\n")
 
     return Dict(:agent_results => sort(agent_results, :agent),
         :iter_results => iter_results,
@@ -341,7 +341,7 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
     while index>0
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
                 sim_state.arr_protos[index].balance<=0)
-            prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
+            prd("Killing proto $(sim_state.arr_protos[index].proto_id)\n")
             for id in sim_state.arr_protos[index].arr_member_ids
                 for ag in keys(AN)
                     if ag.a.agent_id==id
@@ -687,7 +687,7 @@ function all_parameters_legit(additional_params)
     if !all([ word in keys(params) for word in keys(additional_params) ])
         for word in keys(additional_params)
             if word ∉  keys(params)
-                println("No such SPECnet parameter \"$(word)\".")
+                prc("No such SPECnet parameter \"$(word)\".\n")
             end
         end
         return false
