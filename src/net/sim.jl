@@ -674,6 +674,8 @@ function collect_stats(s::SimState)
     num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
+        :gini => Gini([ ag.a.sugar_level
+                            for ag ∈  keys(AN) if ag.a.sugar_level ≥ 0 ]),
         :num_comps => nv(s.graph) == 0 ? 0 :
             length(component_vertices),
         :average_proto_size => proto_average_size,
@@ -684,7 +686,8 @@ function collect_stats(s::SimState)
 end
 
 function all_parameters_legit(additional_params)
-    if !all([ word in keys(params) for word in keys(additional_params) ])
+    if !all([ word in union([:label], keys(params))
+                                        for word in keys(additional_params) ])
         for word in keys(additional_params)
             if word ∉  keys(params)
                 prc("No such SPECnet parameter \"$(word)\".\n")
