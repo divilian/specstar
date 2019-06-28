@@ -37,8 +37,8 @@ function param_sweeper(graph_name; additional_params...)
     @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
 
-    println("Starting sweep..")
-    print("Sweeping for: $(param_to_sweep)")
+    prc("Starting sweep...\n")
+    prc("Sweeping for: $(param_to_sweep)")
     counter=start_value
 
     global agent_line_df = DataFrame(
@@ -392,7 +392,7 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         vars_linestyles=Dict{String,Symbol}();
         y_label=nothing, extra=[], plot_CIs=true)
 
-    prd("Drawing: $(vars_colors)")
+    prd("Drawing: $(vars_colors)\n")
     plot_df = consolidate(plot_df, param_to_sweep, vars_colors, plot_CIs)
     layers = Layer[]
     for (var, color) in vars_colors
@@ -431,11 +431,11 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         style(background_color=colorant"white",key_position=:bottom)
     )
     if length(vars_colors) > 1
-        vars = collect(keys(vars_colors))
+        vars = sort(collect(keys(vars_colors)))
+        colors = [ vars_colors[x] for x in vars ]
         vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
         # TODO: add legend that combines both color and linestyle, where appropriate.
-        push!(p, Guide.manual_color_key(nothing,
-            vars, collect(values(vars_colors))))
+        push!(p, Guide.manual_color_key(nothing, vars, colors))
     end
     [ push!(p, e) for e in extra ]
 
@@ -478,7 +478,7 @@ end
 if graph_sweep
     sweep_results = Dict()
     graph_types=["erdos_renyi","scale_free","small_world","complete","empty"]
-    println("sweeping for graph type")
+    prc("sweeping for graph type")
     for graph_type in graph_types
         params[:whichGraph]=graph_type
         sweep_results[graph_type] = param_sweeper(graph_type)

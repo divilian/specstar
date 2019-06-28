@@ -67,13 +67,13 @@ function fetch_eligible_neighbors(agobj::NetAgent,
             replacement_idx = rand(1:length(other_eligible_agents))
             agents_to_return[i] = other_eligible_agents[replacement_idx]
             deleteat!(other_eligible_agents, replacement_idx)
-            prd("Agent $(agobj.a.agent_id) considers $(agents_to_return[i].a.agent_id) at-large")
+            prd("Agent $(agobj.a.agent_id) considers $(agents_to_return[i].a.agent_id) at-large\n")
         else
-            prd("Agent $(agobj.a.agent_id) considers $(agents_to_return[i].a.agent_id) from neighbors")
+            prd("Agent $(agobj.a.agent_id) considers $(agents_to_return[i].a.agent_id) from neighbors\n")
         end
     end
 
-    prd("Returning: $(agobj.a.agent_id) -- $(agents_to_return)")
+    prd("Returning: $(agobj.a.agent_id) -- $(agents_to_return)\n")
     return shuffle(agents_to_return)
 end ## end fetch_eligible_neighbors
 

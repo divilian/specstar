@@ -33,9 +33,9 @@ function specnet(;additional_params...)
     @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
 
-    pri("SPECnet simulation parameters:")
+    pri("SPECnet simulation parameters:\n")
     for param in sort(collect(keys(params)), by=x->lowercase(string(x)))
-        pri("   $(param) = $(params[param])")
+        pri("   $(param) = $(params[param])\n")
     end
 
     global locs_x, locs_y
@@ -74,7 +74,7 @@ function specnet(;additional_params...)
     # them ruthlessly in sync.)
 
 
-    println("Run SPECnet...")
+    pri("Run SPECnet...\n")
 
 
     # The initial social network.
@@ -112,7 +112,7 @@ function specnet(;additional_params...)
 
     arr_protos = []
 
-    println("Iterations:")
+    pri("Iterations:\n")
 
 
     # The number of stage 3 iterations run so far.
@@ -138,13 +138,13 @@ function specnet(;additional_params...)
         push!(stages, get_stage(SimState(graph, AN, arr_protos)))
         @assert stages[end] ∈  [1,2,3]
         if stages[end] == 1
-            print("-")
+            pri("-")
         elseif stages[end] == 2
-            print("+")
+            pri("+")
         elseif stages[end] == 3
-            print("#")
+            pri("#")
         end
-        if iter % 10 == 0 println(iter) end
+        if iter % 10 == 0 pri(iter) end
 
         if stages[end] == 3
             if starvation_timer == 0
@@ -221,12 +221,12 @@ function specnet(;additional_params...)
                 if dying_agent.a.proto_id == -1
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "and had no proto).")
+                        "and had no proto).\n")
                     kill_agent(dying_agent)
                 elseif dying_agent.a.proto_id == -2
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "but proto has already been exhausted. (1)")
+                        "but proto has already been exhausted. (1)\n")
                     kill_agent(dying_agent)
                 else
                     in_the_hole = dying_agent.a.sugar_level
@@ -235,20 +235,20 @@ function specnet(;additional_params...)
                         "(had $(in_the_hole), " *
                         "now has $(dying_agent.a.sugar_level), " *
                         "proto still has " *
-                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)\n")
                 end
             catch exc
                 if isa(exc, NotEnoughSugarException)
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level) " *
                         "and proto only had " *
-                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)")
+                        "$(fetch_specific_proto_obj(arr_protos,dying_agent.a.proto_id).balance).)\n")
                 elseif isa(exc, DomainError)
                     prd("Agent $(dying_agent) died!! " *
                         "(needed $(-dying_agent.a.sugar_level), " *
-                        "but proto has already been exhausted. (2)")
+                        "but proto has already been exhausted. (2)\n")
                 else
-                    prd("    SHOULD NEVER GET HERE")
+                    prd("    SHOULD NEVER GET HERE\n")
                     error(1)
                 end
                 kill_agent(dying_agent)
@@ -268,9 +268,15 @@ function specnet(;additional_params...)
                             for ag in keys(AN) if ag.a.sugar_level ≥ 0 ]
         if params[:make_sim_plots]
             if length(wealthArray) > 1
-                rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
-                    :R=>params[:num_boot_samples])
-                ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+                if all_the_same(wealthArray)
+                    # All wealths are the same. In this case, the Gini
+                    #   coefficient itself is 0, and a CI cannot be calculated.
+                    ginis[iter,:] = [ 0.0, 0.0, 0.0 ]
+                else
+                    rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
+                        :R=>params[:num_boot_samples])
+                    ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+                end
             else
                 ginis[iter,:] = [ NaN, NaN, NaN ]
             end
@@ -317,12 +323,12 @@ function specnet(;additional_params...)
     end
 
     if params[:make_anims]
-        println("Building wealth animation (be unbelievably patient)...")
+        pri("Building wealth animation (be unbelievably patient)...\n")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"wealth"))"*".svg $(joinpath(tempdir(),"wealth.gif"))`)
-        println("Building graph animation (be mind-bogglingly patient)...")
+        pri("Building graph animation (be mind-bogglingly patient)...\n")
         run(`convert -delay $(params[:animation_delay]) $(joinpath(tempdir(),"graph"))"*".svg $(joinpath(tempdir(),"graph.gif"))`)
     end
-    println("\n...ending SPECnet.")
+    pri("\n...ending SPECnet.\n")
 
     return Dict(:agent_results => sort(agent_results, :agent),
         :iter_results => iter_results,
@@ -342,6 +348,7 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
 	while index>0
 	               
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
+
             sim_state.arr_protos[index].balance==0.0)
             println("Killing proto $(sim_state.arr_protos[index].proto_id)")
 			for ag in keys(AN) 
@@ -350,6 +357,7 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
                                                          #   in a proto, but no longer."
 				end
 			end
+
             push!(arr_dead_protos,sim_state.arr_protos[index])
             println("proto deleted")
 			deleteat!(sim_state.arr_protos,index)
@@ -423,7 +431,7 @@ end
 
 function choose_graph()
     if params[:whichGraph]=="erdos_renyi"
-        ER_prob=params[:λ]/params[:N]
+        ER_prob=params[:λ]/(params[:N]-1)
         graph = LightGraphs.SimpleGraphs.erdos_renyi(
             params[:N], ER_prob)
 
@@ -483,7 +491,7 @@ function plot_final_wealth_hist(sim_state::SimState)
         Guide.ylabel("Density of protos"))
     draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
     draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
-    #draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
+    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
 
 end
 
@@ -584,34 +592,39 @@ function plot_iteration_graphs(iter)
         graphp)
 
     # Plot wealth histogram for this iteration.
-    in_proto_wealths=[]
-    not_in_proto_wealths=[]
+    in_proto_wealths=Float64[]
+    not_in_proto_wealths=Float64[]
     [  in_proto(ag) ?
             push!(in_proto_wealths,ag.a.sugar_level) :
             push!(not_in_proto_wealths,ag.a.sugar_level)
         for ag in keys(AN) ]
 
-    wealthp = plot(
-        layer(x=in_proto_wealths,
+    wealthp_layers = Layer[]
+    if length(in_proto_wealths) > 1
+        push!(wealthp_layers, layer(x=in_proto_wealths,
             Geom.histogram(density=true, bincount=20),
-            Theme(default_color=Colors.RGBA(255,165,0, 0.6))),
+            Theme(default_color=Colors.RGBA(255,165,0, 0.6)))[1])
+    end
 
-        layer(x=not_in_proto_wealths,
+    if length(not_in_proto_wealths) > 1
+        push!(wealthp_layers, layer(x=not_in_proto_wealths,
             Geom.histogram(density=true, bincount=20),
-            Theme(default_color=Colors.RGBA(255,0,255,0.6))),
-            Guide.xlabel("Wealth"),
-            Guide.ylabel("Density of agents"),
-            Guide.title("Wealth distribution at iteration $(iter)"),
-            # Hard to know what to set the max value to.
-            Scale.x_continuous(minvalue=0,
-                maxvalue=params[:init_sg_lvl]*
-                    params[:max_iters]/10),
+            Theme(default_color=Colors.RGBA(255,0,255,0.6)))[1])
+    end
+    wealthp = plot(
+        wealthp_layers,
+        Guide.xlabel("Wealth"),
+        Guide.ylabel("Density of agents"),
+        Guide.title("Wealth distribution at iteration $(iter)"),
+        # Hard to know what to set the max value to.
+        Scale.x_continuous(minvalue=0,
+            maxvalue=params[:init_sg_lvl]*
+                params[:max_iters]/10),
 
         Theme(background_color=colorant"white"),
     )
 
-    draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
-        wealthp)
+    draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"), wealthp)
 
     colors = compute_colors()
 
@@ -676,6 +689,8 @@ function collect_stats(s::SimState)
 	end
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
+        :gini => Gini([ ag.a.sugar_level
+                            for ag ∈  keys(AN) if ag.a.sugar_level ≥ 0 ]),
         :num_comps => nv(s.graph) == 0 ? 0 :
             length(component_vertices),
         :average_proto_size => proto_average_size,
@@ -686,13 +701,19 @@ function collect_stats(s::SimState)
 end
 
 function all_parameters_legit(additional_params)
-    if !all([ word in keys(params) for word in keys(additional_params) ])
+    if !all([ word in union([:label], keys(params))
+                                        for word in keys(additional_params) ])
         for word in keys(additional_params)
             if word ∉  keys(params)
-                println("No such SPECnet parameter \"$(word)\".")
+                prc("No such SPECnet parameter \"$(word)\".\n")
             end
         end
         return false
     end
     return true
+end
+
+# Return true if all the values in the array a are the same.
+function all_the_same(a::Array{Float64,1})
+    return length(a) == 0  ||  all([ e == a[1] for e ∈  a[2:end] ])
 end
