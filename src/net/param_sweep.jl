@@ -9,12 +9,12 @@ include("sim.jl")
 include("setup_params.jl")
 
 
-param_to_sweep=:salary   #parameter to iterate over *any parameter*
+param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=10      #value to begin sweep
-end_value=200         #value to end sweep
-num_values=50        #number of distinct values to run
-trials_per_value=4   #for each distinct value, number of independent sims to run
+start_value=0.0     #value to begin sweep
+end_value=6         #value to end sweep
+num_values=30        #number of distinct values to run
+trials_per_value=14   #for each distinct value, number of independent sims to run
 graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 
@@ -22,7 +22,8 @@ components=[[],[]]
 global social_connectivity_df=DataFrame(
     size_largest_comp=Int[],
     num_comps=Int[],
-    average_proto_size=Float64[],
+    average_proto_size_pre=Float64[],
+	average_proto_size_post=Float64[],
     num_agents_in_proto=Int[],
     num_living_agents_pre=Float64[],
     num_living_agents_post=Float64[],
@@ -97,6 +98,7 @@ function param_sweeper(graph_name; additional_params...)
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
                  overall_results[:average_proto_size],
+				 starvation_results[:average_proto_size],
                  overall_results[:num_agents_in_proto],
                  overall_results[:num_living_agents],     # shouldn't be here
                  starvation_results[:num_living_agents],  # shouldn't be here
@@ -153,9 +155,12 @@ function param_sweeper(graph_name; additional_params...)
         time_to_stage3=Float64[],
         time_to_stage3_lowCI=Float64[],
         time_to_stage3_highCI=Float64[],
-        average_proto_size=Float64[],
-        average_proto_size_lowCI=Float64[],
-        average_proto_size_highCI=Float64[],
+        average_proto_size_pre=Float64[],
+        average_proto_size_pre_lowCI=Float64[],
+        average_proto_size_pre_highCI=Float64[],
+		average_proto_size_post=Float64[],
+        average_proto_size_post_lowCI=Float64[],
+        average_proto_size_post_highCI=Float64[],
         num_agents_in_proto=Float64[],
         num_agents_in_proto_lowCI=Float64[],
         num_agents_in_proto_highCI=Float64[],
@@ -188,7 +193,9 @@ function param_sweeper(graph_name; additional_params...)
         curr_ginis = []
         curr_sizes = []
         curr_components = []
-        curr_proto_size=[]
+        curr_proto_size_pre=[]
+		curr_proto_size_post=[]
+
         curr_num_agents_in_proto=[]
         curr_s2s=[]
         curr_s3s=[]
@@ -210,8 +217,9 @@ function param_sweeper(graph_name; additional_params...)
             push!(curr_ginis, current_sim_gini)
             push!(curr_sizes,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:size_largest_comp][1])
             push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps][1])
-            push!(curr_proto_size,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size][1])
-            push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
+            push!(curr_proto_size_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size_pre][1])
+            push!(curr_proto_size_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size_post][1])
+			push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
             push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
             push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             push!(curr_num_living_agents_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_pre][1])
@@ -221,8 +229,9 @@ function param_sweeper(graph_name; additional_params...)
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
+            
+            
 
-            #averaging and pushing data for wealth histogram
             mark_seed_value+=1
         end
         mark_seed_value=original_seed
@@ -236,13 +245,22 @@ function param_sweeper(graph_name; additional_params...)
                 BasicSampling(params[:num_boot_samples]))
             ciGinis = confint(bs, BasicConfInt(.95))[1]
         end
-
+        filter!(x->x≠0,curr_proto_size_pre)
+	    filter!(x->x≠0,curr_proto_size_post)
+		if length(curr_proto_size_pre)==0
+		    push!(curr_proto_size_pre,0)
+		end
+		if length(curr_proto_size_post)==0
+		    push!(curr_proto_size_post,0)
+		end
         #Compute the average size of the largest component, with a CI for current params
         bs = bootstrap(mean, curr_sizes, BasicSampling(params[:num_boot_samples]))
         ciSizes = confint(bs, BasicConfInt(.95))[1]
         #CI for average proto size for current params
-        bs = bootstrap(mean, curr_proto_size, BasicSampling(params[:num_boot_samples]))
-        ciProtoSizes = confint(bs, BasicConfInt(.95))[1]
+        bs = bootstrap(mean, curr_proto_size_pre, BasicSampling(params[:num_boot_samples]))
+        ciProtoSizesPre = confint(bs, BasicConfInt(.95))[1]
+		bs = bootstrap(mean, curr_proto_size_post, BasicSampling(params[:num_boot_samples]))
+        ciProtoSizesPost = confint(bs, BasicConfInt(.95))[1]
         #CI for number of agents in proto for current params
         bs = bootstrap(mean, curr_num_agents_in_proto, BasicSampling(params[:num_boot_samples]))
         ciNumAginP = confint(bs, BasicConfInt(.95))[1]
@@ -280,7 +298,8 @@ function param_sweeper(graph_name; additional_params...)
                                 ciSizes[1], ciSizes[2], ciSizes[3],
                                 ciS2Times[1], ciS2Times[2], ciS2Times[3],
                                 ciS3Times[1], ciS3Times[2], ciS3Times[3],
-                                ciProtoSizes[1], ciProtoSizes[2], ciProtoSizes[3],
+                                ciProtoSizesPre[1], ciProtoSizesPre[2], ciProtoSizesPre[3],
+								ciProtoSizesPost[1], ciProtoSizesPost[2], ciProtoSizesPost[3],
                                 ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
                                 ciNumLivingPre[1], ciNumLivingPre[2], ciNumLivingPre[3],
                                 ciNumLivingPost[1], ciNumLivingPost[2], ciNumLivingPost[3],
@@ -303,15 +322,15 @@ function param_sweeper(graph_name; additional_params...)
         Dict("number_components"=>"green", "size_largest_component" => "red"),
         y_label="Components")
 
-#    protop = draw_plot(plot_df, param_to_sweep,
-#        Dict(
-#            "num_protos"=>"green",
-#            "average_proto_size" => "brown",
-#            "num_agents_in_proto" => "red",
-#        ),
-#        y_label="Protos",
-#        extra=[Guide.annotation(compose(context(), Compose.text(0, params[:N], "N=$(params[:N])", hleft, vtop))),
-#         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
+    protop = draw_plot(plot_df, param_to_sweep,
+        Dict(
+            "num_protos_pre"=>"blue",
+			"num_protos_post"=>"orange",
+            "average_proto_size_pre" => "green",
+            "average_proto_size_post" => "red",
+        ),
+        y_label="Protos",
+        )
 
     numlivingp = draw_plot(plot_df, param_to_sweep,
         Dict("num_living_agents_pre" => "green",
@@ -333,7 +352,7 @@ function param_sweeper(graph_name; additional_params...)
         Dict("time_to_stage2"=>"blue", "time_to_stage3" => "red"),
         y_label="Time to reach stage")
 
-    tallPlot=vstack(ginip,compp,ttsp)
+    tallPlot=vstack(ginip,compp,ttsp,protop)
     draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
 
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],

@@ -27,6 +27,7 @@ end
 #     specnet()
 #     specnet(max_iters=20)
 #     specnet(max_iters=20, N=100)
+    ## the following is a hack; see comment in ../scape/run-simulation.jl
 function specnet(;additional_params...)
 
     @assert all_parameters_legit(additional_params)
@@ -93,8 +94,7 @@ function specnet(;additional_params...)
 
             =>k for k in 1:params[:N])
 
-    ## the following is a hack; see comment in ../scape/run-simulation.jl
-    arr_protos = []
+
 
 
     # (Erase old images.)
@@ -110,6 +110,7 @@ function specnet(;additional_params...)
 
     locs_x, locs_y = nothing, nothing
 
+    arr_protos = []
 
     println("Iterations:")
 
@@ -255,7 +256,7 @@ function specnet(;additional_params...)
         end
 
 
-        kill_sugarless_protos(SimState(graph, AN, arr_protos), arr_dead_protos)
+        arr_protos=kill_sugarless_protos(SimState(graph, AN, arr_protos), arr_dead_protos)
 
         # The R function Gini() from DescTools returns a vector of three values
         #   if conf.level is not NA: (1) the estimate, (2) the lower bound of
@@ -337,24 +338,25 @@ end
 #   arr_dead_protos variable and setting all its members back to a -1 ("no
 #   proto") proto_id.
 function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
-    index=length(sim_state.arr_protos)
-    while index>0
+    index=length(sim_state.arr_protos) 
+	while index>0
+	               
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
-                sim_state.arr_protos[index].balance<=0)
-            prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
-            for id in sim_state.arr_protos[index].arr_member_ids
-                for ag in keys(AN)
-                    if ag.a.agent_id==id
-                        ag.a.proto_id=-2    # new value, indicating "was once
-                                            #   in a proto, but no longer."
-                    end
-                end
-            end
+            sim_state.arr_protos[index].balance==0.0)
+            println("Killing proto $(sim_state.arr_protos[index].proto_id)")
+			for ag in keys(AN) 
+			    if ag.a.proto_id == sim_state.arr_protos[index].proto_id
+				    ag.a.proto_id=-2                     # new value, indicating "was once
+                                                         #   in a proto, but no longer."
+				end
+			end
             push!(arr_dead_protos,sim_state.arr_protos[index])
-            deleteat!(sim_state.arr_protos,index)
+            println("proto deleted")
+			deleteat!(sim_state.arr_protos,index)
         end
         index-=1
     end
+    return sim_state.arr_protos
 end
 
 # Mark the agent "dead" whose agent number is passed. This involves
@@ -664,14 +666,14 @@ function get_stage(sim_state::SimState)
 end
 
 function collect_stats(s::SimState)
-    total_proto_sz = sum([ length(p.arr_member_ids) for p ∈  s.arr_protos ])
+    num_agents_in_proto= sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
+  
     component_vertices = connected_components(s.graph)
     if length(s.arr_protos) ==0
 	    proto_average_size=0
     else
-	    proto_average_size=total_proto_sz/length(s.arr_protos)
+	    proto_average_size=num_agents_in_proto/length(s.arr_protos)
 	end
-    num_agents_in_proto = sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
         :num_comps => nv(s.graph) == 0 ? 0 :
