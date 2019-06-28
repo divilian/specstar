@@ -421,7 +421,7 @@ end
 
 function choose_graph()
     if params[:whichGraph]=="erdos_renyi"
-        ER_prob=params[:λ]/params[:N]
+        ER_prob=params[:λ]/(params[:N]-1)
         graph = LightGraphs.SimpleGraphs.erdos_renyi(
             params[:N], ER_prob)
 
