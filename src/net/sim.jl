@@ -267,9 +267,15 @@ function specnet(;additional_params...)
                             for ag in keys(AN) if ag.a.sugar_level ≥ 0 ]
         if params[:make_sim_plots]
             if length(wealthArray) > 1
-                rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
-                    :R=>params[:num_boot_samples])
-                ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+                if all_the_same(wealthArray)
+                    # All wealths are the same. In this case, the Gini
+                    #   coefficient itself is 0, and a CI cannot be calculated.
+                    ginis[iter,:] = [ 0.0, 0.0, 0.0 ]
+                else
+                    rGini=Gini(wealthArray; Symbol("conf.level")=>.95,
+                        :R=>params[:num_boot_samples])
+                    ginis[iter,:] = [ convert(Float16,r) for r in rGini ]
+                end
             else
                 ginis[iter,:] = [ NaN, NaN, NaN ]
             end
@@ -481,7 +487,7 @@ function plot_final_wealth_hist(sim_state::SimState)
         Guide.ylabel("Density of protos"))
     draw(PNG("$(tempdir())/final_agent_wealth_histogram.png"),final_wealthp)
     draw(PNG("$(tempdir())/final_proto_wealth_histogram_alive.png"),final_proto_wealth_alivep)
-    #draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
+    draw(PNG("$(tempdir())/final_proto_wealth_histogram.png"),final_proto_wealthp)
 
 end
 
@@ -582,34 +588,39 @@ function plot_iteration_graphs(iter)
         graphp)
 
     # Plot wealth histogram for this iteration.
-    in_proto_wealths=[]
-    not_in_proto_wealths=[]
+    in_proto_wealths=Float64[]
+    not_in_proto_wealths=Float64[]
     [  in_proto(ag) ?
             push!(in_proto_wealths,ag.a.sugar_level) :
             push!(not_in_proto_wealths,ag.a.sugar_level)
         for ag in keys(AN) ]
 
-    wealthp = plot(
-        layer(x=in_proto_wealths,
+    wealthp_layers = Layer[]
+    if length(in_proto_wealths) > 1
+        push!(wealthp_layers, layer(x=in_proto_wealths,
             Geom.histogram(density=true, bincount=20),
-            Theme(default_color=Colors.RGBA(255,165,0, 0.6))),
+            Theme(default_color=Colors.RGBA(255,165,0, 0.6)))[1])
+    end
 
-        layer(x=not_in_proto_wealths,
+    if length(not_in_proto_wealths) > 1
+        push!(wealthp_layers, layer(x=not_in_proto_wealths,
             Geom.histogram(density=true, bincount=20),
-            Theme(default_color=Colors.RGBA(255,0,255,0.6))),
-            Guide.xlabel("Wealth"),
-            Guide.ylabel("Density of agents"),
-            Guide.title("Wealth distribution at iteration $(iter)"),
-            # Hard to know what to set the max value to.
-            Scale.x_continuous(minvalue=0,
-                maxvalue=params[:init_sg_lvl]*
-                    params[:max_iters]/10),
+            Theme(default_color=Colors.RGBA(255,0,255,0.6)))[1])
+    end
+    wealthp = plot(
+        wealthp_layers,
+        Guide.xlabel("Wealth"),
+        Guide.ylabel("Density of agents"),
+        Guide.title("Wealth distribution at iteration $(iter)"),
+        # Hard to know what to set the max value to.
+        Scale.x_continuous(minvalue=0,
+            maxvalue=params[:init_sg_lvl]*
+                params[:max_iters]/10),
 
         Theme(background_color=colorant"white"),
     )
 
-    draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"),
-        wealthp)
+    draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"), wealthp)
 
     colors = compute_colors()
 
@@ -696,4 +707,9 @@ function all_parameters_legit(additional_params)
         return false
     end
     return true
+end
+
+# Return true if all the values in the array a are the same.
+function all_the_same(a::Array{Float64,1})
+    return length(a) == 0  ||  all([ e == a[1] for e ∈  a[2:end] ])
 end
