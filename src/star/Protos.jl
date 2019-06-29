@@ -15,7 +15,6 @@ mutable struct Proto
     proto_id::Int
     balance::Float64
     alive::Bool
-    arr_member_ids::Array{String, 1}
     ledger_transactions::Array{Transaction, 1}
 end
 
@@ -103,7 +102,6 @@ function form_possible_protos!(arr_agents, agent_environment, arr_protos,
                                        transaction1.transaction_amount +
                                        transaction2.transaction_amount,
                                        true,
-                                       [agobj.a.agent_id, partner_agent.a.agent_id],
                                        [transaction1, transaction2])
                     next_proto_id += 1
                     push!(arr_protos, prototn_obj)
@@ -138,7 +136,6 @@ function update_proto_statuses!(arr_protos, timeperiod)
     for proto_obj in arr_protos
         if proto_obj.balance <= 0
             proto_obj.alive = false
-            proto_obj.arr_member_ids = []
             push!(proto_obj.ledger_transactions,
                   Transaction(0, timeperiod, "closure", "-"))
         end
