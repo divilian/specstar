@@ -669,13 +669,13 @@ end
 
 function plot_life_history(life_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
-    life_history[:proto_class] = 
-        map(x->x==-1 ? "no" : (x==-2 ? "dead" : "yes"), life_history[:proto_id])
+    life_history[:isolate] = 
+        map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
     life_historyp = plot(life_history,
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
-        color=:proto_class,
-        Scale.color_discrete_manual("blue","purple","red",
-            levels=["no","yes","dead"]),
+        color=:isolate,
+        Scale.color_discrete_manual("navy","orange",
+            levels=["no","yes"]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["green","red"]),
         Guide.annotation(compose(context(),
