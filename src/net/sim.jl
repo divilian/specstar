@@ -97,7 +97,9 @@ function specnet(;additional_params...)
     life_history = DataFrame(
         iter = Int[],
         agent = String[],
-        sugar_level = Float16[]
+        sugar_level = Float16[],
+        proto_id = Int[],
+        num_neighbors = Int[]
     )
 
     # (Erase old images.)
@@ -165,7 +167,8 @@ function specnet(;additional_params...)
         push!(nums_agents, length([ a for a ∈  keys(AN) if a.a.alive ]))
         push!(nums_protos, length(arr_protos))
         for ag ∈  keys(AN)   # if a.a.alive ?
-            push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level))
+            push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level,
+                ag.a.proto_id, length(neighbors(graph, AN[ag]))))
         end
 
         if params[:make_anims]
@@ -666,8 +669,13 @@ end
 
 function plot_life_history(life_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
+    life_history[:proto_class] = 
+        map(x->x==-1 ? "no" : (x==-2 ? "dead" : "yes"), life_history[:proto_id])
     life_historyp = plot(life_history,
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
+        color=:proto_class,
+        Scale.color_discrete_manual("blue","purple","red",
+            levels=["no","yes","dead"]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["green","red"]),
         Guide.annotation(compose(context(),
