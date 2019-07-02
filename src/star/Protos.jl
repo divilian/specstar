@@ -15,7 +15,6 @@ mutable struct Proto
     proto_id::Int
     balance::Float64
     alive::Bool
-#   arr_member_ids::Array{String, 1}
     ledger_transactions::Array{Transaction, 1}
 end
 
