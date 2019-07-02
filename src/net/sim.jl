@@ -94,8 +94,11 @@ function specnet(;additional_params...)
 
             =>k for k in 1:params[:N])
 
-
-
+    life_history = DataFrame(
+        iter = Int[],
+        agent = String[],
+        sugar = Float16[]
+    )
 
     # (Erase old images.)
     save_dir = pwd()
@@ -161,6 +164,9 @@ function specnet(;additional_params...)
 
         push!(nums_agents, length([ a for a ∈  keys(AN) if a.a.alive ]))
         push!(nums_protos, length(arr_protos))
+        for ag ∈  keys(AN)   # if a.a.alive ?
+            push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level))
+        end
 
         if params[:make_anims]
             if locs_x == nothing
@@ -320,6 +326,7 @@ function specnet(;additional_params...)
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist(SimState(graph, AN, arr_protos))
+        plot_life_history(life_history)
     end
 
     if params[:make_anims]
@@ -334,6 +341,7 @@ function specnet(;additional_params...)
         :iter_results => iter_results,
         :overall_results => overall_results,
         :starvation_results => starvation_results,
+        :life_history => life_history,
         :terminated_early => terminated_early)
 end
 
@@ -353,8 +361,8 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
             prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
 			for ag in keys(AN) 
 			    if ag.a.proto_id == sim_state.arr_protos[index].proto_id
-				    ag.a.proto_id=-2                     # new value, indicating "was once
-                                                         #   in a proto, but no longer."
+				    ag.a.proto_id=-2        # new value, indicating "was once
+                                            #   in a proto, but no longer."
 				end
 			end
 
@@ -655,6 +663,10 @@ function plot_iteration_graphs(iter)
 
 end
 
+
+function plot_life_history(life_history)
+
+end
 
 # Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
 #   S1: No agent has yet created a proto.
