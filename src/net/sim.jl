@@ -350,7 +350,7 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
 
             sim_state.arr_protos[index].balance==0.0)
-            println("Killing proto $(sim_state.arr_protos[index].proto_id)")
+            prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
 			for ag in keys(AN) 
 			    if ag.a.proto_id == sim_state.arr_protos[index].proto_id
 				    ag.a.proto_id=-2                     # new value, indicating "was once
@@ -359,7 +359,7 @@ function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
 			end
 
             push!(arr_dead_protos,sim_state.arr_protos[index])
-            println("proto deleted")
+            prd("proto deleted")
 			deleteat!(sim_state.arr_protos,index)
         end
         index-=1

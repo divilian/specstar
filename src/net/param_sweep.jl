@@ -32,7 +32,7 @@ global social_connectivity_df=DataFrame(
     sim_tag=Int[])
 
 
-function param_sweeper(graph_name; additional_params...)
+function param_sweeper(; additional_params...)
 
     @assert all_parameters_legit(additional_params)
     merge!(params, Dict(additional_params))
@@ -121,16 +121,16 @@ function param_sweeper(graph_name; additional_params...)
         counter += (end_value-start_value)/num_values
     end
     sim_tag=0
-    rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
-    rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
-    rm("$(tempdir())/$(graph_name)GiniSweepPlot.png", force=true)
-    rm("$(tempdir())/$(graph_name)_wealth_heatmap.png", force=true)
-    rm("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png", force=true)
-    rm("$(tempdir())/$(graph_name)ComponentSweepPlot.png", force=true)
-    rm("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png", force=true)
+    rm("$(tempdir())/agent_results.csv", force=true)
+    rm("$(tempdir())/simulation_results.csv", force=true)
+    rm("$(tempdir())/GiniSweepPlot.png", force=true)
+    rm("$(tempdir())/wealth_heatmap.png", force=true)
+    rm("$(tempdir())/Component_GiniSweepPlots.png", force=true)
+    rm("$(tempdir())/ComponentSweepPlot.png", force=true)
+    rm("$(tempdir())/ProtoPropertiesSweep.png", force=true)
 
     #this file contains all info with one line per agent in a given run of siml.jl
-    CSV.write("$(tempdir())/$(graph_name)_agent_results.csv",agent_line_df)
+    CSV.write("$(tempdir())/agent_results.csv",agent_line_df)
 
 
     #once the main dataframe is made, plots may be drawn with data from agent_line_df
@@ -313,7 +313,7 @@ function param_sweeper(graph_name; additional_params...)
     #this file contains (currently) only the resulting Gini index from each simulation
     trial_line_df=join(trial_line_df, social_connectivity_df, on = :sim_tag)
 
-    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
+    CSV.write("$(tempdir())/simulation_results.csv",trial_line_df)
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
         y_label="Gini")
@@ -481,8 +481,8 @@ if graph_sweep
     prc("sweeping for graph type")
     for graph_type in graph_types
         params[:whichGraph]=graph_type
-        sweep_results[graph_type] = param_sweeper(graph_type)
+        sweep_results[graph_type] = param_sweeper()
     end
 else
-    sweep_results = param_sweeper(params[:whichGraph])
+    sweep_results = param_sweeper()
 end
