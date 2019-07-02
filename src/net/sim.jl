@@ -97,7 +97,7 @@ function specnet(;additional_params...)
     life_history = DataFrame(
         iter = Int[],
         agent = String[],
-        sugar = Float16[]
+        sugar_level = Float16[]
     )
 
     # (Erase old images.)
@@ -326,7 +326,7 @@ function specnet(;additional_params...)
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist(SimState(graph, AN, arr_protos))
-        plot_life_history(life_history)
+        plot_life_history(life_history, stages)
     end
 
     if params[:make_anims]
@@ -664,8 +664,17 @@ function plot_iteration_graphs(iter)
 end
 
 
-function plot_life_history(life_history)
-
+function plot_life_history(life_history, stages)
+    stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
+    life_historyp = plot(life_history,
+        group=:agent, x=:iter, y=:sugar_level, Geom.line,
+        xintercept=stage_starts,
+        Geom.vline(style=[:dash], color=["green","red"]),
+        Guide.annotation(compose(context(),
+            Compose.text(stage_starts, fill(maximum(life_history[:sugar_level]),2),
+            [" Stage 2", " Stage 3"], fill(hleft,2), fill(vtop,2)))),
+        Theme(default_color=Colors.RGBA(0,0,0,.5), background_color=colorant"white"))
+    draw(PNG("$(tempdir())/life_history.png"), life_historyp)
 end
 
 # Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
