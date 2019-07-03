@@ -156,7 +156,7 @@ function specnet(;additional_params...)
         elseif stages[end] == 3
             pri("#")
         end
-        if iter % 10 == 0 pri(iter) end
+        if iter % 10 == 0 pri("$(iter)\n") end
 
         if stages[end] == 3
             if starvation_timer == 0
@@ -185,7 +185,7 @@ function specnet(;additional_params...)
         if params[:make_anims]
             if locs_x == nothing
                 locs_x, locs_y = spring_layout(graph)
-            else
+            elseif length(locs_x) > 0    # if empty, all agents have died.
                 locs_x, locs_y = spring_layout(graph, locs_x, locs_y)
             end
         end
@@ -440,16 +440,17 @@ function assert_no_dead_neighbors(graph, agent)
     end
 end
 
-let possible_colors = Random.shuffle(ColorSchemes.rainbow.colors)
-    global compute_colors
-    function compute_colors()
-        agents_in_node_order = [
-            [ a for a in keys(AN)
-                        if AN[a] == node ][1] for node in 1:nv(graph) ]
-        return [ in_proto(ag) ? possible_colors[ag.a.proto_id] :
-            (!ag.a.alive ? colorant"pink" : colorant"lightgrey")
-                        for ag in agents_in_node_order ]
-    end
+global compute_colors
+function compute_colors()
+    agents_in_node_order = [
+        [ a for a in keys(AN)
+                    if AN[a] == node ][1] for node in 1:nv(graph) ]
+    # should divide by total # of protos here, instead of total # of
+    #   agents, but we don't know the former.
+    return [ in_proto(ag) ? get(ColorSchemes.rainbow,
+        ag.a.proto_id / params[:N]) : 
+        (!ag.a.alive ? colorant"pink" : colorant"lightgrey")
+                    for ag in agents_in_node_order ]
 end
 
 function choose_graph()
@@ -589,30 +590,34 @@ end
 
 function plot_iteration_graphs(iter)
 
-    # Plot graph for this iteration.
-    colors = compute_colors()
+    if nv(graph) > 0
 
-    remember_layout = x -> spring_layout(x, locs_x, locs_y)
+        # Plot graph for this iteration.
+        colors = compute_colors()
 
-    labels_to_plot = map(node->
-            [ ag.a.agent_id for ag in keys(AN) if AN[ag] == node ][1],
-        1:length(AN))
-    wealths_to_plot = map(node->
-            [ ag.a.sugar_level for ag in keys(AN)
-                                    if AN[ag] == node ][1],
-        1:length(AN))
-    graphp = gplot(graph,
-        layout=remember_layout,
-        nodelabel=labels_to_plot,
-        NODESIZE=.08,
-        nodesize=ifelse.(wealths_to_plot .> 0,
-                         wealths_to_plot*4,
-                         maximum(wealths_to_plot)*2),
-        nodestrokec=colorant"grey",
-        nodestrokelw=.5,
-        nodefillc=colors)
-    draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
-        graphp)
+        remember_layout = x -> spring_layout(x, locs_x, locs_y)
+
+        labels_to_plot = map(node->
+                [ ag.a.agent_id for ag in keys(AN) if AN[ag] == node ][1],
+            1:length(AN))
+        wealths_to_plot = map(node->
+                [ ag.a.sugar_level for ag in keys(AN)
+                                        if AN[ag] == node ][1],
+            1:length(AN))
+        graphp = gplot(graph,
+            layout=remember_layout,
+            nodelabel=labels_to_plot,
+            NODESIZE=.08,
+            nodesize=ifelse.(wealths_to_plot .> 0,
+                             wealths_to_plot*4,
+                             maximum(wealths_to_plot)*2),
+            nodestrokec=colorant"grey",
+            nodestrokelw=.5,
+            nodefillc=colors)
+        draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
+            graphp)
+        run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of up to $(params[:max_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
+    end
 
     # Plot wealth histogram for this iteration.
     in_proto_wealths=Float64[]
@@ -634,47 +639,23 @@ function plot_iteration_graphs(iter)
             Geom.histogram(density=true, bincount=20),
             Theme(default_color=Colors.RGBA(255,0,255,0.6)))[1])
     end
-    wealthp = plot(
-        wealthp_layers,
-        Guide.xlabel("Wealth"),
-        Guide.ylabel("Density of agents"),
-        Guide.title("Wealth distribution at iteration $(iter)"),
-        # Hard to know what to set the max value to.
-        Scale.x_continuous(minvalue=0,
-            maxvalue=params[:init_sg_lvl]*
-                params[:max_iters]/10),
+    if length(wealthp_layers) > 0
+        wealthp = plot(
+            wealthp_layers,
+            Guide.xlabel("Wealth"),
+            Guide.ylabel("Density of agents"),
+            Guide.title("Wealth distribution at iteration $(iter)"),
+            # Hard to know what to set the max value to.
+            Scale.x_continuous(minvalue=0,
+                maxvalue=params[:init_sg_lvl]*
+                    params[:max_iters]/10),
 
-        Theme(background_color=colorant"white"),
-    )
+            Theme(background_color=colorant"white"),
+        )
 
-    draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"), wealthp)
-
-    colors = compute_colors()
-
-    remember_layout = x -> spring_layout(x, locs_x, locs_y)
-
-    labels_to_plot = map(
-        node->[ag.a.agent_id for ag in keys(AN) if AN[ag]==node][1],
-        1:length(AN))
-    wealths_to_plot = map(
-        node->[ag.a.sugar_level for ag in keys(AN) if AN[ag]==node][1],
-        1:length(AN))
-    graphp = gplot(graph,
-        layout=remember_layout,
-        nodelabel=labels_to_plot,
-        NODESIZE=.08,
-        nodesize=ifelse.(wealths_to_plot .> 0,
-                         wealths_to_plot*4,
-                         maximum(wealths_to_plot)*2),
-        nodestrokec=colorant"grey",
-        nodestrokelw=.5,
-        nodefillc=colors)
-    draw(PNG("$(tempdir())/graph$(lpad(string(iter),3,'0')).png"),
-                                                            graphp)
-
-    #iteration label for svg files
-    run(`mogrify -format svg -gravity South -pointsize 15 -annotate 0 "Iteration $(iter) of up to $(params[:max_iters])"  $(joinpath(tempdir(),"graph"))$(lpad(string(iter),3,'0')).png`)
-    run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
+        draw(PNG("$(tempdir())/wealth$(lpad(string(iter),3,'0')).png"), wealthp)
+        run(`mogrify -format svg $(joinpath(tempdir(),"wealth"))$(lpad(string(iter),3,'0')).png`)
+    end
 
 end
 
