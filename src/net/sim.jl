@@ -164,7 +164,8 @@ function specnet(;additional_params...)
                 overall_results = collect_stats(SimState(graph, AN, arr_protos))
             end
             starvation_timer += 1
-            if starvation_timer == params[:starvation_period]
+            if starvation_timer == params[:starvation_period]  ||
+                    nv(graph) == 0
                 total_iters = iter - 1
                 pop!(stages)    # (Remove what we prematurely added.)
                 break   # End simulation after starvation.
