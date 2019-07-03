@@ -663,6 +663,7 @@ end
 
 function plot_history(life_history, proto_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
+    stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
     life_history[:isolate] = 
         map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
     life_historyp = plot(life_history,
@@ -679,16 +680,21 @@ function plot_history(life_history, proto_history, stages)
             key_position=:bottom),
         Coord.cartesian(xmax=length(stages)),
         Guide.ylabel("Agent wealth", orientation=:vertical))
-    proto_historyp = plot(proto_history,
-        group=:proto_id, x=:iter, y=:balance, Geom.line,
-        xintercept=stage_starts,
-        Geom.vline(style=[:dash], color=["green","red"]),
-        Theme(default_color=Colors.RGBA(.5,0,.5,.5), background_color=colorant"white",
-            key_position=:bottom),
-        Coord.cartesian(xmax=length(stages)),
-        Guide.ylabel("Proto balance", orientation=:vertical))
-    historyp = vstack(proto_historyp, life_historyp)
-    draw(PNG("$(tempdir())/history.png", 4inch, 6inch), historyp)
+    to_plot = life_historyp
+
+    if nrow(proto_history) > 0
+        proto_historyp = plot(proto_history,
+            group=:proto_id, x=:iter, y=:balance, Geom.line,
+            xintercept=stage_starts,
+            Geom.vline(style=[:dash], color=["green","red"]),
+            Theme(default_color=Colors.RGBA(.5,0,.5,.5), background_color=colorant"white",
+                key_position=:bottom),
+            Coord.cartesian(xmax=length(stages)),
+            Guide.ylabel("Proto balance", orientation=:vertical))
+        to_plot = vstack(proto_historyp, life_historyp)
+    end
+
+    draw(PNG("$(tempdir())/history.png", 4inch, 6inch), to_plot)
 end
 
 # Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
