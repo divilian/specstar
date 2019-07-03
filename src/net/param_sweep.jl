@@ -326,7 +326,6 @@ function param_sweeper(; additional_params...)
 									default_color=RGB((params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
 									(params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
 									(params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
-	
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
         y_label="Gini")
@@ -398,10 +397,10 @@ function repeat_sweep()
 	plot_repeat=plot(repeat_sweep_layer,Guide.XLabel("$(param_to_sweep)"),
          Guide.YLabel("Gini"),
          Guide.Title("Repeat sweep across $(repeat_param)"))
-	for i=repeat_start_value:repeat_end_value
+	for i=(repeat_start_value+1):repeat_end_value
+		params[repeat_param]=i
 	    param_sweeper()
 		append!(plot_repeat.layers,repeat_sweep_layer)
-		params[repeat_param]=i
 	end
 
 	draw(PNG("$(tempdir())/repeat_sweep_plot.png"), plot_repeat)
