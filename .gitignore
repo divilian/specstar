@@ -1,4 +1,5 @@
 *.pdf
+*.doc*
 *.txt
 *.toc
 *.out
