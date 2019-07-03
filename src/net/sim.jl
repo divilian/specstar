@@ -102,6 +102,13 @@ function specnet(;additional_params...)
         num_neighbors = Int[]
     )
 
+    proto_history = DataFrame(
+        iter = Int[],
+        proto_id = Int[],
+        balance = Float16[],
+        num_members = Int[],
+    )
+
     # (Erase old images.)
     save_dir = pwd()
     cd("$(tempdir())")
@@ -169,6 +176,10 @@ function specnet(;additional_params...)
         for ag ∈  keys(AN)   # if a.a.alive ?
             push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level,
                 ag.a.proto_id, length(neighbors(graph, AN[ag]))))
+        end
+        for pr ∈  arr_protos
+            push!(proto_history, (iter, pr.proto_id, pr.balance, length(
+                [ ag for ag ∈  keys(AN) if ag.a.proto_id==pr.proto_id ])))
         end
 
         if params[:make_anims]
@@ -329,7 +340,7 @@ function specnet(;additional_params...)
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist(SimState(graph, AN, arr_protos))
-        plot_life_history(life_history, stages)
+        plot_history(life_history, proto_history, stages)
     end
 
     if params[:make_anims]
@@ -345,6 +356,7 @@ function specnet(;additional_params...)
         :overall_results => overall_results,
         :starvation_results => starvation_results,
         :life_history => life_history,
+        :proto_history => proto_history,
         :terminated_early => terminated_early)
 end
 
@@ -667,7 +679,7 @@ function plot_iteration_graphs(iter)
 end
 
 
-function plot_life_history(life_history, stages)
+function plot_history(life_history, proto_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
     life_history[:isolate] = 
         map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
@@ -681,8 +693,20 @@ function plot_life_history(life_history, stages)
         Guide.annotation(compose(context(),
             Compose.text(stage_starts, fill(maximum(life_history[:sugar_level]),2),
             [" Stage 2", " Stage 3"], fill(hleft,2), fill(vtop,2)))),
-        Theme(default_color=Colors.RGBA(0,0,0,.5), background_color=colorant"white"))
-    draw(PNG("$(tempdir())/life_history.png"), life_historyp)
+        Theme(default_color=Colors.RGBA(0,0,0,.5), background_color=colorant"white",
+            key_position=:bottom),
+        Coord.cartesian(xmax=length(stages)),
+        Guide.ylabel("Agent wealth", orientation=:vertical))
+    proto_historyp = plot(proto_history,
+        group=:proto_id, x=:iter, y=:balance, Geom.line,
+        xintercept=stage_starts,
+        Geom.vline(style=[:dash], color=["green","red"]),
+        Theme(default_color=Colors.RGBA(.5,0,.5,.5), background_color=colorant"white",
+            key_position=:bottom),
+        Coord.cartesian(xmax=length(stages)),
+        Guide.ylabel("Proto balance", orientation=:vertical))
+    historyp = vstack(proto_historyp, life_historyp)
+    draw(PNG("$(tempdir())/history.png", 4inch, 6inch), historyp)
 end
 
 # Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
