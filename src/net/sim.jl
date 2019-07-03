@@ -368,23 +368,21 @@ end
 #   arr_dead_protos variable and setting all its members back to a -1 ("no
 #   proto") proto_id.
 function kill_sugarless_protos(sim_state::SimState, arr_dead_protos)
-    index=length(sim_state.arr_protos) 
-	while index>0
-	               
+    index=length(sim_state.arr_protos)
+    while index>0
         if(sim_state.arr_protos[index].proto_id ≠ -1 &&
-
             sim_state.arr_protos[index].balance==0.0)
             prd("Killing proto $(sim_state.arr_protos[index].proto_id)")
-			for ag in keys(AN) 
-			    if ag.a.proto_id == sim_state.arr_protos[index].proto_id
-				    ag.a.proto_id=-2        # new value, indicating "was once
+            for ag in keys(AN)
+                if ag.a.proto_id == sim_state.arr_protos[index].proto_id
+                    ag.a.proto_id=-2        # new value, indicating "was once
                                             #   in a proto, but no longer."
-				end
-			end
+                end
+            end
 
             push!(arr_dead_protos,sim_state.arr_protos[index])
             prd("proto deleted")
-			deleteat!(sim_state.arr_protos,index)
+            deleteat!(sim_state.arr_protos,index)
         end
         index-=1
     end
@@ -449,7 +447,7 @@ function compute_colors()
     # should divide by total # of protos here, instead of total # of
     #   agents, but we don't know the former.
     return [ in_proto(ag) ? get(ColorSchemes.rainbow,
-        ag.a.proto_id / params[:N]) : 
+        ag.a.proto_id / params[:N]) :
         (!ag.a.alive ? colorant"pink" : colorant"lightgrey")
                     for ag in agents_in_node_order ]
 end
@@ -664,7 +662,7 @@ end
 function plot_history(life_history, proto_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
     stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
-    life_history[:isolate] = 
+    life_history[:isolate] =
         map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
     life_historyp = plot(life_history,
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
@@ -721,13 +719,12 @@ end
 
 function collect_stats(s::SimState)
     num_agents_in_proto= sum([ ag.a.proto_id ≠ -1 for ag ∈  keys(AN) ])
-  
     component_vertices = connected_components(s.graph)
     if length(s.arr_protos) ==0
-	    proto_average_size=0
+        proto_average_size=0
     else
-	    proto_average_size=num_agents_in_proto/length(s.arr_protos)
-	end
+        proto_average_size=num_agents_in_proto/length(s.arr_protos)
+    end
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
         :gini => Gini([ ag.a.sugar_level

@@ -27,7 +27,7 @@ global social_connectivity_df=DataFrame(
     size_largest_comp=Int[],
     num_comps=Int[],
     average_proto_size_pre=Float64[],
-	average_proto_size_post=Float64[],
+    average_proto_size_post=Float64[],
     num_agents_in_proto=Int[],
     num_living_agents_pre=Float64[],
     num_living_agents_post=Float64[],
@@ -102,7 +102,7 @@ function param_sweeper(; additional_params...)
                 (overall_results[:size_largest_comp],
                  overall_results[:num_comps],
                  overall_results[:average_proto_size],
-				 starvation_results[:average_proto_size],
+                 starvation_results[:average_proto_size],
                  overall_results[:num_agents_in_proto],
                  overall_results[:num_living_agents],     # shouldn't be here
                  starvation_results[:num_living_agents],  # shouldn't be here
@@ -165,7 +165,7 @@ function param_sweeper(; additional_params...)
         average_proto_size_pre=Float64[],
         average_proto_size_pre_lowCI=Float64[],
         average_proto_size_pre_highCI=Float64[],
-		average_proto_size_post=Float64[],
+        average_proto_size_post=Float64[],
         average_proto_size_post_lowCI=Float64[],
         average_proto_size_post_highCI=Float64[],
         num_agents_in_proto=Float64[],
@@ -201,7 +201,7 @@ function param_sweeper(; additional_params...)
         curr_sizes = []
         curr_components = []
         curr_proto_size_pre=[]
-		curr_proto_size_post=[]
+        curr_proto_size_post=[]
 
         curr_num_agents_in_proto=[]
         curr_s2s=[]
@@ -226,7 +226,7 @@ function param_sweeper(; additional_params...)
             push!(curr_components,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_comps][1])
             push!(curr_proto_size_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size_pre][1])
             push!(curr_proto_size_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:average_proto_size_post][1])
-			push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
+            push!(curr_num_agents_in_proto,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_agents_in_proto][1])
             push!(curr_s2s,first_iter_of_stage(iter_line_df, 2, sim_tag))
             push!(curr_s3s,first_iter_of_stage(iter_line_df, 3, sim_tag))
             push!(curr_num_living_agents_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_pre][1])
@@ -251,20 +251,20 @@ function param_sweeper(; additional_params...)
             ciGinis = confint(bs, BasicConfInt(.95))[1]
         end
         filter!(x->x≠0,curr_proto_size_pre)
-	    filter!(x->x≠0,curr_proto_size_post)
-		if length(curr_proto_size_pre)==0
-		    push!(curr_proto_size_pre,0)
-		end
-		if length(curr_proto_size_post)==0
-		    push!(curr_proto_size_post,0)
-		end
+        filter!(x->x≠0,curr_proto_size_post)
+        if length(curr_proto_size_pre)==0
+            push!(curr_proto_size_pre,0)
+        end
+        if length(curr_proto_size_post)==0
+            push!(curr_proto_size_post,0)
+        end
         #Compute the average size of the largest component, with a CI for current params
         bs = bootstrap(mean, curr_sizes, BasicSampling(params[:num_boot_samples]))
         ciSizes = confint(bs, BasicConfInt(.95))[1]
         #CI for average proto size for current params
         bs = bootstrap(mean, curr_proto_size_pre, BasicSampling(params[:num_boot_samples]))
         ciProtoSizesPre = confint(bs, BasicConfInt(.95))[1]
-		bs = bootstrap(mean, curr_proto_size_post, BasicSampling(params[:num_boot_samples]))
+        bs = bootstrap(mean, curr_proto_size_post, BasicSampling(params[:num_boot_samples]))
         ciProtoSizesPost = confint(bs, BasicConfInt(.95))[1]
         #CI for number of agents in proto for current params
         bs = bootstrap(mean, curr_num_agents_in_proto, BasicSampling(params[:num_boot_samples]))
@@ -304,7 +304,7 @@ function param_sweeper(; additional_params...)
                                 ciS2Times[1], ciS2Times[2], ciS2Times[3],
                                 ciS3Times[1], ciS3Times[2], ciS3Times[3],
                                 ciProtoSizesPre[1], ciProtoSizesPre[2], ciProtoSizesPre[3],
-								ciProtoSizesPost[1], ciProtoSizesPost[2], ciProtoSizesPost[3],
+                                ciProtoSizesPost[1], ciProtoSizesPost[2], ciProtoSizesPost[3],
                                 ciNumAginP[1], ciNumAginP[2], ciNumAginP[3],
                                 ciNumLivingPre[1], ciNumLivingPre[2], ciNumLivingPre[3],
                                 ciNumLivingPost[1], ciNumLivingPost[2], ciNumLivingPost[3],
@@ -322,10 +322,10 @@ function param_sweeper(; additional_params...)
     CSV.write("$(tempdir())/simulation_results.csv",trial_line_df)
 
     global repeat_sweep_layer=layer(x=plot_df[param_to_sweep],y=plot_df[:gini],Geom.line,
-	                                Theme(line_width=1mm,
-									default_color=RGB((params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
-									(params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
-									(params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
+                                    Theme(line_width=1mm,
+                                    default_color=RGB((params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
+                                    (params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
+                                    (params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
         y_label="Gini")
@@ -337,7 +337,7 @@ function param_sweeper(; additional_params...)
     protop = draw_plot(plot_df, param_to_sweep,
         Dict(
             "num_protos_pre"=>"blue",
-			"num_protos_post"=>"orange",
+            "num_protos_post"=>"orange",
             "average_proto_size_pre" => "green",
             "average_proto_size_post" => "red",
         ),
@@ -392,18 +392,17 @@ end
 
 function repeat_sweep()
     params[repeat_param]=repeat_start_value
-	
-	param_sweeper()
-	plot_repeat=plot(repeat_sweep_layer,Guide.XLabel("$(param_to_sweep)"),
+    param_sweeper()
+    plot_repeat=plot(repeat_sweep_layer,Guide.XLabel("$(param_to_sweep)"),
          Guide.YLabel("Gini"),
          Guide.Title("Repeat sweep across $(repeat_param)"))
-	for i=(repeat_start_value+1):repeat_end_value
-		params[repeat_param]=i
-	    param_sweeper()
-		append!(plot_repeat.layers,repeat_sweep_layer)
-	end
+    for i=(repeat_start_value+1):repeat_end_value
+        params[repeat_param]=i
+        param_sweeper()
+        append!(plot_repeat.layers,repeat_sweep_layer)
+    end
 
-	draw(PNG("$(tempdir())/repeat_sweep_plot.png"), plot_repeat)
+    draw(PNG("$(tempdir())/repeat_sweep_plot.png"), plot_repeat)
 end
 
 # draw_plot() -- create, write to file, and return a parameter sweep line plot.
