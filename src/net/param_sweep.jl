@@ -126,14 +126,14 @@ function param_sweeper(; additional_params...)
     end
     sim_tag=0
 
-    rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
-    rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
-    rm("$(tempdir())/$(graph_name)GiniSweepPlot.png", force=true)
-    rm("$(tempdir())/$(graph_name)_wealth_heatmap.png", force=true)
-    rm("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png", force=true)
-    rm("$(tempdir())/$(graph_name)ComponentSweepPlot.png", force=true)
-    rm("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png", force=true)
-    rm("$(tempdir())/$(graph_name)repeat_sweep_plot.png", force=true)
+    rm("$(tempdir())/agent_results.csv", force=true)
+    rm("$(tempdir())/simulation_results.csv", force=true)
+    rm("$(tempdir())/GiniSweepPlot.png", force=true)
+    rm("$(tempdir())/wealth_heatmap.png", force=true)
+    rm("$(tempdir())/Component_GiniSweepPlots.png", force=true)
+    rm("$(tempdir())/ComponentSweepPlot.png", force=true)
+    rm("$(tempdir())/ProtoPropertiesSweep.png", force=true)
+    rm("$(tempdir())/repeat_sweep_plot.png", force=true)
 
 
     #this file contains all info with one line per agent in a given run of siml.jl
@@ -236,8 +236,6 @@ function param_sweeper(; additional_params...)
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
-            
-            
 
             mark_seed_value+=1
         end
@@ -321,10 +319,10 @@ function param_sweeper(; additional_params...)
     trial_line_df=join(trial_line_df, social_connectivity_df, on = :sim_tag)
 
 
-    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
-   
+    CSV.write("$(tempdir())/simulation_results.csv",trial_line_df)
+
     global repeat_sweep_layer=layer(x=plot_df[param_to_sweep],y=plot_df[:gini],Geom.line,
-	                                Theme(line_width=1mm, 
+	                                Theme(line_width=1mm,
 									default_color=RGB((params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
 									(params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
 									(params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
@@ -396,12 +394,12 @@ end
 function repeat_sweep()
     params[repeat_param]=repeat_start_value
 	
-	param_sweeper(params[:whichGraph])
+	param_sweeper()
 	plot_repeat=plot(repeat_sweep_layer,Guide.XLabel("$(param_to_sweep)"),
          Guide.YLabel("Gini"),
          Guide.Title("Repeat sweep across $(repeat_param)"))
 	for i=repeat_start_value:repeat_end_value
-	    param_sweeper(params[:whichGraph])
+	    param_sweeper()
 		append!(plot_repeat.layers,repeat_sweep_layer)
 		params[repeat_param]=i
 	end
@@ -515,14 +513,7 @@ if graph_sweep
         sweep_results[graph_type] = param_sweeper()
     end
 elseif run_repeat_sweep
-repeat_sweep()
-
+    repeat_sweep()
 else
     sweep_results = param_sweeper()
 end
-
-
-
-
-	     
-    
