@@ -143,6 +143,7 @@ function specnet(;additional_params...)
     local nums_protos=[]
 
     global overall_results
+    global agent_results
     for iter in 1:params[:max_iters]
 
         global graph, locs_x, locs_y
@@ -162,6 +163,11 @@ function specnet(;additional_params...)
             if starvation_timer == 0
                 # Collect stats on the model right before the starvation period.
                 overall_results = collect_stats(SimState(graph, AN, arr_protos))
+                agent_results = DataFrame(
+                    agent = [ ag.a.agent_id for ag in keys(AN) ],
+                    sugar = [ ag.a.sugar_level for ag in keys(AN) ],
+                    proto_id = [ ag.a.proto_id for ag in keys(AN) ]
+                )
             end
             starvation_timer += 1
             if starvation_timer == params[:starvation_period]  ||
@@ -311,15 +317,15 @@ function specnet(;additional_params...)
     terminated_early = false
     if total_iters == params[:max_iters]
         pri("\n*WARNING* sim terminated early at iteration $(total_iters)!\n")
+        agent_results = DataFrame(
+            agent = [ ],
+            sugar = [ ],
+            proto_id = [ ],
+        )
         terminated_early = true
     end
 
     # Collect results in DataFrame.
-    agent_results = DataFrame(
-        agent = [ ag.a.agent_id for ag in keys(AN) ],
-        sugar = [ ag.a.sugar_level for ag in keys(AN) ],
-        proto_id = [ ag.a.proto_id for ag in keys(AN) ]
-    )
     iter_results = DataFrame(
         iter = 1:length(stages),
         gini_lowCI = ginis[1:length(stages),2],
