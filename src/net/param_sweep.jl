@@ -13,10 +13,14 @@ param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
 start_value=0.0     #value to begin sweep
 end_value=6         #value to end sweep
-num_values=30        #number of distinct values to run
+num_values=10        #number of distinct values to run
 trials_per_value=14   #for each distinct value, number of independent sims to run
 graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
+repeat_param=:N
+repeat_start_value=10
+repeat_end_value=15
+run_repeat_sweep=true
 
 components=[[],[]]
 global social_connectivity_df=DataFrame(
@@ -121,13 +125,16 @@ function param_sweeper(; additional_params...)
         counter += (end_value-start_value)/num_values
     end
     sim_tag=0
-    rm("$(tempdir())/agent_results.csv", force=true)
-    rm("$(tempdir())/simulation_results.csv", force=true)
-    rm("$(tempdir())/GiniSweepPlot.png", force=true)
-    rm("$(tempdir())/wealth_heatmap.png", force=true)
-    rm("$(tempdir())/Component_GiniSweepPlots.png", force=true)
-    rm("$(tempdir())/ComponentSweepPlot.png", force=true)
-    rm("$(tempdir())/ProtoPropertiesSweep.png", force=true)
+
+    rm("$(tempdir())/$(graph_name)_agent_results.csv", force=true)
+    rm("$(tempdir())/$(graph_name)_simulation_results.csv", force=true)
+    rm("$(tempdir())/$(graph_name)GiniSweepPlot.png", force=true)
+    rm("$(tempdir())/$(graph_name)_wealth_heatmap.png", force=true)
+    rm("$(tempdir())/$(graph_name)Component_GiniSweepPlots.png", force=true)
+    rm("$(tempdir())/$(graph_name)ComponentSweepPlot.png", force=true)
+    rm("$(tempdir())/$(graph_name)ProtoPropertiesSweep.png", force=true)
+    rm("$(tempdir())/$(graph_name)repeat_sweep_plot.png", force=true)
+
 
     #this file contains all info with one line per agent in a given run of siml.jl
     CSV.write("$(tempdir())/agent_results.csv",agent_line_df)
@@ -313,7 +320,15 @@ function param_sweeper(; additional_params...)
     #this file contains (currently) only the resulting Gini index from each simulation
     trial_line_df=join(trial_line_df, social_connectivity_df, on = :sim_tag)
 
-    CSV.write("$(tempdir())/simulation_results.csv",trial_line_df)
+
+    CSV.write("$(tempdir())/$(graph_name)_simulation_results.csv",trial_line_df)
+   
+    global repeat_sweep_layer=layer(x=plot_df[param_to_sweep],y=plot_df[:gini],Geom.line,
+	                                Theme(line_width=1mm, 
+									default_color=RGB((params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
+									(params[repeat_param]-repeat_start_value)/(repeat_end_value-repeat_start_value),
+									(params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
+	
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
         y_label="Gini")
@@ -376,6 +391,22 @@ end
 function first_iter_of_stage(df, stage_num, sim_tag)
     iters = df[(df[:sim_tag].==sim_tag).&(df[:stage].==stage_num), :iter]
     length(iters) > 0 ? minimum(iters) : 0
+end
+
+function repeat_sweep()
+    params[repeat_param]=repeat_start_value
+	
+	param_sweeper(params[:whichGraph])
+	plot_repeat=plot(repeat_sweep_layer,Guide.XLabel("$(param_to_sweep)"),
+         Guide.YLabel("Gini"),
+         Guide.Title("Repeat sweep across $(repeat_param)"))
+	for i=repeat_start_value:repeat_end_value
+	    param_sweeper(params[:whichGraph])
+		append!(plot_repeat.layers,repeat_sweep_layer)
+		params[repeat_param]=i
+	end
+
+	draw(PNG("$(tempdir())/repeat_sweep_plot.png"), plot_repeat)
 end
 
 # draw_plot() -- create, write to file, and return a parameter sweep line plot.
@@ -483,6 +514,15 @@ if graph_sweep
         params[:whichGraph]=graph_type
         sweep_results[graph_type] = param_sweeper()
     end
+elseif run_repeat_sweep
+repeat_sweep()
+
 else
     sweep_results = param_sweeper()
 end
+
+
+
+
+	     
+    
