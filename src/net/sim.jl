@@ -707,8 +707,7 @@ end
 #   S3: All agents are either (a) graph isolates, (b) dead, or (c) in a proto.
 global left_stage_1 = false
 function get_stage(sim_state::SimState)
-    if length(sim_state.arr_protos) == 1  &&  # See arr_protos hack
-            !left_stage_1
+    if length(sim_state.arr_protos) == 0  &&  !left_stage_1
         return 1
     else
         global left_stage_1 = true
