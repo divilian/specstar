@@ -666,23 +666,26 @@ end
 
 
 function plot_history(life_history, proto_history, stages)
-    stage_starts = [findfirst(x->x==n, stages) for n ∈  [2,3]]
+    stage_starts = [findfirst(x->x==n, stages) for n ∈  1:3]
     stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
     life_history[:isolate] =
         map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
     life_historyp = plot(life_history,
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
         color=:isolate,
-        Scale.color_discrete_manual("navy","orange",
-            levels=["no","yes"]),
+        Scale.color_discrete_manual("navy","orange", levels=["no","yes"]),
         xintercept=stage_starts,
-        Geom.vline(style=[:dash], color=["green","red"]),
+        Geom.vline(style=[:dash], color=["blue","green","red"]),
+        yintercept=[params[:proto_threshold]],
+        Geom.hline(style=[:dot], color=["grey"]),
         Guide.annotation(compose(context(),
-            Compose.text(stage_starts, fill(maximum(life_history[:sugar_level]),2),
-            [" Stage 2", " Stage 3"], fill(hleft,2), fill(vtop,2)))),
-        Theme(default_color=Colors.RGBA(0,0,0,.5), background_color=colorant"white",
-            key_position=:bottom),
+            Compose.text(maximum(life_history[:iter]),
+            params[:proto_threshold], "proto threshold", hright, vbottom))),
+        Theme(default_color=Colors.RGBA(0,0,0,.5),
+            background_color=colorant"white", key_position=:bottom),
+        Coord.cartesian(xmin=1, xmax=length(stages)),
         Coord.cartesian(xmax=length(stages)),
+        Guide.xlabel(nothing, orientation=:horizontal),
         Guide.ylabel("Agent wealth", orientation=:vertical))
     to_plot = life_historyp
 
@@ -690,12 +693,19 @@ function plot_history(life_history, proto_history, stages)
         proto_historyp = plot(proto_history,
             group=:proto_id, x=:iter, y=:balance, Geom.line,
             xintercept=stage_starts,
-            Geom.vline(style=[:dash], color=["green","red"]),
-            Theme(default_color=Colors.RGBA(.5,0,.5,.5), background_color=colorant"white",
-                key_position=:bottom),
-            Coord.cartesian(xmax=length(stages)),
+            Geom.vline(style=[:dash], color=["blue","green","red"]),
+            Guide.annotation(compose(context(),
+                Compose.text(stage_starts,
+                    fill(maximum(proto_history[:balance])-15,3),
+                    ["Stage 1", "Stage 2", "Stage 3"], fill(hleft,3), fill(vtop,3),
+                    [Rotation(-π/2, stage_starts[k],
+                        maximum(proto_history[:balance])-15) for k ∈  1:3]))),
+            Theme(default_color=Colors.RGBA(.5,0,.5,.5),
+                background_color=colorant"white", key_position=:bottom),
+            Coord.cartesian(xmin=1, xmax=length(stages)),
+            Guide.xlabel("Iteration", orientation=:horizontal),
             Guide.ylabel("Proto balance", orientation=:vertical))
-        to_plot = vstack(proto_historyp, life_historyp)
+        to_plot = vstack(life_historyp, proto_historyp)
     end
 
     draw(PNG("$(tempdir())/history.png", 4inch, 6inch), to_plot)
