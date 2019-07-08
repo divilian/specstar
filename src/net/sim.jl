@@ -100,7 +100,7 @@ function specnet(;additional_params...)
         sugar_level = Float16[],
         resources = Float16[],   # combined agent and proto wealth share
         proto_id = Int[],
-        num_neighbors = Int[]
+        num_neighbors = Int[],
     )
 
     proto_history = DataFrame(
@@ -143,6 +143,10 @@ function specnet(;additional_params...)
     local nums_agents=[]
     local nums_protos=[]
 
+    # Remember how many neighbors each node *originally* had.
+    local original_neighbor_count =
+        Dict(ag.a.agent_id=>length(neighbors(graph,AN[ag]))
+                                                for ag ∈  keys(AN))
     global overall_results
     global agent_results
     for iter in 1:params[:max_iters]
@@ -350,7 +354,7 @@ function specnet(;additional_params...)
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
         plot_final_wealth_hist(SimState(graph, AN, arr_protos))
-        plot_history(life_history, proto_history, stages)
+        plot_history(life_history, proto_history, stages, original_neighbor_count)
     end
 
     if params[:make_anims]
@@ -670,17 +674,17 @@ function plot_iteration_graphs(iter)
 end
 
 
-function plot_history(life_history, proto_history, stages)
+function plot_history(life_history, proto_history, stages, original_neighbor_count)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  1:3]
     stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
-    life_history[:isolate] =
-        map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
 
+    life_history[:original_isolate] = 
+        [original_neighbor_count[a] == 0 for a in life_history[:agent]]
     effective_historyp = plot(life_history,
         # Plotting effective wealth, not just agent wealth
         group=:agent, x=:iter, y=:resources, Geom.line,
-        color=:isolate,
-        Scale.color_discrete_manual("navy","orange", levels=["no","yes"]),
+        color=:original_isolate,
+        Scale.color_discrete_manual("navy","orange", levels=[false, true]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["blue","green","red"]),
         yintercept=[params[:proto_threshold]],
@@ -698,8 +702,8 @@ function plot_history(life_history, proto_history, stages)
     life_historyp = plot(life_history,
         # Plotting just agent wealth
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
-        color=:isolate,
-        Scale.color_discrete_manual("navy","orange", levels=["no","yes"]),
+        color=:original_isolate,
+        Scale.color_discrete_manual("navy","orange", levels=[false, true]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["blue","green","red"]),
         yintercept=[params[:proto_threshold]],
