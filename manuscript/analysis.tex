@@ -38,7 +38,29 @@ agent wealth at every iteration, and the bottom plot shows the balances of the
 protos at the same points in time. (No protos exist until stage 2, by
 definition.) Note that the isolates (orange lines) never form protos, and
 therefore begin the starvation stage with a higher personal wealth to draw
-from. We verified that changes to basic parameters have the expected effect:
+from.
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\columnwidth]{figures/sampleEffectiveHistory.png}
+\caption{The same simulation run as Figure~\ref{fig:singleRun}, but this time
+depicting each agent's \textit{effective} wealth (its personal wealth plus its
+share of its proto's wealth, if any).}
+\label{fig:effectiveWealthSingleRun}
+\end{figure}
+
+Figure~\ref{fig:effectiveWealthSingleRun} shows the same information in another
+way: instead of plotting each agent's \textit{personal} wealth (as in the top
+plot of Figure~\ref{fig:singleRun}, we show its \textbf{effective wealth},
+defined as the sum of its personal wealth and its ``share'' of its proto's
+wealth (if any). After all, contributions that a proto's members make to its
+balance are available to those members in times of need; therefore, a fair
+comparison between isolates and non-isolates should take this into account.
+From the figure, it can be seen that isolates no longer have a systematic
+advantage (as they appeared to in Figure~\ref{fig:singleRun}.
+
+We verified that changes to basic parameters all have the expected effect:
 lowering the initial wealth delays the onset of stage 2; a higher $\sigma^2$
 for the income distribution makes the lines less jagged; a higher metabolic
 rate hastens extinction; \textit{etc.}
