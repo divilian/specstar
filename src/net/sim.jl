@@ -98,6 +98,7 @@ function specnet(;additional_params...)
         iter = Int[],
         agent = String[],
         sugar_level = Float16[],
+        resources = Float16[],   # combined agent and proto wealth share
         proto_id = Int[],
         num_neighbors = Int[]
     )
@@ -122,7 +123,7 @@ function specnet(;additional_params...)
 
     locs_x, locs_y = nothing, nothing
 
-    arr_protos = []
+    arr_protos = Proto[]
 
     pri("Iterations:\n")
 
@@ -165,7 +166,7 @@ function specnet(;additional_params...)
                 overall_results = collect_stats(SimState(graph, AN, arr_protos))
                 agent_results = DataFrame(
                     agent = [ ag.a.agent_id for ag in keys(AN) ],
-                    sugar = [ ag.a.sugar_level for ag in keys(AN) ],
+                    sugar = [ compute_effective_wealth(arr_protos, ag) for ag in keys(AN) ],
                     proto_id = [ ag.a.proto_id for ag in keys(AN) ]
                 )
             end
@@ -182,6 +183,7 @@ function specnet(;additional_params...)
         push!(nums_protos, length(arr_protos))
         for ag ∈  keys(AN)   # if a.a.alive ?
             push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level,
+                compute_effective_wealth(arr_protos, ag), 
                 ag.a.proto_id, length(neighbors(graph, AN[ag]))))
         end
         for pr ∈  arr_protos
@@ -291,8 +293,9 @@ function specnet(;additional_params...)
         # If we're going to end up making a single-sim plot, use Gini's CI's
         #   (which use bootstrapping, and are therefore time-consuming) to get
         #   all three. Otherwise, just get (1).
-        wealthArray=[ ag.a.sugar_level
-                            for ag in keys(AN) if ag.a.sugar_level ≥ 0 ]
+        wealthArray=[ compute_effective_wealth(arr_protos, ag)
+                    for ag in keys(AN)
+                        if compute_effective_wealth(arr_protos, ag) ≥ 0 ]
         if params[:make_sim_plots]
             if length(wealthArray) > 1
                 if all_the_same(wealthArray)
@@ -490,7 +493,7 @@ function plot_final_wealth_hist(sim_state::SimState)
     final_wealths=[]
     final_proto_wealths_alive=[]
     final_proto_wealths=[]
-    [push!(final_wealths,ag.a.sugar_level) for ag in keys(AN) ]
+    [push!(final_wealths, compute_colors(arr_protos, ag)) for ag in keys(AN) ]
     for p in sim_state.arr_protos
         if(p.balance!=-1)
             push!(final_proto_wealths_alive, p.balance)
@@ -606,6 +609,7 @@ function plot_iteration_graphs(iter)
                 [ ag.a.agent_id for ag in keys(AN) if AN[ag] == node ][1],
             1:length(AN))
         wealths_to_plot = map(node->
+                # could use effective wealth instead of agent wealth here
                 [ ag.a.sugar_level for ag in keys(AN)
                                         if AN[ag] == node ][1],
             1:length(AN))
@@ -628,6 +632,7 @@ function plot_iteration_graphs(iter)
     in_proto_wealths=Float64[]
     not_in_proto_wealths=Float64[]
     [  in_proto(ag) ?
+            # could use effective wealth instead of agent wealth here
             push!(in_proto_wealths,ag.a.sugar_level) :
             push!(not_in_proto_wealths,ag.a.sugar_level)
         for ag in keys(AN) ]
@@ -670,7 +675,28 @@ function plot_history(life_history, proto_history, stages)
     stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
     life_history[:isolate] =
         map(x->x==0 ? "yes" : "no", life_history[:num_neighbors])
+
+    effective_historyp = plot(life_history,
+        # Plotting effective wealth, not just agent wealth
+        group=:agent, x=:iter, y=:resources, Geom.line,
+        color=:isolate,
+        Scale.color_discrete_manual("navy","orange", levels=["no","yes"]),
+        xintercept=stage_starts,
+        Geom.vline(style=[:dash], color=["blue","green","red"]),
+        yintercept=[params[:proto_threshold]],
+        Geom.hline(style=[:dot], color=["grey"]),
+        Guide.annotation(compose(context(),
+            Compose.text(maximum(life_history[:iter]),
+            params[:proto_threshold], "proto threshold", hright, vbottom))),
+        Theme(default_color=Colors.RGBA(0,0,0,.5),
+            background_color=colorant"white", key_position=:bottom),
+        Coord.cartesian(xmin=1, xmax=length(stages)),
+        Coord.cartesian(xmax=length(stages)),
+        Guide.xlabel(nothing, orientation=:horizontal),
+        Guide.ylabel("Effective wealth", orientation=:vertical))
+
     life_historyp = plot(life_history,
+        # Plotting just agent wealth
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
         color=:isolate,
         Scale.color_discrete_manual("navy","orange", levels=["no","yes"]),
@@ -708,7 +734,8 @@ function plot_history(life_history, proto_history, stages)
         to_plot = vstack(life_historyp, proto_historyp)
     end
 
-    draw(PNG("$(tempdir())/history.png", 4inch, 6inch), to_plot)
+    draw(PNG("$(tempdir())/agentProtoHistory.png", 4inch, 6inch), to_plot)
+    draw(PNG("$(tempdir())/effectiveHistory.png", 4inch, 3inch), effective_historyp)
 end
 
 # Return an integer ∈  {1,2,3} for the stage that the simulation is currently in:
@@ -742,8 +769,9 @@ function collect_stats(s::SimState)
     end
     return Dict(:size_largest_comp => nv(s.graph) == 0 ? 0 :
             findmax(length.(component_vertices))[1][1],
-        :gini => Gini([ ag.a.sugar_level
-                            for ag ∈  keys(AN) if ag.a.sugar_level ≥ 0 ]),
+        :gini => Gini([ compute_effective_wealth(s.arr_protos, ag)
+                for ag ∈  keys(AN)
+                    if compute_effective_wealth(s.arr_protos, ag) ≥ 0 ]),
         :num_comps => nv(s.graph) == 0 ? 0 :
             length(component_vertices),
         :average_proto_size => proto_average_size,
@@ -769,4 +797,15 @@ end
 # Return true if all the values in the array a are the same.
 function all_the_same(a::Array{Float64,1})
     return length(a) == 0  ||  all([ e == a[1] for e ∈  a[2:end] ])
+end
+
+function compute_effective_wealth(arr_protos::Array{Proto,1}, agent::NetAgent)
+    if agent.a.proto_id < 0
+        return agent.a.sugar_level
+    else
+        pr = fetch_specific_proto_obj(arr_protos, agent.a.proto_id)
+        return pr.balance /
+            length([a for a ∈  keys(AN) if a.a.proto_id==agent.a.proto_id]) +
+            agent.a.sugar_level
+    end
 end

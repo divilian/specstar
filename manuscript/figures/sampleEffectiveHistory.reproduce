@@ -1,0 +1,22 @@
+Commit 749f4aa
+SPECnet simulation parameters:
+   animation_delay = 20
+   init_sg_lvl = 50
+   k = 2
+   make_anims = false
+   make_sim_plots = true
+   max_iters = 150
+   metabolic_rate = 5
+   N = 50
+   num_boot_samples = 1000
+   openness = 0.0
+   proto_threshold = 65
+   random_seed = 1234
+   salary = 20
+   SF_degree = 2
+   SF_edges = 40
+   starvation_period = 80
+   whichGraph = erdos_renyi
+   white_noise_intensity = 5.0
+   β = 0.2
+   λ = 2.0
