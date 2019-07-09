@@ -123,7 +123,7 @@ function specnet(;additional_params...)
 
     locs_x, locs_y = nothing, nothing
 
-    arr_protos = Proto[]
+    global arr_protos = Proto[]
 
     pri("Iterations:\n")
 
@@ -497,7 +497,7 @@ function plot_final_wealth_hist(sim_state::SimState)
     final_wealths=[]
     final_proto_wealths_alive=[]
     final_proto_wealths=[]
-    [push!(final_wealths, compute_colors(arr_protos, ag)) for ag in keys(AN) ]
+    [push!(final_wealths, ag.a.sugar_level) for ag in keys(AN) ]
     for p in sim_state.arr_protos
         if(p.balance!=-1)
             push!(final_proto_wealths_alive, p.balance)
