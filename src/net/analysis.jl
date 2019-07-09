@@ -12,6 +12,9 @@ lifespans = by(lh, [:agent, :original_isolate], lifespan = :iter => maximum)
 
 lifespanp = plot(lifespans, x=:original_isolate, y=:lifespan, Geom.boxplot,
     color=:original_isolate,
+    Scale.color_discrete_manual("navy","orange",
+        levels=[false, true]),
+    style(background_color=colorant"white",key_position=:none),
     Scale.y_continuous(minvalue=0))
 draw(PNG("$(tempdir())/lifespanComparison.png"), lifespanp)
 
