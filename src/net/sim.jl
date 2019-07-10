@@ -169,8 +169,8 @@ function specnet(;additional_params...)
                     agent = [ ag.a.agent_id for ag in keys(AN) ],
                     sugar = [ compute_effective_wealth(arr_protos, ag) for ag in keys(AN) ],
                     proto_id = [ ag.a.proto_id for ag in keys(AN) ],
-                    nn = [ length(neighbors(graph,AN[ag])) for ag in keys(AN) ],
-                    raw = [ ag.a.sugar_level for ag in keys(AN) ],
+                  #  nn = [ length(neighbors(graph,AN[ag])) for ag in keys(AN) ],
+                  #  raw = [ ag.a.sugar_level for ag in keys(AN) ],
                   #  isol = [original_neighbor_count[ag.a.agent_id] == 0 for ag in keys(AN) ],
                 )
 
