@@ -35,7 +35,7 @@ We study wealth accumulation dynamics in a population of heterogeneously mixed a
 
 \end{abstract}
 \section{Introduction}
-In recent years, concerns and debates surrounding wealth inequality and socioeconomic mobility have been one of the few unifying issues dominating the extremely polarized public spheres of the Global North. While economic and political inequality used to be discussed in not so mainstream heterodox economics circles, the contentious discussions on the topic within mainstream economics since the publication of Piketty's book~\cite{piketty2017capital} suggests a lack of consensus about very basic foundational questions like the origins and persistence of economic inequality. Not surprisingly, traditional theories and tools of macro and micro economics are now being diagnosed for their limitations. Simultaneously, insights from related disciplines, along with novel scientific inquiry models not usually associated with traditional econometrics, are being taken more seriously. The work presented here shares this spirit by integrating substantive ideas from anthropology, economic sociology~\cite{granovetter2017society} and urban sociology~\cite{sampson2012great} and using modeling approaches from computational social science~\cite{hedstrom2018} and analytical sociology~\cite{hedstrom2011oxford} to understand the origins of inequality in a simple model of wealth dynamics in the presence of social structures.    
+In recent years, concerns and debates surrounding wealth inequality and socioeconomic mobility have been one of the few unifying issues dominating the extremely polarized public spheres of the Global North. While economic and political inequality used to be discussed in not so mainstream heterodox economics circles, the contentious discussions on the topic within mainstream economics since the publication of Piketty's book~\cite{piketty2017capital} suggests a lack of consensus about very basic foundational questions like the origins and persistence of economic inequality. Not surprisingly, traditional theories and tools of macro and micro economics are now being diagnosed for their limitations. Simultaneously, insights from related disciplines, along with novel scientific inquiry models not usually associated with traditional econometrics, are being taken more seriously. The work presented here shares this spirit by integrating substantive ideas from anthropology, economic sociology~\cite{granovetter2017society} and urban sociology~\cite{sampson2012great} and using modeling approaches from computational social science~\cite{hedstrom2018}, computational economics~\cite{tesfatsion} and analytical sociology~\cite{hedstrom2011oxford} to understand the origins of inequality in a simple model of wealth dynamics in the presence of social structures.    
 % SD: citation for "anthropology," the first element of the last sentence's list? Grief and/or White?
 
 The current work originated in our attempts to incorporate and tease out the effects of social structures in simple models of wealth dynamics in the presence of environmental stochasticity, and a simple form of resource pooling. These models were inspired by our search for analogs of the grid world agent-based models (ABMs) of Friesen and Mudigonda~\cite{srimil} where foraging agents that pool their resources were shown to on-average outperform non-pooling agents. The original model used foraging to mix the population and create opportunities for interaction, and, when certain conditions were met, allowed resource sharing. Our model achieves agent interaction by postulating a static network structure which partially mixes the agents. 
@@ -48,23 +48,48 @@ As mentioned earlier, macroeconomic models are ill-suited to the study of collec
 
 Models constructed here, like those used in scientific inquiry in general, serve a specific purpose. In this work, we construct simple toy models to reproduce certain aspects of non-trivial wealth inequality distributions in the presence and absence of primitive forms of cooperation, clearly delineating the role of network structure in generating wealth inequality. We make no suggestions that these models \textit{explain} the phenomena of interest; we are only interested in constructing the simplest possible models, with no detailed empirical grounding, but with the potential to generate realistic looking inequality distributions. In doing so, we aspire to shed light on the \textit{true} social and economic mechanisms underlying the genesis and persistence of economic inequality. 
 
-%What is the scientific question of interest to us? 
-%How features of models of structure and dyanmics intera
 
 % SD: In light of recent discussions, we may want to downplay Gini and up-play the robustness of agents to exogenous shocks.
-The phenomenon under scrutiny is the emergence and evolution of economic inequality in societies with non-trivial social structures. The model we use to answer questions surrounding this phenomenon must possess a dynamic model of wealth accumulation, a model of social structure, and a suitably useful measure of inequality. The dynamics are modeled as Brownian noise driven linear dynamical systems, here constant growth rate; the structure is modeled by networks, here random graphs; the measure of inequality used is Gini coefficients. Although both the dynamical system and the network model are quite well understood, the precise interplay of structure and dynamics produces interesting emergent wealth distributions. To the best of our knowledge, this specific combination of network structure and social dynamics has not been discussed in the computational social science or mathematical sociology literature, and we consider this the primary contribution of this work. 
+The phenomenon under scrutiny is the emergence and evolution of economic inequality in societies with non-trivial social structures. The model we use to answer questions surrounding this phenomenon must possess a dynamic model of wealth accumulation, a model of social structure, and a suitably useful measure of inequality. The dynamics are modeled as Brownian noise driven linear dynamical systems, here constant growth rate; the structure is modeled by networks, here random graphs; the measures of inequality used are Gini coefficients, and survival time distributions of agents in response to lack of resources. Although both the dynamical system and the network model are quite well understood, the precise interplay of structure and dynamics produces interesting emergent wealth distributions. To the best of our knowledge, this specific combination of network structure and social dynamics has not been discussed in the computational social science (CSS) or mathematical sociology literature, and we consider this the primary contribution of this work. 
 
 Apart from enabling interactions between social actors, social structures like institutions also shape the form of cooperation and coordination mechanisms. The institutions can take the form of economic institutions, like banks and cooperatives; or the form of norms, like resource-sharing practices in societies. The original SriMil model~\cite{srimil}consists of a simple resource pooling arrangement where aggregates of agents pool their excess wealth in a common institution called ``proto-institutions,'' agreeing to provide this saved resource to individual agents in times of need. The model of resource pooling used in this work is identical to the SriMil model. 
 
-The analysis to be presented in later sections focuses only on homogeneous agents with simple drift-diffusion dynamics on Erd\H{o}s-R\'{e}nyi network models; space constraints unfortunately prevent us from repeating the analysis on other standard \textit{textbook} networks like scale-free and small-world networks. We also address more empirically grounded models in the concluding section of this paper. 
+The analysis to be presented in later sections focuses only on homogeneous agents with simple drift-diffusion dynamics on Erd\H{o}s-R\'{e}nyi network models (ER); space constraints unfortunately prevent us from repeating the analysis on other standard \textit{textbook} networks like scale-free and small-world networks. We discuss empirical evidence for the role of social network structures in the concluding section of this paper, motivating the need for more expressive social network models. 
 
 
 In the next section, we discuss the mathematical formulation of the model. In section 3, we present the analysis of our simulation experiments, summarize key findings and discuss why we chose the \texttt{julia} programming language~\cite{Julia-2017} for our implementation. In section 4, we discuss the limitations of our simple models, extensions to dynamics and networks more expressive than the ones presented here, and planned future work. 
 
+Before discussing our model in greater mathematical detail, we discuss the model qualitatively, contrasting them with more familiar modeling approaches. The model presented here has much in common with models used in social reality inspired models in statistical physics~\cite{redner2001guide}, dynamic process models in network science~\cite{newman2018networks}, and computational social science and agent-based models~\cite{abm_review}; however, our modeling philosophy is somewhere at the interface of agent-based computational economics (ACE)~\cite{tesfatsion} and analytical sociology (AS)~\cite{ch1as_hdbk,ch2as_hdbk}. In ACE, we acknowledge its aspiration to develop bottom-up models of economic systems at all scales but restrain from its enthusiastic use of complex but well-calibrated detailed models of markets and agents~\cite{tesfatsion2017}. In AS, we assent its focus on social mechanisms in explaining social phenomena, but instead rely on simplified mechanisms with few parameters~\cite{ch11as_hdbk} with the specific goal of extracting insights from \textit{stylized} models.       
+
+More specifically, from statistical physics, we borrow the dynamics: diffusion models and associated first-passage time techniques; from network science, we borrow the structural aspects: Erd\H{o}s-R\'{e}nyi network models; and from non-equlibrium statistical physics, CSS and ACE, we borrow a form of cooperation: the concept of coalescence, institution and coordination. 
+
+
+
+\section{Model}
+The model of cooperative wealth accumulation constructed here is best thought of as a stochastic interacting particle system infused with economic sociological semantics. The particle evolves according to an one dimensional diffusion process with constant drift and is driven by a Brownian noise with boundary condition at the origin corresponding to particle absorption. After crossing a pre-determined threshold in state space. 
+
+In this section, we introduce the model used for our simulation study. 
+
+
+~\cite{redner2001guide} ~\cite{rv}  ~\cite{wilhite} ~\cite{arthur} 
 
 
 
 
+\subsection{Implementation}
+%Stephen thinks that a subsection of the Model section should be about the
+%simulation code. It won't be long; just enough to explain how the mathematical
+%model just described is represented and executed in Julia, including some
+%answers to non-obvious questions that arise when considering implementation.
+
+\section{Analysis}
+%\input{analysis}
+
+\section{Conclusion and Future Work}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%Things that could be discussed here but is redundant if we are running out of words 
 %The general idea is to discuss how/why social networks matter wealth accumulation dynamics. We have references from anthropology. We have references in economic sociology(jackson).Sampson's work and Venkatesh's work can be used when talking about urban poverty and urban sociology. Discuss how in economics, wealth accumulation dynamics are mostly discussed at the macroeconomic level. In this sense, this work (and the work presented last year) are novel in this regard.  
 
 %% Sampson's work seem to be crucial for making the claim that social structures and neighborhood effects are important determinants of economic outcomes. 
@@ -73,31 +98,27 @@ In the next section, we discuss the mathematical formulation of the model. In se
 
 %While we are interested in more sophisticated models, we are more interested in extracting the effects of social network structure in simple models of cooperative wealth accumulation. The proto-institution is definitely borrowed from SriMil. In order to study more elaborate and economically rigorous wealth dynamics, we need to be able sort of the effects of network structure in simple stylized network models. The work on ER models is expected to be first of our analysis. Eventually, we plan to get to more realistic wealth accumulation models of interest to economists but for now this is all we have.  
 
-
-
-
-
 %In Katz's book, the differing life histories of individuals in Hamilton, Canada suggest that luck played a role in deterministic life outcomes. Katz argues that social mobility makes sense only in the context of social structure
 
 %Katz's chapter 2. His main argument there is that the structure of inequality represent in Hamilton, Canada is representative of inequality present in all other north American cities of that era. The persistence of inequality can be see in the persistence of four kinds of social structures. 1) occupational structure, 2) division of wealth and proportion of the wealthy, 3) social and demographic identity of different economic ranks, and 4) distance between people of different socio-economic ranks or social stratification. He talks about persistence of networks of wealth and power. Points out strong interconnection between property, political power and social status. Argues that economic stratification and its crystallization leads to crystallization of social and other subjective stratifications.  
 
-\section{Model}
-~\cite{redner2001guide} ~\cite{rv}
-%Use chapter 3 of redner's book here. 
-%Also, the network model presented here seem to be one of a kind. Typically dynam ics on networks are deterministic in nature. The models discussed here is different from deterministic dynamic processes and epidemic processes, and diffusion type processes (percolation processes). The models are stochastic dynamic systems on networks. Such social processes are studied using Stochastic Actor Oriented Models (SOAM) Snidjers. ALso use Kolacyzk and Csardi's discussion as reference. Social influence models..... and others) This is not directly about influence but more about cooperation. Need to find a nice way of talking about this. 
 
-%In the model section, we motivate our current specnet model as attempts to capture specific aspects of historical sociology and urban sociology of Katz and Samson respectively.  
 
-%Stephen thinks that a subsection of the Model section should be about the
-%simulation code. It won't be long; just enough to explain how the mathematical
-%model just described is represented and executed in Julia, including some
-%answers to non-obvious questions that arise when considering implementation.
-
-\section{Analysis}
-\input{analysis}
-
-\section{Conclusion and Future Work}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% This one is really important and top priority for use as a zoomed out conclusion 
 %what kinds of real world systems are we talking about?This section should write itself. Just a brief discussion of phase 2+ and integration with spescape should suffice 
+%%%% ERGM, SBM and LNM are good next steps 
+%%%%% Use anthropology references to motivate more expressive models 
+\cite{power2018cooperation,power2018}
+
+\cite{koster2019,koster2014,koster2015,bogerhoff2015}
+
+\cite{smith2019,nolin2012}
+
+
+%%%% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %I am actually confused about whether such a purely preliminary work can say antyhing about the real world. Do we really want to say anything at all about the real world. What can ER graphs say about the real world?  
 
 %We conclude by discussing features of social processes and mechanisms argued for by both Sampson and Katz that are currently not present in the model but important and part of the vision for where our model is headed. 
@@ -105,12 +126,6 @@ In the next section, we discuss the mathematical formulation of the model. In se
 %We also include the goal of seamlessly going from a model with no geography to a model with geography. 
 
 % I am moving the discussion of connections to anthropology to this section 
-
-\cite{power2018cooperation,power2018}
-
-\cite{koster2019,koster2014,koster2015,bogerhoff2015}
-
-\cite{smith2019,nolin2012}
 
 
 \bibliography{ref_cssa19}
