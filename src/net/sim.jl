@@ -727,6 +727,8 @@ function plot_history(life_history, proto_history, stages)
         Guide.ylabel("Agent wealth", orientation=:vertical))
     to_plot = life_historyp
 
+    stage_text_tweak = 150  # tweak this higher to make the "Stage 1/2/3"
+                            #   text labels shift lower.
     if nrow(proto_history) > 0
         proto_historyp = plot(proto_history,
             group=:proto_id, x=:iter, y=:balance, Geom.line,
@@ -734,10 +736,12 @@ function plot_history(life_history, proto_history, stages)
             Geom.vline(style=[:dash], color=["blue","green","red"]),
             Guide.annotation(compose(context(),
                 Compose.text(stage_starts,
-                    fill(maximum(proto_history[:balance])-15,3),
-                    ["Stage 1", "Stage 2", "Stage 3"], fill(hleft,3), fill(vtop,3),
+                    fill(maximum(proto_history[:balance])-stage_text_tweak,3),
+                    ["Stage 1", "Stage 2", "Stage 3"],
+                    fill(hleft,3), fill(vtop,3),
                     [Rotation(-π/2, stage_starts[k],
-                        maximum(proto_history[:balance])-15) for k ∈  1:3]))),
+                        maximum(proto_history[:balance])-stage_text_tweak)
+                                                            for k ∈  1:3]))),
             Theme(default_color=Colors.RGBA(.5,0,.5,.5),
                 background_color=colorant"white", key_position=:bottom),
             Coord.cartesian(xmin=1, xmax=length(stages)),

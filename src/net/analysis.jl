@@ -2,7 +2,7 @@
 using HypothesisTests
 
 # Assumption: sim.jl has been executed, and its return value saved in a
-#   variable called "r".                                                                               
+#   variable called "r".
 
 lh = r[:life_history]
 lifespans = by(lh, [:agent, :stage3_isolate], lifespan = :iter => maximum)
