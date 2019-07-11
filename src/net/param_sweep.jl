@@ -20,7 +20,7 @@ original_seed=params[:random_seed]
 repeat_param=:N
 repeat_start_value=10
 repeat_end_value=15
-run_repeat_sweep=true
+run_repeat_sweep=false
 
 components=[[],[]]
 global social_connectivity_df=DataFrame(
@@ -343,6 +343,16 @@ function param_sweeper(; additional_params...)
         ),
         y_label="Protos",
         )
+
+    numagentspp = draw_plot(plot_df, param_to_sweep,
+        Dict("num_agents_in_proto" => "green"),
+            
+        Dict("num_agents_in_proto"=> :solid
+            ),
+        y_label="Number agents in proto",
+        extra=[Guide.annotation(compose(context(), Compose.text(minimum(plot_df[param_to_sweep]), params[:N], "N=$(params[:N])", hleft, vtop))),
+         Coord.Cartesian(ymin=0, ymax=params[:N]),
+         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
     numlivingp = draw_plot(plot_df, param_to_sweep,
         Dict("num_living_agents_pre" => "green",
