@@ -381,6 +381,7 @@ function specnet(;additional_params...)
         :starvation_results => starvation_results,
         :life_history => life_history,
         :proto_history => proto_history,
+        :avg_lifespans => compute_avg_lifespan(life_history),
         :terminated_early => terminated_early)
 end
 
@@ -825,4 +826,18 @@ function compute_effective_wealth(arr_protos::Array{Proto,1}, agent::NetAgent)
             length([a for a ∈  keys(AN) if a.a.proto_id==agent.a.proto_id]) +
             agent.a.sugar_level
     end
+end
+
+# Return an array of two numbers: the average lifespan of isolates, and
+# non-isolates, in this simulation run.
+function compute_avg_lifespan(life_history)
+    isol_ids = unique(life_history[life_history[:stage3_isolate],:agent])
+    nonisol_ids = unique(life_history[.!life_history[:stage3_isolate],:agent])
+    isol_lifespans = [maximum(life_history[life_history[:agent].==aid,:iter])
+        for aid ∈  isol_ids]
+    nonisol_lifespans = [maximum(life_history[life_history[:agent].==aid,:iter])
+        for aid ∈  nonisol_ids]
+    prd("isol lifespans are $(isol_lifespans)")
+    prd("non-isol lifespans are $(nonisol_lifespans)")
+    return [ mean(isol_lifespans), mean(nonisol_lifespans) ]
 end
