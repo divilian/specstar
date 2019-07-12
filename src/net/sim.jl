@@ -191,7 +191,7 @@ function specnet(;additional_params...)
         push!(nums_protos, length(arr_protos))
         for ag ∈  keys(AN)   # if a.a.alive ?
             push!(life_history, (iter, ag.a.agent_id, ag.a.sugar_level,
-                compute_effective_wealth(arr_protos, ag), 
+                compute_effective_wealth(arr_protos, ag),
                 ag.a.proto_id, length(neighbors(graph, AN[ag]))))
         end
         for pr ∈  arr_protos
@@ -336,6 +336,12 @@ function specnet(;additional_params...)
         terminated_early = true
     end
 
+
+    # Add in isolate information to life_history.
+    life_history[:stage3_isolate] =
+        [a ∈  keys(stage3_isolates) ? stage3_isolates[a] : true
+                                        for a ∈  life_history[:agent]]
+
     # Collect results in DataFrame.
     iter_results = DataFrame(
         iter = 1:length(stages),
@@ -358,7 +364,7 @@ function specnet(;additional_params...)
         plot_gini_livingfrac_over_time(iter_results,
             [:proto_threshold, :salary, :white_noise_intensity])
         #plot_final_wealth_hist(SimState(graph, AN, arr_protos))
-        plot_history(life_history, proto_history, stages, stage3_isolates)
+        plot_history(life_history, proto_history, stages)
     end
 
     if params[:make_anims]
@@ -678,17 +684,14 @@ function plot_iteration_graphs(iter)
 end
 
 
-function plot_history(life_history, proto_history, stages, stage3_isolates)
+function plot_history(life_history, proto_history, stages)
     stage_starts = [findfirst(x->x==n, stages) for n ∈  1:3]
     stage_starts = [isnothing(ss) ? 1 : ss for ss ∈  stage_starts]
 
-    life_history[:original_isolate] = 
-        [a ∈  keys(stage3_isolates) ? stage3_isolates[a] : true
-                                            for a ∈  life_history[:agent]]
     effective_historyp = plot(life_history,
         # Plotting effective wealth, not just agent wealth
         group=:agent, x=:iter, y=:resources, Geom.line,
-        color=:original_isolate,
+        color=:stage3_isolate,
         Scale.color_discrete_manual("navy","orange", levels=[false, true]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["blue","green","red"]),
@@ -707,7 +710,7 @@ function plot_history(life_history, proto_history, stages, stage3_isolates)
     life_historyp = plot(life_history,
         # Plotting just agent wealth
         group=:agent, x=:iter, y=:sugar_level, Geom.line,
-        color=:original_isolate,
+        color=:stage3_isolate,
         Scale.color_discrete_manual("navy","orange", levels=[false, true]),
         xintercept=stage_starts,
         Geom.vline(style=[:dash], color=["blue","green","red"]),
@@ -724,6 +727,8 @@ function plot_history(life_history, proto_history, stages, stage3_isolates)
         Guide.ylabel("Agent wealth", orientation=:vertical))
     to_plot = life_historyp
 
+    stage_text_tweak = 150  # tweak this higher to make the "Stage 1/2/3"
+                            #   text labels shift lower.
     if nrow(proto_history) > 0
         proto_historyp = plot(proto_history,
             group=:proto_id, x=:iter, y=:balance, Geom.line,
@@ -731,10 +736,12 @@ function plot_history(life_history, proto_history, stages, stage3_isolates)
             Geom.vline(style=[:dash], color=["blue","green","red"]),
             Guide.annotation(compose(context(),
                 Compose.text(stage_starts,
-                    fill(maximum(proto_history[:balance])-15,3),
-                    ["Stage 1", "Stage 2", "Stage 3"], fill(hleft,3), fill(vtop,3),
+                    fill(maximum(proto_history[:balance])-stage_text_tweak,3),
+                    ["Stage 1", "Stage 2", "Stage 3"],
+                    fill(hleft,3), fill(vtop,3),
                     [Rotation(-π/2, stage_starts[k],
-                        maximum(proto_history[:balance])-15) for k ∈  1:3]))),
+                        maximum(proto_history[:balance])-stage_text_tweak)
+                                                            for k ∈  1:3]))),
             Theme(default_color=Colors.RGBA(.5,0,.5,.5),
                 background_color=colorant"white", key_position=:bottom),
             Coord.cartesian(xmin=1, xmax=length(stages)),

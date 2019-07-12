@@ -42,7 +42,7 @@ function param_sweeper(; additional_params...)
     merge!(params, Dict(additional_params))
 
     prc("Starting sweep...\n")
-    prc("Sweeping for: $(param_to_sweep)")
+    prc("Sweeping for: $(param_to_sweep)\n")
     counter=start_value
 
     global agent_line_df = DataFrame(
@@ -421,6 +421,10 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
 
     prd("Drawing: $(vars_colors)\n")
     plot_df = consolidate(plot_df, param_to_sweep, vars_colors, plot_CIs)
+    if nrow(plot_df) == 0
+        prc("WARNING: Cannot produce plot for $(param_to_sweep).")
+        return
+    end
     layers = Layer[]
     for (var, color) in vars_colors
         append!(layers, layer(plot_df,
