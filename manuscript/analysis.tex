@@ -52,19 +52,35 @@ share of its proto's wealth, if any).}
 
 Figure~\ref{fig:effectiveWealthSingleRun} shows the same information in another
 way: instead of plotting each agent's \textit{personal} wealth (as in the top
-plot of Figure~\ref{fig:singleRun}, we show its \textbf{effective wealth},
+plot of Figure~\ref{fig:singleRun}), we show its \textbf{effective wealth},
 defined as the sum of its personal wealth and its ``share'' of its proto's
 wealth (if any). After all, contributions that a proto's members make to its
 balance are available to those members in times of need; therefore, a fair
 comparison between isolates and non-isolates should take this into account.
 From the figure, it can be seen that isolates no longer have a systematic
-advantage (as they appeared to in Figure~\ref{fig:singleRun}.
+advantage (as they appeared to in Figure~\ref{fig:singleRun}.)
 
 We verified that changes to basic parameters all have the expected effect:
 lowering the initial wealth delays the onset of stage 2; a higher $\sigma^2$
 for the income distribution makes the lines less jagged; a higher metabolic
 rate hastens extinction; \textit{etc.}
 
+To see how wealth inequality plays out over time, we plot the Gini coefficient
+of the population in Figure~\ref{fig:giniHistory}. (The Gini calculation is
+taken with respect to each agent's \textit{effective} wealth, not merely its
+personal wealth.) In stage 2, we see inequality decrease as agents join one
+another in protos and contribute their ``excess'' wealth to a shared pool. When
+the stage 3 starvation period commences, inequality rises as the poorer agents
+drop to zero and begin to deplete proto balances.
+
+\begin{figure}[hb]
+\centering
+\includegraphics[width=\columnwidth]{figures/giniHistory.png}
+\caption{The simulated society's wealth inequality over time. (The same
+simulation parameters were used as in Figures~\ref{fig:singleRun} and
+\ref{fig:effectiveWealthSingleRun}, but this time with 500 agents.)}
+\label{fig:giniHistory}
+\end{figure}
 
 % Note that the empty graph can't really be shown because stages 2 and 3 have
 % no well-defined meaning in that case.
