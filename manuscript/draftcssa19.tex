@@ -79,10 +79,11 @@ The one dimensional state space of the particle is identified with the wealth of
 
 
 \subsection{Implementation}
-%Stephen thinks that a subsection of the Model section should be about the
-%simulation code. It won't be long; just enough to explain how the mathematical
-%model just described is represented and executed in Julia, including some
-%answers to non-obvious questions that arise when considering implementation.
+
+The model is realized in a discrete-time Julia simulation program, in which each particle (agent) is represented as a mutable struct that maintains that agent's state over time. Each agent's state includes its current amount of wealth and which proto (if any) it is a member of. Additionally, using the LightGraphs package~\cite{LightGraphs-2017}, each agent is associated with a node of a randomly generated ER graph. Protos are also represented as mutable structs, each of which contains a list of member agent IDs and a current wealth balance.
+
+% cite Bootstrap?
+We chose Julia for its flexible type system, its speed of execution, its ease of programming, and the availability of useful packages, such as LightGraphs, Gadfly~\cite{Gadfly-2018} (plotting), and Bootstrap (confidence intervals).  Additionally, Julia easily allows the programmer to invoke code from R packages when necessary, as we did for Gini coefficient calculation with the R package DescTools~\cite{DescTools-2019}.
 
 \section{Analysis}
 %\input{analysis}
