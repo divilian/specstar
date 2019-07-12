@@ -1,25 +1,25 @@
 
 ## Input parameters
 params = Dict{Symbol,Any}(
-    :N => 30,                       # number of agents
-    :max_iters => 50,               # maximum number of iterations the simulation
+    :N => 500,                       # number of agents
+    :max_iters => 150,               # maximum number of iterations the simulation
                                     #   runs before termination (will terminate
                                     #   earlier if stopping condition reached)
-    :starvation_period => 20,       # the number of iterations to starve all agents
+    :starvation_period => 80,       # the number of iterations to starve all agents
                                     #   after the simulation has reached stage 3
                                     #   (all live non-isolate agents in protos)
     :openness => float(0.0),        # 0 <=> openness <=> 1
                                     #   (0: always choose from neighbor,
                                     #    1: always choose from entire city)
-    :init_sg_lvl => 100,            # each agent starts with wealth
+    :init_sg_lvl => 50,            # each agent starts with wealth
                                     #   ~U(1, init_sg_lvl)
     :metabolic_rate => 5,           # each iteration, each agent consumes exactly
                                     #   this much sugar
     :salary => 20,                   # each iteration, each agent receives exactly
                                     #   this much sugar
     :white_noise_intensity =>       # each iteration, an agent receives (or loses)
-        float(1.0),                 #   ~N(0, white_noise_intensity) extra sugar
-    :proto_threshold => 50,         # each agent in an encounter must have
+        float(5.0),                 #   ~N(0, white_noise_intensity) extra sugar
+    :proto_threshold => 65,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
     :make_anims => true,           # create animations of results?
     :make_sim_plots => true,        # create plots (for individual simulations)?
@@ -39,7 +39,7 @@ params = Dict{Symbol,Any}(
                                     #   - "complete"
                                     #   - "empty"
 
-    :λ => float(0.0),                 # ER: expected number if edges per node
+    :λ => float(2.0),                 # ER: expected number if edges per node
 
     :SF_edges => 40,                # SF: number of edges
     :SF_degree => 2,                # SF: exponent of expected power law degree

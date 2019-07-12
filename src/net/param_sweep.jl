@@ -13,7 +13,7 @@ param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
 start_value=0.0     #value to begin sweep
 end_value=6         #value to end sweep
-num_values=10        #number of distinct values to run
+num_values=100        #number of distinct values to run
 trials_per_value=14   #for each distinct value, number of independent sims to run
 graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
