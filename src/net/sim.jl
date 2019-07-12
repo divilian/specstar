@@ -361,8 +361,8 @@ function specnet(;additional_params...)
     end
 
     if params[:make_sim_plots]
-        plot_gini_livingfrac_over_time(iter_results,
-            [:proto_threshold, :salary, :white_noise_intensity])
+        plot_gini_livingfrac_over_time(iter_results)
+        #   [:proto_threshold, :salary, :white_noise_intensity])
         #plot_final_wealth_hist(SimState(graph, AN, arr_protos))
         plot_history(life_history, proto_history, stages)
     end
@@ -544,7 +544,7 @@ end
 # Plot the Gini coefficient, and the fraction of agents still alive, over time.
 # The callouts parameter should be a list of symbols which should appear in the
 # title's plot.
-function plot_gini_livingfrac_over_time(iter_results, callouts)
+function plot_gini_livingfrac_over_time(iter_results, callouts=[])
 
     # Remove rows with NaNs.
     for col in names(iter_results)
@@ -606,8 +606,9 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
 #            ["black","brown"]),
         style(background_color=colorant"white",key_position=:bottom))
 
+    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
     tall = vstack(giniPlot, livingPlot)
-    draw(PNG("$(tempdir())/GiniPlot.png", 4inch, 6inch), tall)
+    draw(PNG("$(tempdir())/GiniLivingPlot.png", 4inch, 6inch), tall)
 end
 
 function plot_iteration_graphs(iter)
