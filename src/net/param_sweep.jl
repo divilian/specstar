@@ -33,6 +33,8 @@ global social_connectivity_df=DataFrame(
     num_living_agents_post=Float64[],
     num_protos_pre=Float64[],
     num_protos_post=Float64[],
+    avg_lifespan_isos=Float64[],
+    avg_lifespan_nonisos=Float64[],
     sim_tag=Int[])
 
 
@@ -97,6 +99,7 @@ function param_sweeper(; additional_params...)
             iter_results = results[:iter_results]
             overall_results = results[:overall_results]
             starvation_results = results[:starvation_results]
+            avg_lifespans = results[:avg_lifespans]
 
             push!(social_connectivity_df,
                 (overall_results[:size_largest_comp],
@@ -108,6 +111,8 @@ function param_sweeper(; additional_params...)
                  starvation_results[:num_living_agents],  # shouldn't be here
                  overall_results[:num_protos],     # shouldn't be here
                  starvation_results[:num_protos],  # shouldn't be here
+                 avg_lifespans[1],     # shouldn't be here
+                 avg_lifespans[2],     # shouldn't be here
 
                  (i*trials_per_value+j)))
 
@@ -183,6 +188,12 @@ function param_sweeper(; additional_params...)
         num_protos_post=Float64[],
         num_protos_post_lowCI=Float64[],
         num_protos_post_highCI=Float64[],
+        avg_lifespan_isos=Float64[],
+        avg_lifespan_isos_lowCI=Float64[],
+        avg_lifespan_isos_highCI=Float64[],
+        avg_lifespan_nonisos=Float64[],
+        avg_lifespan_nonisos_lowCI=Float64[],
+        avg_lifespan_nonisos_highCI=Float64[],
     )
     names!(plot_df, prepend!(names(plot_df)[2:end], [param_to_sweep]))
 
@@ -210,6 +221,8 @@ function param_sweeper(; additional_params...)
         curr_num_living_agents_post=[]
         curr_num_protos_pre=[]
         curr_num_protos_post=[]
+        curr_avg_lifespan_isos=[]
+        curr_avg_lifespan_nonisos=[]
         for i=1:trials_per_value
 
             sim_tag=(j*trials_per_value+i)
@@ -233,6 +246,8 @@ function param_sweeper(; additional_params...)
             push!(curr_num_living_agents_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_living_agents_post][1])
             push!(curr_num_protos_pre,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos_pre][1])
             push!(curr_num_protos_post,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:num_protos_post][1])
+            push!(curr_avg_lifespan_isos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:avg_lifespan_isos][1])
+            push!(curr_avg_lifespan_nonisos,social_connectivity_df[social_connectivity_df[:sim_tag].==sim_tag,:avg_lifespan_nonisos][1])
             #adding results to the df
             push!(trial_line_df,(counter,mark_seed_value,sim_tag,
                 current_sim_gini))
@@ -298,6 +313,12 @@ function param_sweeper(; additional_params...)
         bs = bootstrap(mean, curr_num_protos_post, BasicSampling(params[:num_boot_samples]))
         ciNumProtosPost = confint(bs, BasicConfInt(.95))[1]
 
+        #CIs for average lifespan
+        bs = bootstrap(mean, curr_avg_lifespan_isos, BasicSampling(params[:num_boot_samples]))
+        ciAvgLifespanIsos = confint(bs, BasicConfInt(.95))[1]
+        bs = bootstrap(mean, curr_avg_lifespan_nonisos, BasicSampling(params[:num_boot_samples]))
+        ciAvgLifespanNonisos = confint(bs, BasicConfInt(.95))[1]
+
         push!(plot_df, (counter,ciGinis[1], ciGinis[2], ciGinis[3],
                                 ciNumbers[1], ciNumbers[2], ciNumbers[3],
                                 ciSizes[1], ciSizes[2], ciSizes[3],
@@ -310,6 +331,8 @@ function param_sweeper(; additional_params...)
                                 ciNumLivingPost[1], ciNumLivingPost[2], ciNumLivingPost[3],
                                 ciNumProtosPre[1], ciNumProtosPre[2], ciNumProtosPre[3],
                                 ciNumProtosPost[1], ciNumProtosPost[2], ciNumProtosPost[3],
+                                ciAvgLifespanIsos[1], ciAvgLifespanIsos[2], ciAvgLifespanIsos[3],
+                                ciAvgLifespanNonisos[1], ciAvgLifespanNonisos[2], ciAvgLifespanNonisos[3],
         ))
         counter+=((end_value-start_value)/num_values)
 
@@ -376,6 +399,17 @@ function param_sweeper(; additional_params...)
 
     tallPlot=vstack(ginip,compp,ttsp,protop)
     draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
+
+    lifespanp = draw_plot(plot_df, param_to_sweep,
+        Dict("avg_lifespan_isos"=>"orange", "avg_lifespan_nonisos" => "navy"),
+        extra=[
+            Coord.Cartesian(ymin=0),
+            Guide.title("λ=$(params[:λ])"),   # specifically for figure 4
+            Guide.xlabel("White noise (σ²)"),
+            Guide.manual_color_key("", ["Isolates    .", "Non-isolates"],
+                ["orange","navy"])
+        ],
+        y_label="Mean lifespan (iterations)")
 
     wealth_heatmap=plot(x=agent_line_df.sugar,y=agent_line_df[param_to_sweep],
         Geom.histogram2d,

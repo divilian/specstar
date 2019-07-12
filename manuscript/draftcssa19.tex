@@ -61,14 +61,16 @@ In the next section, we discuss the mathematical formulation of the model. In se
 
 Before discussing our model in greater mathematical detail, we discuss the model qualitatively, contrasting them with more familiar modeling approaches. The model presented here has much in common with models used in social reality inspired models in statistical physics~\cite{redner2001guide}, dynamic process models in network science~\cite{newman2018networks}, and computational social science and agent-based models~\cite{abm_review}; however, our modeling philosophy is somewhere at the interface of agent-based computational economics (ACE)~\cite{tesfatsion} and analytical sociology (AS)~\cite{ch1as_hdbk,ch2as_hdbk}. In ACE, we acknowledge its aspiration to develop bottom-up models of economic systems at all scales but restrain from its enthusiastic use of complex but well-calibrated detailed models of markets and agents~\cite{tesfatsion2017}. In AS, we assent its focus on social mechanisms in explaining social phenomena, but instead rely on simplified mechanisms with few parameters~\cite{ch11as_hdbk} with the specific goal of extracting insights from \textit{stylized} models.       
 
-More specifically, from statistical physics, we borrow the dynamics: diffusion models and associated first-passage time techniques; from network science, we borrow the structural aspects: Erd\H{o}s-R\'{e}nyi network models; and from non-equlibrium statistical physics, CSS and ACE, we borrow a form of cooperation: the concept of coalescence, institution and coordination. 
+More specifically, from statistical physics, we borrow the dynamics: diffusion models and associated first-passage time techniques; from network science, we borrow the structural aspects: Erd\H{o}s-R\'{e}nyi network (ER) models; and from non-equlibrium statistical physics, CSS and ACE, we borrow a form of cooperation: the concept of coalescence, institution and coordination. 
 
 
 
 \section{Model}
-The model of cooperative wealth accumulation constructed here is best thought of as a stochastic interacting particle system infused with economic sociological semantics. The particle evolves according to an one dimensional diffusion process with constant drift and is driven by a Brownian noise with boundary condition at the origin corresponding to particle absorption. After crossing a pre-determined threshold in state space. 
+The model of cooperative wealth accumulation constructed here is best thought of as a stochastic interacting particle system infused with economic sociological semantics. The particle evolves according to an one dimensional diffusion process with constant drift and is driven by a Brownian noise with boundary condition at the origin corresponding to particle absorption. After crossing a pre-determined threshold in state space, particles above the threshold follow a protocol and coalesce together. In an ensemble of otherwise identical particles, a given particle may coalesce with a subset of other particles. This mixing characteristic is encoded via a graph. Both the conjoined particles and individual particles die upon crossing the origin. This model of interacting diffusing particles can be provided with substantive semantics as follows. 
 
-In this section, we introduce the model used for our simulation study. 
+%Might be nice to put a nice table here 
+The one dimensional state space of the particle is identified with the wealth of an social actor (agent). We consider a homogeneous population where all agents are required burn their wealth at a constant specified rate in order to survive. In addition, the agents all gain wealth at a constant rate. The resource draining rate and the resource gaining rate are additive and constitute the drift of the diffusion process. The environmental contingency is modeled by a Brownian noise of a specified intensity. Upon crossing a specific wealth threshold, agents can coalesce to form a cooperative unit deciding to pool their resources and their environmental contingencies into a single unit which we call a \textit{proto-institution} (proto). The mixing characteristic of this ensemble is the social network (here ER model).          
+
 
 
 ~\cite{redner2001guide} ~\cite{rv}  ~\cite{wilhite} ~\cite{arthur} 
@@ -77,10 +79,40 @@ In this section, we introduce the model used for our simulation study.
 
 
 \subsection{Implementation}
-%Stephen thinks that a subsection of the Model section should be about the
-%simulation code. It won't be long; just enough to explain how the mathematical
-%model just described is represented and executed in Julia, including some
-%answers to non-obvious questions that arise when considering implementation.
+
+The model is realized in a discrete-time Julia simulation program, in which each agent is represented as a mutable struct (a dedicated area of memory whose contents change over time) that maintains its state. An agent's state includes its current amount of wealth and which proto (if any) it is a member of. Additionally, using the LightGraphs package~\cite{LightGraphs-2017}, each agent is associated with a node of a randomly generated ER graph. Protos are also represented as mutable structs, each of which contains a list of member agent IDs and a current wealth balance.
+
+The simulation proceeds as follows. For configurable parameters
+$N > 0$,
+$\texttt{init\_max} > 0$,
+$\texttt{salary} > 0$,
+$m > 0$ (metabolic rate),
+$t_p > 0$ (the ``proto threshold''),
+$\sigma^2 \ge 0$ and
+$0 \le \lambda \le 1$:
+
+\begin{enumerate}
+\itemsep.1em
+\item Create $N$ agents, each with a random initial wealth (uniformly distributed from 0 to \texttt{init\_max}), and related to one another as per a random ER network with parameter $\lambda$.
+\item \textbf{Stages 1 and 2\footnote{We define ``Stage 1'' as the period \textit{before} the first proto is formed, ``Stage 2'' as the period \textit{during} which protos are being formed}:} Repeat until all non-isolate agents\footnote{An \textbf{isolate} agent is one with no graph neighbors.} are members of a proto:
+    \begin{enumerate}
+    \itemsep.1em
+    \item Each agent $A$ whose current wealth $\ge t_p$, and who is not currently a member of a proto, chooses at random one of its graph neighbors (call it $B$) whose wealth \textit{also} exceeds $t_p$. (If there are no such neighbors, proceed to the next agent.) If $B$ is already in a proto, have $A$ join $B$'s proto. If not, have $A$ and $B$ form a new proto.
+    \item Each agent gains an amount of wealth equal to $(\texttt{salary} - m + \epsilon)$, where $\epsilon \sim \mathcal{N}(0,\sigma^2)$ (white noise).\footnote{Note that this ``gain'' could be negative, in which case the agent, and possibly its proto, may be subject to death exactly as in step (3).}
+    \item Each agent \textit{that is in a proto} donates all its wealth in excess of $t_p$ to that proto's balance. (Agents not in a proto maintain their current wealth.)
+    \end{enumerate}
+    \item \textbf{Stage 3 (starvation):} Repeat until all agents are dead:
+        \begin{enumerate}
+        \itemsep.1em
+        \item Each agent \textit{loses} an amount of wealth equal to $(m + \epsilon), \epsilon \sim \mathcal{N}(0,\sigma^2)$.
+        \item If an agent's wealth would drop below zero as a result of this loss, and if it is not a member of a proto, it dies and is removed from the simulation. If it \textit{is} a member of a proto, it withdraws the necessary amount from its proto's balance to remain at zero wealth. If the proto does not have sufficient funds to cover the loss, both the agent and the proto die and are removed from the simulation.
+        \end{enumerate}
+\end{enumerate}
+
+Various statistical counters are updated as the program executes so that its behavior can be analyzed post mortem. The main simulation loop can also be invoked from a ``parameter sweep'' program which executes it multiple times over a range of parameter values, in order to determine how the model's behavior changes in response to key parameters.
+
+% cite Bootstrap?
+We chose Julia for its flexible type system, its speed of execution, its ease of programming, and the availability of useful packages, such as LightGraphs, Gadfly~\cite{Gadfly-2018} (plotting), and Bootstrap (confidence intervals).  Additionally, Julia easily allows the programmer to invoke code from R packages when necessary, as we did for Gini coefficient calculation with the R package DescTools~\cite{DescTools-2019}.
 
 \section{Analysis}
 %\input{analysis}

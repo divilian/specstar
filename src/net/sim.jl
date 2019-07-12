@@ -362,8 +362,8 @@ function specnet(;additional_params...)
     end
 
     if params[:make_sim_plots]
-        plot_gini_livingfrac_over_time(iter_results,
-            [:proto_threshold, :salary, :white_noise_intensity])
+        plot_gini_livingfrac_over_time(iter_results)
+        #   [:proto_threshold, :salary, :white_noise_intensity])
         #plot_final_wealth_hist(SimState(graph, AN, arr_protos))
         plot_history(life_history, proto_history, stages)
     end
@@ -382,6 +382,7 @@ function specnet(;additional_params...)
         :starvation_results => starvation_results,
         :life_history => life_history,
         :proto_history => proto_history,
+        :avg_lifespans => compute_avg_lifespan(life_history),
         :terminated_early => terminated_early)
 end
 
@@ -545,7 +546,7 @@ end
 # Plot the Gini coefficient, and the fraction of agents still alive, over time.
 # The callouts parameter should be a list of symbols which should appear in the
 # title's plot.
-function plot_gini_livingfrac_over_time(iter_results, callouts)
+function plot_gini_livingfrac_over_time(iter_results, callouts=[])
 
     # Remove rows with NaNs.
     for col in names(iter_results)
@@ -607,8 +608,9 @@ function plot_gini_livingfrac_over_time(iter_results, callouts)
 #            ["black","brown"]),
         style(background_color=colorant"white",key_position=:bottom))
 
+    draw(PNG("$(tempdir())/GiniPlot.png"), giniPlot)
     tall = vstack(giniPlot, livingPlot)
-    draw(PNG("$(tempdir())/GiniPlot.png", 4inch, 6inch), tall)
+    draw(PNG("$(tempdir())/GiniLivingPlot.png", 4inch, 6inch), tall)
 end
 
 function plot_iteration_graphs(iter)
@@ -825,4 +827,18 @@ function compute_effective_wealth(arr_protos::Array{Proto,1}, agent::NetAgent)
             length([a for a ∈  keys(AN) if a.a.proto_id==agent.a.proto_id]) +
             agent.a.sugar_level
     end
+end
+
+# Return an array of two numbers: the average lifespan of isolates, and
+# non-isolates, in this simulation run.
+function compute_avg_lifespan(life_history)
+    isol_ids = unique(life_history[life_history[:stage3_isolate],:agent])
+    nonisol_ids = unique(life_history[.!life_history[:stage3_isolate],:agent])
+    isol_lifespans = [maximum(life_history[life_history[:agent].==aid,:iter])
+        for aid ∈  isol_ids]
+    nonisol_lifespans = [maximum(life_history[life_history[:agent].==aid,:iter])
+        for aid ∈  nonisol_ids]
+    prd("isol lifespans are $(isol_lifespans)")
+    prd("non-isol lifespans are $(nonisol_lifespans)")
+    return [ mean(isol_lifespans), mean(nonisol_lifespans) ]
 end
