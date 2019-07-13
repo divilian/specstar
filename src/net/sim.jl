@@ -329,9 +329,10 @@ function specnet(;additional_params...)
     if total_iters == params[:max_iters]
         pri("\n*WARNING* sim terminated early at iteration $(total_iters)!\n")
         agent_results = DataFrame(
-            agent = [ ],
-            sugar = [ ],
-            proto_id = [ ],
+                agent = [ ],
+                sugar = [  ],
+                proto_id = [ ],
+                 
         )
         terminated_early = true
     end

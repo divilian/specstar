@@ -13,14 +13,14 @@ param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
 start_value=0.0     #value to begin sweep
 end_value=6         #value to end sweep
-num_values=10        #number of distinct values to run
+num_values=100        #number of distinct values to run
 trials_per_value=14   #for each distinct value, number of independent sims to run
 graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 repeat_param=:N
 repeat_start_value=10
 repeat_end_value=15
-run_repeat_sweep=true
+run_repeat_sweep=false
 
 components=[[],[]]
 global social_connectivity_df=DataFrame(
@@ -366,6 +366,16 @@ function param_sweeper(; additional_params...)
         ),
         y_label="Protos",
         )
+
+    numagentspp = draw_plot(plot_df, param_to_sweep,
+        Dict("num_agents_in_proto" => "green"),
+            
+        Dict("num_agents_in_proto"=> :solid
+            ),
+        y_label="Number agents in proto",
+        extra=[Guide.annotation(compose(context(), Compose.text(minimum(plot_df[param_to_sweep]), params[:N], "N=$(params[:N])", hleft, vtop))),
+         Coord.Cartesian(ymin=0, ymax=params[:N]),
+         layer(yintercept=[params[:N]], Geom.hline(style=:dot, color=colorant"navy"))[1]])
 
     numlivingp = draw_plot(plot_df, param_to_sweep,
         Dict("num_living_agents_pre" => "green",
