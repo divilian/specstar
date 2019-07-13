@@ -2,10 +2,11 @@
 # Confirm/deny the hypothesis that life expectancy (mean and stdev) of isolates
 #   and non-isolates are *not* different, across a range of parameter settings.
 
+using CSV
 include("sim.jl")
 include("analysis.jl")
 
-λs = [ .1, .5, 1.0, 2.0, 6.0 ]
+λs = [ .1, .5, 1.0, 2.0, 5.0 ]
 wn_intensities = [ 1, 10, 25 ]
 salaries = [ 10, 40 ]
 
@@ -16,6 +17,7 @@ comparison_results = DataFrame(
     p_value=Float16[],
 )
 
+params[:N] = 500
 params[:make_anims] = false
 params[:make_sim_plots] = false
 
@@ -38,3 +40,11 @@ for λ in λs
         end
     end
 end
+
+comparison_results[:sig] = comparison_results[:p_value] .<=.05
+CSV.write("$(tempdir())/isolVsNonisol.csv")
+
+for var in [ :λ, :wn_intensity, :salary ]
+    println(sort(by(comparison_results, [var, :sig], nrow), [var, order(:sig, rev=true)]))
+end
+
