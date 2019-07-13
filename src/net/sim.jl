@@ -839,5 +839,6 @@ function compute_avg_lifespan(life_history)
         for aid ∈  nonisol_ids]
     prd("isol lifespans are $(isol_lifespans)")
     prd("non-isol lifespans are $(nonisol_lifespans)")
-    return [ mean(isol_lifespans), mean(nonisol_lifespans) ]
+    return [ length(isol_lifespans) > 0 ? mean(isol_lifespans) : 0,
+             length(nonisol_lifespans) > 0 ? mean(nonisol_lifespans) : 0 ]
 end
