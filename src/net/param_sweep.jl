@@ -81,7 +81,10 @@ function param_sweeper(; additional_params...)
     params[:make_sim_plots] = false  # We would never want this true for a sweep
 
     for i = 1:num_values
+        prc("$(i) of $(num_values) values.\n")
+        prc("  $(trials_per_value) trials: ")
         for j = 1:trials_per_value
+            prc("$(j).")
             #setting the random seed and adding it to the DataFrame of the final gini of each simulation
             Random.seed!(params[:random_seed])
 
@@ -128,6 +131,7 @@ function param_sweeper(; additional_params...)
         end
         params[:random_seed]=original_seed
         counter += (end_value-start_value)/num_values
+        prc("\n")
     end
     sim_tag=0
 
