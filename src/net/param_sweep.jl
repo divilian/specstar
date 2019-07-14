@@ -11,10 +11,10 @@ include("setup_params.jl")
 
 param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
-start_value=0.0     #value to begin sweep
-end_value=6         #value to end sweep
-num_values=100        #number of distinct values to run
-trials_per_value=14   #for each distinct value, number of independent sims to run
+start_value=0.1     #value to begin sweep
+end_value=5         #value to end sweep
+num_values=20        #number of distinct values to run
+trials_per_value=20   #for each distinct value, number of independent sims to run
 graph_sweep=false    #run the sweep once for each graph type
 original_seed=params[:random_seed]
 repeat_param=:N
@@ -401,8 +401,8 @@ function param_sweeper(; additional_params...)
         Dict("time_to_stage2"=>"blue", "time_to_stage3" => "red"),
         y_label="Time to reach stage")
 
-    tallPlot=vstack(ginip,compp,ttsp,protop)
-    draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
+#    tallPlot=vstack(ginip,compp,ttsp,protop)
+#    draw(PNG("$(tempdir())/tallPlot.png", 5inch, 9inch), tallPlot)
 
     lifespanp = draw_plot(plot_df, param_to_sweep,
         Dict("avg_lifespan_isos"=>"orange", "avg_lifespan_nonisos" => "navy"),
@@ -504,7 +504,7 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
 
     p = plot(plot_df, layers,
         Theme(background_color=colorant"white"),
-        Guide.xlabel(string(param_to_sweep)),
+#        Guide.xlabel(string(param_to_sweep)),
         Guide.ylabel(y_label, orientation=:vertical),
         Guide.xticks(ticks=:auto, label=true, orientation=:horizontal),
         style(background_color=colorant"white",key_position=:bottom)
@@ -514,7 +514,7 @@ function draw_plot(plot_df, param_to_sweep, vars_colors=Dict{String,String},
         colors = [ vars_colors[x] for x in vars ]
         vars[1:end-1] = [ v*"   ." for v in vars[1:end-1] ]
         # TODO: add legend that combines both color and linestyle, where appropriate.
-        push!(p, Guide.manual_color_key(nothing, vars, colors))
+#        push!(p, Guide.manual_color_key(nothing, vars, colors))
     end
     [ push!(p, e) for e in extra ]
 

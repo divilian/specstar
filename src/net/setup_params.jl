@@ -21,8 +21,8 @@ params = Dict{Symbol,Any}(
         float(5.0),                 #   ~N(0, white_noise_intensity) extra sugar
     :proto_threshold => 65,         # each agent in an encounter must have
                                     #   > wealth than this to form a proto
-    :make_anims => true,           # create animations of results?
-    :make_sim_plots => true,        # create plots (for individual simulations)?
+    :make_anims => false,           # create animations of results?
+    :make_sim_plots => false,        # create plots (for individual simulations)?
     :num_boot_samples => 1000,      # for single sims, the number of bootstrap
                                     #   samples used in computing CI for single
                                     #   Gini
