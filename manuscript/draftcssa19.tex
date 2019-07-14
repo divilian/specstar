@@ -131,7 +131,7 @@ As its network properties are well-understood, wealth dynamics on such network a
 \subsection{Implementation}
 
 
-%The model is realized in a discrete-time Julia simulation program, in which each agent is represented as a mutable struct (a dedicated area of memory whose contents change over time) that maintains its state. An agent's state includes its current amount of wealth and which proto (if any) it is a member of. Additionally, using the LightGraphs package~\cite{LightGraphs-2017}, each agent is associated with a node of a randomly generated ER graph. Protos are also represented as mutable structs, each of which contains a list of member agent IDs and a current wealth balance.
+The model is realized in a discrete-time Julia simulation program, in which each agent is represented as a mutable struct (a dedicated area of memory whose contents change over time) that maintains its state. An agent's state includes its current amount of wealth and which proto (if any) it is a member of. Additionally, using the LightGraphs package~\cite{LightGraphs-2017}, each agent is associated with a node of a randomly generated ER graph. Protos are also represented as mutable structs, each of which contains a list of member agent IDs and a current wealth balance.
 
 The simulation proceeds as follows. For configurable parameters
 $N > 0$,
@@ -163,7 +163,7 @@ $0 \le \lambda \le 1$:
 Various statistical counters are updated as the program executes so that its behavior can be analyzed post mortem. The main simulation loop can also be invoked from a ``parameter sweep'' program which executes it multiple times over a range of parameter values, in order to determine how the model's behavior changes in response to key parameters.
 
 % cite Bootstrap?
-%We chose Julia for its flexible type system, its speed of execution, its ease of programming, and the availability of useful packages, such as LightGraphs, Gadfly~\cite{Gadfly-2018} (plotting), and Bootstrap (confidence intervals).  Additionally, Julia easily allows the programmer to invoke code from R packages when necessary, as we did for Gini coefficient calculation with the R package DescTools~\cite{DescTools-2019}.
+We chose Julia for its flexible type system, its speed of execution, its ease of programming, and the availability of useful packages, such as LightGraphs, Gadfly~\cite{Gadfly-2018} (plotting), and Bootstrap (confidence intervals).  Additionally, Julia easily allows the programmer to invoke code from R packages when necessary, as we did for Gini coefficient calculation with the R package DescTools~\cite{DescTools-2019}.
 
 
 \section{Verification}
