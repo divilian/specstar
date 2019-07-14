@@ -355,7 +355,7 @@ function param_sweeper(; additional_params...)
                                     (params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
-        y_label="Gini")
+        y_label="Gini", extra=[Guide.title("σ²=$(params[:white_noise_intensity])")])
 
     compp = draw_plot(plot_df, param_to_sweep,
         Dict("number_components"=>"green", "size_largest_component" => "red"),
