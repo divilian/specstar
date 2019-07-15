@@ -171,10 +171,22 @@ We chose Julia for its flexible type system, its speed of execution, its ease of
 
 \section{Analysis}
 \input{analysis}
-
+%%%%% need to add some speculations and motivate further simulation experiments .... especially what insights were gained by the current simulation model
 \section{Conclusion and Future Work}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Being one of the first in an ongoing project, the next directions are too many to mention here. Still, we mention a few next steps that adheres to the spirit of our project. These directions all alleviate some of the obvious limitations of the current work. 
 
+While both the stochastic models and ER models are well understood, proto formation dynamics, as coagulation processes in continuous-time, remain to be better understood, mathematically. Also, while the mathematical analysis of dynamics of discrete-time stochastic models on networks are well studied, diffusion processes on networks seem under explored in the literature. 
+
+Even with only a few parameters, the simulation results are hard to visualize and interpret. As the number of parameters increase, as expected in future models, ideas from design and analysis of (computer) experiments may be required. Also, our exploration of the time to death distirbutions of the population show non-trivial stucture. More careful statisitcal tests that go beyond the mean analysis presented here are required to tease out the necessary and sufficient conditions for proto population to consistenty out-perform isolate population.   
+
+The models used for our simulation are at best \textit{stylized} models of real world social and economic systems, especially in anthropology~\cite{white2011kinship} and historical and urban sociology~\cite{sampson2012great,katz2013people}. Research in economic anthropology~\cite{koster2019,koster2014,koster2015,bogerhoff2015,smith2019,nolin2012,power2018cooperation,power2018} suggest complex food aand economic resource sharing rituals among members of various communities. Such resource sharing social networks do not look like any of the \textit{textbook} models. Extending our analysis to more expressive network models like exponential random graph models, stochastic block models and latent space models is an important research direction. This alongside the use of empirically observed cooperation and coordination protocols have potential in making our models better callibrated with real world systems.   
+
+Despite their simplicitly, models like the ones constructed here have several advantages.  As ACE models, they offer insights about economic systems in which majority of the assumptions of neo-classical economics like perfectly mixed agents~\cite{wilhite} and presence of equilibrium~\cite{arthur} do not hold. As AS models~\cite{hedstrom2011oxford}, they offer an approach that adds models of social mechanisms to CSS models in a graded manner.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Need to understand the physics of the proto formation better
+%%% Say something about how this work is continues the work original started by Sri Mil
+% SriMil model introduced protos but the mathematical reformulation of proto is insightful not only for our model but also for the rginal SriMil model 
 
 %%%Idea for final section as of today 06/13 
 
@@ -192,7 +204,11 @@ We chose Julia for its flexible type system, its speed of execution, its ease of
 
 %%%%  Economics of poverty is totally difference and is expected to involve completely different set of models... maybe use ideas from notes below 
 
+%%% End with connections to the big SPECSTAR project 
+%%% Major strengths ACE (cite Arthur, Tesfatsion and Wilhite papers), AS (mechanisms fuss) 
+%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% DO NOT DELETE.... EXPECTED TO BE PART OF THE LARGER JOURNAL MANUSCRIPT 
 %%%Things that could be discussed here but is redundant if we are running out of words 
 %The general idea is to discuss how/why social networks matter wealth accumulation dynamics. We have references from anthropology. We have references in economic sociology(jackson).Sampson's work and Venkatesh's work can be used when talking about urban poverty and urban sociology. Discuss how in economics, wealth accumulation dynamics are mostly discussed at the macroeconomic level. In this sense, this work (and the work presented last year) are novel in this regard.  
 
@@ -213,11 +229,6 @@ We chose Julia for its flexible type system, its speed of execution, its ease of
 %what kinds of real world systems are we talking about?This section should write itself. Just a brief discussion of phase 2+ and integration with spescape should suffice 
 %%%% ERGM, SBM and LNM are good next steps 
 %%%%% Use anthropology references to motivate more expressive models 
-\cite{power2018cooperation,power2018}
-
-\cite{koster2019,koster2014,koster2015,bogerhoff2015}
-
-\cite{smith2019,nolin2012}
 
 
 %%%% 
