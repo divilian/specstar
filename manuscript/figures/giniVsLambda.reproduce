@@ -1,5 +1,10 @@
 Commit 7bc0243
 
+Run param sweeps for the two lines separately. For the white_noise=5 line, use
+the settings below. For white_noise=20, use all the same settings except the
+white_noise_intensity=20. Save and rename each plot_df.csv as it's created, as
+specified in makeFig4.jl, and then run that Julia script.
+
 param_sweep.jl settings:
 ----------------------------------------------------------------
 param_to_sweep=:λ   #parameter to iterate over *any parameter*

@@ -2,7 +2,7 @@
 ## Input parameters
 params = Dict{Symbol,Any}(
     :N => 500,                       # number of agents
-    :max_iters => 150,               # maximum number of iterations the simulation
+    :max_iters => 250,               # maximum number of iterations the simulation
                                     #   runs before termination (will terminate
                                     #   earlier if stopping condition reached)
     :starvation_period => 80,       # the number of iterations to starve all agents
