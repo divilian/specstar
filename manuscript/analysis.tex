@@ -1,21 +1,13 @@
 \subsection{Gini coefficient}
 
-As mentioned in Section~\ref{giniKindaSucks}, the Gini coefficient is not the
-ideal measure of inequality for our apocalyptic model. Nonetheless, it is
-illustrative to see how it varies with respect to the ER $\lambda$ parameter.
-Figure~\ref{fig:giniVsLambda} depicts the Gini computed \textit{at the onset
-of stage 3} (before starvation) versus $\lambda$ and confirms that increasing $\lambda$ leads to a decreasing Gini coefficient. Increasing $\lambda$ fosters wealth uniformity through the increased formation of and growth in size of proto-institutions. Firstly, a higher percentage of agents join a proto as greater $\lambda$ values lead to fewer isolate agents in the ER network. As more agents join protos, differences in agent wealth are eliminated as protos establish perfect equality amongst its constituent agents, thereby lowering system’s overall inequality. Secondly, higher $\lambda$ values leads to larger average proto sizes, as a more connected networks increases the likelihood that an agent will join an existing proto rather than form a new one. In much the same way, as smaller protos coalesce into larger ones, the standard inequality between the fragmented proto-institutions is eliminated in favor of perfect equality across the larger proto-institution, resulting in a corresponding decrease in the Gini coefficient. 
+As mentioned in Section~\ref{giniKindaSucks}, the Gini coefficient is not the ideal measure of inequality for our apocalyptic model. Nonetheless, it is illustrative to see how it varies with respect to the ER $\lambda$ parameter. Figure~\ref{fig:giniVsLambda} depicts the Gini computed \textit{at the onset of stage 3} (before starvation) versus $\lambda$, and confirms that increasing $\lambda$ leads to a decreasing Gini coefficient. Increasing $\lambda$ fosters wealth uniformity through the increased formation of and growth in size of protos. Firstly, a higher percentage of agents join a proto as greater $\lambda$ values lead to fewer isolate agents in the ER network. As more agents join protos, differences in agent wealth are eliminated as each proto establishes perfect equality amongst its constituent agents, thereby lowering system's overall inequality. Secondly, higher $\lambda$ values lead to larger average proto sizes, as more densely-connected networks increase the likelihood that an agent will join an existing proto rather than form a new one. In much the same way, as smaller protos coalesce into larger ones, the standard inequality between the fragmented protos is eliminated in favor of perfect equality across the larger proto, resulting in a corresponding decrease in the Gini coefficient. 
 
 \begin{figure}[hb]
 \centering
 \includegraphics[width=\columnwidth]{figures/giniVsLambda.png}
-\caption{The average Gini coefficient, computed before the onset of starvation,
-for various values of the ER $\lambda$ connectivity parameter. The color band
-represents a bootstrapped 95\% confidence interval.}
+\caption{The average Gini coefficient of effective wealth (computed pre-stage 3) for various values of the ER $\lambda$ connectivity parameter, and with both low-noise and high-noise income. 500 agents were used in each simulation. The color band represents a bootstrapped 95\% confidence interval.}
 \label{fig:giniVsLambda}
 \end{figure}
-
-% Will's text and plot showing Gini coefficient (pre-stage-3) decreases with ?
 
 \subsection{Life expectancy}
 
@@ -53,3 +45,4 @@ constant agent income to a scenario when the noise is as high as the average.}
 \end{figure}
 
 % Wealth histogram is steady ?
+% vim:textwidth=99999
