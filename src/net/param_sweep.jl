@@ -355,7 +355,8 @@ function param_sweeper(; additional_params...)
                                     (params[repeat_param]-repeat_start_value)/2*(repeat_end_value-repeat_start_value)) ))
 
     ginip = draw_plot(plot_df, param_to_sweep, Dict("gini"=>"navy"),
-        y_label="Gini", extra=[Guide.title("σ²=$(params[:white_noise_intensity])")])
+        y_label="Gini", extra=[Guide.title(
+            "White noise (σ²)=$(params[:white_noise_intensity])")])
 
     compp = draw_plot(plot_df, param_to_sweep,
         Dict("number_components"=>"green", "size_largest_component" => "red"),
@@ -422,6 +423,7 @@ function param_sweeper(; additional_params...)
         Guide.xlabel("Agent Wealth"))
     draw(PNG("$(tempdir())/wealth_heatmap.png"), wealth_heatmap)
 
+    CSV.write("$(tempdir())/plot_df.csv",plot_df)
     return Dict(:agent_line_df => agent_line_df,
         :trial_line_df => trial_line_df,
         :plot_df => plot_df)
