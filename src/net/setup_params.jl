@@ -5,7 +5,7 @@ params = Dict{Symbol,Any}(
     :max_iters => 250,               # maximum number of iterations the simulation
                                     #   runs before termination (will terminate
                                     #   earlier if stopping condition reached)
-    :starvation_period => 80,       # the number of iterations to starve all agents
+    :starvation_period => 10,       # the number of iterations to starve all agents
                                     #   after the simulation has reached stage 3
                                     #   (all live non-isolate agents in protos)
     :openness => float(0.0),        # 0 <=> openness <=> 1

@@ -11,6 +11,7 @@ include("setup_params.jl")
 
 param_to_sweep=:λ   #parameter to iterate over *any parameter*
                      #for graph sweep param_to_sweep should not be exclusive to one graph type e.g. SF_prob
+
 start_value=0.1     #value to begin sweep
 end_value=5         #value to end sweep
 num_values=20        #number of distinct values to run
