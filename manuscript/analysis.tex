@@ -30,9 +30,6 @@ with more densely connected graphs, as in the bottom plot: here, when income is
 more noisy, agents who join protos live nearly twice as long as those who
 don't.
 
-% Insert Rajesh's fascinating speculations about why this should be the case.
-
-
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\columnwidth]{figures/avgLifespanLambda_025.png}
@@ -43,6 +40,15 @@ The \texttt{salary} parameter was set to 20, so the x-axis ranges from a nearly
 constant agent income to a scenario when the noise is as high as the average.}
 \label{fig:avgLifespanLambda}
 \end{figure}
+
+\subsection{Interpretations, Conjectures and Next Steps}
+Unraveling the interplay of structure and dynamics was is a major objective of this offshoot of the Milton and Mudigonda model. The necessarily preliminary analysis reported here shows interesting results in this direction. As the two sources of heterogeneity, both the ambient stochasticity and interaction probability seem to influence the two kinds of inequality indicators. 
+
+As expected, figure~\ref{fig:giniVsLambda} shows the role of environmental noise: larger environmental noise produces larger inequality measures. Similarly, figure ~\ref{fig:avgLifespanLambda} shows the role of noise in amplifying differences between isolates and non-isolates: larger the noise, larger the separation between the mean lifetimes of the two populations. Also, as mentioned above, larger $\lambda$ leads to more egalitarian population(figure~\ref{fig:giniVsLambda}); concurrently, larger $\lambda$ leads to larger separation between mean lifetimes of the two populations. 
+
+Ideally, we would like to derive these results mathematically, especially the point beyond which the average lifespan of two populations change. Since the SDS has only a few parameters, it would easy to decompose the contributions of the various factors response for mean differential lifetimes as it is unclear whether the differences are due to wealth stabilization induced by proto formation in stage 2, or in stage 3.  Another interesting question is whether the population can be further stratified along proto-size dimensions. We conjecture that protos with larger number of agents will have larger mean lifetimes than protos with smaller numbers in the aggregate. We also conjecture that the time spent in a proto positively influences the mean lifetimes of agents in it.  
+
+While the mathematical formulation of the model was presented for a single particle, the system consists of a large ensemble of particles. Many of the characteristics, the differentiation of the system into isolates and non-isolates depend on the order rank order statistics of wealth. Also, More careful statistical tests that go beyond the mean analysis presented here are required to tease out the necessary and sufficient conditions for agents in protos (non-isolates) to consistently outperform the isolates. We are currently pursuing these questions. 
 
 % Wealth histogram is steady ?
 % vim:textwidth=99999
