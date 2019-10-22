@@ -124,7 +124,7 @@ dx(t) = vdt + \sqrt{2D} dw
 \begin{itemize}
 \item $v$ is the wealth growth rate (the difference of the income and metabolic rate of the agent) and $D$ is the intensity of the Brownian process (white noise process) $w$. 
 \item $x(t)$ is the state of the particle (wealth) at time $t$. 
-\item The dynamics can be started at any initial point $x_0 > 0$. 
+\item The dynamics can be started at any initial point $x_0 > 0$ (diffusion on a \textit{semi-infinite interval}. 
 \end{itemize}
 Structure
 \begin{itemize}
@@ -135,7 +135,12 @@ Structure
 \begin{frame}[t]
 \frametitle{Vocabulary}
 \begin{itemize}
-\item proto
+\item isolates
+\item proto a.k.a proto-institutions
+\item starvation shock 
+\item lifetime 
+\item $\lambda$ parameter 
+\item \texttt{julia}
 \end{itemize}
 \end{frame}
 
@@ -189,7 +194,7 @@ constant agent income to a scenario when the noise is as high as the average.}
 \frametitle{Results}
 %% need to link the figures here 
 \begin{itemize}
-\item Larger environmental noise produces large inequality measures (Figure 1)
+\item Larger environmental noise produces larger inequality measures (Figure 1)
 \item Larger the noise, larger the separation between the mean lifetimes of the two populations (Figures 2 and 3) 
 \item Larger connectivity leads to a more egalitarian population
 \item Larger connectivity leads to larger separation between the mean lifetimes of the two populations
@@ -212,6 +217,7 @@ constant agent income to a scenario when the noise is as high as the average.}
 \begin{itemize}
 \item These are very preliminary results 
 \item Repeating these simulations on other baseline network models might provide more clarity
+\item Simulations with SDS models used in macroeconomics will help empirically ground the models  
 \item These models might be amenable to mean field analysis 
 \end{itemize}
 More generally
