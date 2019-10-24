@@ -2,6 +2,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
+\usepackage{commath}
 %\usepackage{graphics}
 %\usepackage{curves}
 \usepackage{tikz}
@@ -26,6 +27,7 @@
 \usepackage{color}
 \usepackage{bibentry}
 \usepackage{graphicx}
+
 %\nobibliography*
 \bibliographystyle{plain}
 \graphicspath{ {./figures/} }
@@ -47,7 +49,8 @@
 \setbeamertemplate{footline}[frame number]
 
 \title[Your Short Title]{Wealth dynamics in the presence of network structure and primitive cooperation}
-\author[shortname]{Rajesh Venkatachalapathy \inst{1} \and Stephen Davies \inst{2} \and William Nehrboss \inst{3}}
+\author[shortname]{Rajesh Venkatachalapathy \inst{1} \and Stephen Davies
+\inst{2} \\ \and William Nehrboss \inst{3}}
 \institute[shortinst]{\inst{1} Systems Science Graduate Program \\Portland State University \\Portland, Oregon \and \inst{2} Department of Computer Science\\University of Mary Washington\\Fredericksburg, Virginia \and \inst{3} Lake Anna Homeschool\\Bumpass, Virginia}
 
 %\author{Rajesh Venkatachalapathy}
@@ -75,6 +78,7 @@
 \item Motivation and questions
 \item Model
 \item Experiments 
+\item Sample simulation runs
 \item Findings 
 \item Future work 
 \end{itemize}
@@ -87,10 +91,10 @@
 \end{itemize}
 Questions
 \begin{itemize}
-\item What is the social network analog of FM model?
+\item What is the social network analog of the FM model?
 \item What is the mathematical analog of ABM-based FM model? 
 \item Do social structures mediate wealth accumulation? 
-\item Does cooperation lead to more wealth?
+\item Does cooperation lead to more wealth? (Or to less?)
 \item Does cooperation improve chances of survival under resource scarcity?
 \end{itemize}
 \end{frame}
@@ -102,14 +106,15 @@ FM model
 \item Agent-based model 
 \item Resources are distributed in a grid world 
 \item Agents interact as they forage for resources in \textit{this} grid world
-\item  \textit{Wealthy enough} agents decide to pool their resources  
+\item  \textit{Wealthy enough} agents who encounter one another decide to pool their resources  
 \end{itemize}
+\bigskip
 Our model 
 \begin{itemize}
 \item Stochastic dynamical system 
-\item Resources are provided to each individual agent in a \textit{noisy manner}
+\item Resources are provided to each agent in a \textit{noisy manner}
 \item Agents interact with neighbors in a static social network
-\item \textit{Wealthy enough} agents decide to pool their resources 
+\item \textit{Wealthy enough} agents who encounter one another decide to pool their resources 
 \end{itemize}
 \end{frame}
 
@@ -118,13 +123,16 @@ Our model
 
 Dynamics
 \begin{equation}\label{ddm}
-dx(t) = vdt + \sqrt{2D} dw
+\dif x(t) = v\dif t + \sqrt{2D} \dif w
 \end{equation}
 
 \begin{itemize}
-\item $v$ is the wealth growth rate (the difference of the income and metabolic rate of the agent) and $D$ is the intensity of the Brownian process (white noise process) $w$. 
+\item $v$ is the wealth growth rate (the difference of the income and metabolic
+rate of the agent) and $D$ is the intensity of the Brownian (white noise)
+process $w$. 
 \item $x(t)$ is the state of the particle (wealth) at time $t$. 
-\item The dynamics can be started at any initial point $x_0 > 0$ (diffusion on a \textit{semi-infinite interval}. 
+\item The dynamics can be started at any initial point $x_0 > 0$ (diffusion on
+a \textit{semi-infinite interval}).
 \end{itemize}
 Structure
 \begin{itemize}
@@ -135,27 +143,43 @@ Structure
 \begin{frame}[t]
 \frametitle{Vocabulary}
 \begin{itemize}
-\item isolates
-\item proto a.k.a proto-institutions
-\item starvation shock 
-\item lifetime 
-\item $\lambda$ parameter 
+\item an \textbf{isolate}
+\item a ``\textbf{proto}'' a.k.a proto-institution
+\item ``\textbf{starvation shock}''
+\item \textbf{lifespan}
+\item $\lambda$ parameter (for ER model)
 \item \texttt{julia}
 \end{itemize}
 \end{frame}
 
 \begin{frame}[t]
 \frametitle{Experiments}
+\bigskip
 There are three \textbf{stages} in our experiments
+\smallskip
 \begin{itemize}
-\item \textbf{Stage 1} is the phase of the dynamical model \textit{before} which any agents have formed protos
-\item \textbf{Stage 2} is the phase \textit{during} which agents are formation protos.
-\item \textbf{Stage 3} is the phase where all agents undergo starvation\footnote{This stage commences once all non-isiolate agents have jointed a proto.} 
+\item \textbf{Stage 1} is the phase of the dynamical model \textit{before}
+which any agents have formed protos.
+\item \textbf{Stage 2} is the phase \textit{during} which agents are forming protos.
+\item \textbf{Stage 3} is the phase \textit{after} which all (non-isolate)
+agents have joined a proto. \textbf{Starvation} commences.
 \end{itemize}
 \end{frame}
 
 \begin{frame}[t]
-\frametitle{Figures}
+\frametitle{Demo}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\begin{center}
+\huge
+Sample simulation runs
+\end{center}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{Experimental results}
 \begin{figure}[hb]
 \centering
 \includegraphics[scale=.4]{figures/giniVsLambda.png}
@@ -165,7 +189,7 @@ There are three \textbf{stages} in our experiments
 \end{frame}
 
 \begin{frame}[t]
-\frametitle{Figures}
+\frametitle{Experimental results}
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=.4]{figures/avgLifespanLambda_025.png}
@@ -173,12 +197,12 @@ There are three \textbf{stages} in our experiments
 non-isolates (proto members) for different values of $\lambda$ and $\sigma^2$.
 The \texttt{salary} parameter was set to 20, so the x-axis ranges from a nearly
 constant agent income to a scenario when the noise is as high as the average.}
-\label{fig:avgLifespanLambda}
+\label{fig:avgLifespanLambda025}
 \end{figure}
 \end{frame}
 
 \begin{frame}[t]
-\frametitle{Figures}
+\frametitle{Experimental results}
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=.4]{figures/avgLifespanLambda2.png}
@@ -186,18 +210,21 @@ constant agent income to a scenario when the noise is as high as the average.}
 non-isolates (proto members) for different values of $\lambda$ and $\sigma^2$.
 The \texttt{salary} parameter was set to 20, so the x-axis ranges from a nearly
 constant agent income to a scenario when the noise is as high as the average.}
-\label{fig:avgLifespanLambda}
+\label{fig:avgLifespanLambda2}
 \end{figure}
 \end{frame}
 
 \begin{frame}[t]
-\frametitle{Results}
+\frametitle{Takeaways}
 %% need to link the figures here 
 \begin{itemize}
-\item Larger environmental noise produces larger inequality measures (Figure 1)
-\item Larger the noise, larger the separation between the mean lifetimes of the two populations (Figures 2 and 3) 
-\item Larger connectivity leads to a more egalitarian population
-\item Larger connectivity leads to larger separation between the mean lifetimes of the two populations
+\itemsep1em
+\item Higher environmental noise produces more inequality (Fig.~1)
+\item Denser connectivity produces \textit{less} inequality (Fig.~1)
+\item Higher environmental noise gives proto members a longer average lifespan (Figs.~2 and 3) 
+    \begin{itemize}
+    \item ...and this effect is exaggerated for more densely connected populations
+    \end{itemize}
 \end{itemize}
 
 \end{frame}
@@ -205,10 +232,14 @@ constant agent income to a scenario when the noise is as high as the average.}
 \begin{frame}[t]
 \frametitle{Questions}
 \begin{itemize}
-\item What are the underlying mechanisms underlying the gap between mean life expectancy of \textit{protos} and \textit{isolates}?
-\item Do \textit{protos} of different sizes differ in the mean life expectancy and wealth? 
+\item What are the mechanisms underlying the gap between mean life expectancy
+of proto members and isolates?
+\item Do protos of different sizes differ in the mean life expectancy
+and wealth? 
 \item Can we derive the results of these simulations from the defining SDS?
-\item Do other baseline network models like \textit{scale-free} and \textit{small-world} models induce similar systematic differences between \textit{protos} and \textit{isolates}?
+\item Do other baseline network models (like \textit{scale-free} and
+\textit{small-world}) induce similar systematic differences between
+proto members and isolates?
 \end{itemize}
 \end{frame}
 
@@ -220,10 +251,12 @@ constant agent income to a scenario when the noise is as high as the average.}
 \item Simulations with SDS models used in macroeconomics will help empirically ground the models  
 \item These models might be amenable to mean field analysis 
 \end{itemize}
+\bigskip
 More generally
 \begin{itemize}
-\item Our models are an useful addition to the variety of dynamical system models on networks 
-\item Despite their simplicity, the exhibit interesting dynamics and are useful to study the two-way interaction between structure and dynamics.  
+\item Our models are an useful addition to the variety of dynamical system
+models on networks.
+\item Despite their simplicity, they exhibit interesting dynamics and are useful to study the two-way interaction between structure and dynamics.  
 \end{itemize}
 \end{frame}
 
